@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Alternatives — Maister Viewer VS Code Extension</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+h3 { font-size:14px; margin:0 0 6px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin:14px 0; }
+.alt { background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--border);
+  border-radius:var(--radius); padding:14px 16px; }
+.alt.rec { border-left-color:var(--accent); background:var(--accent-soft); }
+.alt .k { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim);
+  margin:10px 0 2px; font-weight:700; }
+.alt ul { margin:2px 0 0; padding-left:18px; }
+.alt li { margin:2px 0; }
+.area { border-top:2px solid var(--border); margin-top:34px; padding-top:6px; }
+.rec-box { background:var(--ok-soft); border:1px solid var(--border); border-left:4px solid var(--ok);
+  border-radius:var(--radius); padding:12px 16px; margin:14px 0; }
+.rec-box b { color:var(--ok); }
+.per { font-size:12.5px; color:var(--dim); margin-top:10px; }
+.toc { font-size:13px; margin:12px 0 4px; color:var(--dim); }
+.scope h3 { margin-top:16px; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">&larr; Dashboard</a>
+  <a href="problem-statement.html">Problem</a>
+  <a href="personas.html">Personas</a>
+  <span class="here">Alternatives</span>
+  <a href="alternatives.md" target="_blank" rel="noopener" class="md">md twin &#8599;</a>
+</nav>
+
+<header>
+  <h1>Design Alternatives — Maister Viewer VS Code Extension</h1>
+  <p style="color:var(--dim);margin:4px 0 0">
+    <span class="badge">alternatives</span>
+    &nbsp;Phase 4 · Idea Generation &nbsp;·&nbsp; 2026-09-22 &nbsp;·&nbsp;
+    <a href="alternatives.md" target="_blank" rel="noopener">alternatives.md</a>
+  </p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>5</b><span>decision areas</span></div>
+  <div class="tile"><b>20</b><span>alternatives</span></div>
+  <div class="tile"><b>A2·B2·C2·D2·E3</b><span>recommended spine</span></div>
+  <div class="tile"><b>2</b><span>deferrable cost peaks</span></div>
+  <div class="tile"><b>3</b><span>personas evaluated</span></div>
+</div>
+
+<section class="tldr card">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Twenty alternatives across five decision areas: presentation architecture, artifact rendering, data layer &amp; indexing, navigation model, and relationship to Maister's existing <code>dashboard.html</code>.</p>
+  <p>The recommended spine is a TreeView for navigation plus one reusable webview panel for reading (A2), in-extension markdown rendering with companion HTML re-hosted through <code>asWebviewUri</code> (B2+B3), a two-tier persisted metadata index with lazy body parsing (C2), an activity-first three-surface navigation model (D2), and a reimplementation of the dashboard's visual language over <code>orchestrator-state.yml</code> with <code>dashboard-data.js</code> as an optional fast path (E3+E4).</p>
+  <p>Areas are genuinely coupled: a tree-only presentation (A1) forecloses rendered reading inside the extension and therefore fails the universal floor; delegating rendering to VS Code's markdown preview (B1) forecloses the GitLens self-sufficiency property.</p>
+  <p>The two largest cost drivers — full-text search and portfolio aggregation — are both deferrable without breaking the universal floor, which is what makes a credible first release possible.</p>
+
+  <h2>Key Decisions</h2>
+  <ul>
+    <li><b>Five decision areas, chosen area by area</b> — coupling constraints stated explicitly where one choice forecloses another.</li>
+    <li><b>Evaluated against the Phase 3 universal floor</b> (rendered reading, workflow-type filtering, § 7 summary block) rather than feature counts.</li>
+    <li><b>Scope guardrails separate a minimum-viable spine from expansive options</b>, treating full-text search and portfolio roll-up as the two deferrable cost peaks.</li>
+  </ul>
+
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li><span class="sev warning">warning</span>The GitLens self-sufficiency property is in direct tension with the cheapest rendering options — every low-cost path pushes the user out to VS Code's preview or an external browser.</li>
+    <li><span class="sev warning">warning</span>Webview CSP forces a rewrite pass over Maister's companions; inline <code>&lt;style&gt;</code> is allowed under a nonce but inline <code>&lt;script&gt;</code> and the dashboard's dynamic <code>&lt;script src&gt;</code> are not — companion reuse is partial, not total.</li>
+    <li><span class="sev info">info</span>Persisted indexes risk staleness across sessions and Maister upgrades; each needs a cheap invalidation key (mtime + size, or a schema version stamp).</li>
+    <li><span class="sev info">info</span>Accessibility diverges sharply by area: TreeView is accessible for free, webviews inherit nothing and must be hand-built to the project's frontend standard.</li>
+    <li><span class="sev warning">warning</span>Performance at hundreds of tasks is unvalidated — no alternative here has been benchmarked, and the glob-plus-parse floor cost is unmeasured.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents:
+  <a href="#a">A · Presentation Architecture</a> ·
+  <a href="#b">B · Artifact Rendering</a> ·
+  <a href="#c">C · Data Layer &amp; Indexing</a> ·
+  <a href="#d">D · Navigation Model</a> ·
+  <a href="#e">E · Existing Dashboard</a> ·
+  <a href="#coupling">Coupling</a> ·
+  <a href="#scope">Scope Guardrails</a>
+</p>
+
+<main>
+
+<div class="card">
+  <h3>How to read this</h3>
+  <p style="margin:0">Five decision areas, four alternatives each, each with a concrete mechanism (named VS Code APIs), honest pros and cons, and persona impact. The <b>universal floor</b> from Phase 3 is the pass/fail bar throughout: rendered artifact reading (never source), workflow-type filtering, and the § 7 TL;DR / Key Decisions / Risks block surfaced. Personas: <b>Marek</b> (engineering, live monitoring), <b>Ada</b> (business, rendered reading), <b>Irena</b> (delivery lead, portfolio &amp; staleness).</p>
+</div>
+
+<!-- ============ AREA A ============ -->
+<section class="area" id="a">
+<h2>Decision Area A — Presentation Architecture</h2>
+<p><i>How the UI is composed from VS Code's surfaces: <code>TreeDataProvider</code>, <code>WebviewViewProvider</code>, <code>WebviewPanel</code>, <code>CustomReadonlyEditorProvider</code>, <code>TextDocumentContentProvider</code>, decorations, status bar, <code>QuickPick</code>.</i></p>
+
+<div class="grid">
+  <div class="alt">
+    <h3>A1 — Tree-First, Native Editors</h3>
+    <p>One activity-bar container with <code>TreeView</code>s. <code>TreeItem</code> carries <code>ThemeIcon</code>, <code>description</code> for status/staleness, a <code>MarkdownString</code> tooltip holding the § 7 TL;DR, and <code>contextValue</code> for menus. <code>FileDecorationProvider</code> badges verification outcome. Clicks hand off to <code>markdown.showPreview</code> or <code>vscode.open</code>.</p>
+    <div class="k">Pros</div>
+    <ul><li>Cheapest by a wide margin</li><li>Accessibility, theming, keyboard nav free and correct</li><li>Zero CSP surface, fast at hundreds of nodes</li><li><code>MarkdownString</code> tooltips cover more of § 7 than expected</li></ul>
+    <div class="k">Cons</div>
+    <ul><li><span class="fail">Fails the universal floor</span> — every artifact click leaves the extension</li><li>No decisions table, findings list, or roll-up possible</li><li>Irena's aggregate has nowhere to live</li></ul>
+    <p class="per"><b>Personas:</b> Marek adequate · Ada <span class="fail">fails</span> · Irena <span class="fail">fails</span></p>
+  </div>
+
+  <div class="alt rec">
+    <h3>A2 — Tree for Navigation + One Reusable Webview Panel <span class="badge">recommended</span></h3>
+    <p>A1's trees for navigation, filtering and live state; selecting a task reveals a singleton <code>WebviewPanel</code> in <code>ViewColumn.Beside</code>. Navigation inside the panel is <code>postMessage</code> to the host. <code>WebviewPanelSerializer</code> for restore; <code>localResourceRoots</code> scoped to the task dir plus <code>media/</code>.</p>
+    <div class="k">Pros</div>
+    <ul><li>Meets the universal floor fully</li><li>Splits work along each surface's strengths</li><li>Panel beside the terminal matches Marek's journey literally</li><li>One reused panel — no tab accumulation</li><li>Best partial-delivery story: the tree alone is already useful</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Two UI technologies plus a <code>postMessage</code> protocol</li><li>Webview a11y is entirely hand-built</li><li>Theming via <code>--vscode-*</code> vars, tested across light/dark/HC</li><li>Competes with code editors for screen space</li></ul>
+    <p class="per"><b>Personas:</b> Marek ✔✔ · Ada ✔✔ · Irena ✔✔</p>
+  </div>
+
+  <div class="alt">
+    <h3>A3 — Webview-View Only</h3>
+    <p>No tree. <code>window.registerWebviewViewProvider</code> renders the entire product — list, filters, live run, reading — as HTML inside the sidebar, escalating to a panel for full-width documents.</p>
+    <div class="k">Pros</div>
+    <ul><li>Total design control, one technology, one pipeline</li><li>Filters, facet chips, sparklines are ordinary front-end work</li><li>Always visible without an editor column</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Sidebar is 250–350px; verification reports read badly there</li><li>Escape-hatch panel reintroduces the split without the tree's benefits</li><li>Must rebuild keyboard nav, virtualised scrolling, context menus, a11y</li><li>Views dispose on collapse unless <code>retainContextWhenHidden</code></li></ul>
+    <p class="per"><b>Personas:</b> Ada ✔✔ · Irena ✔ · Marek weakest</p>
+  </div>
+
+  <div class="alt">
+    <h3>A4 — Custom Editor Bound to Task Files</h3>
+    <p><code>CustomReadonlyEditorProvider</code> registered for <code>orchestrator-state.yml</code> via a <code>customEditors</code> <code>filenamePattern</code>; a <code>maister:</code> <code>TextDocumentContentProvider</code> supplies synthetic docs. Tasks become things you <i>open</i>.</p>
+    <div class="k">Pros</div>
+    <ul><li>Deeply idiomatic: tabs, splits, Quick Open, pinning, history</li><li>Anyone landing on a state file gets the good view, not raw YAML</li><li>Virtual docs get find-widget and highlighting free</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Hijacks a file users sometimes need raw</li><li>No always-visible surface — bad for Marek's primary job</li><li>Portfolio has no file to bind to; model becomes half-consistent</li><li>Webview costs without the tree's cheap navigation</li></ul>
+    <p class="per"><b>Personas:</b> a fine complement for all three, a weak spine for any</p>
+  </div>
+</div>
+
+<div class="rec-box">
+  <p style="margin:0 0 6px"><b>Recommendation — A2</b>, optionally adopting A4's custom-editor binding later as an <i>entry point</i> rather than a spine.</p>
+  <p style="margin:0">The floor forces a webview somewhere (A1 cannot render documents); the live-monitoring primary job forces an always-visible surface (A4 cannot guarantee one). A2 satisfies both without rebuilding the tree in HTML (A3's cost), and degrades gracefully.</p>
+  <p style="margin:6px 0 0;color:var(--dim)"><b>Coupling:</b> A1 is incompatible with B2/B3/B4 — choosing it forces B1 and accepts failing the floor. A3 and A4 require B2 or B3. E2 requires a webview, ruling out A1.</p>
+</div>
+</section>
+
+<!-- ============ AREA B ============ -->
+<section class="area" id="b">
+<h2>Decision Area B — Artifact Rendering Strategy</h2>
+<p><i>Hard facts: webviews enforce a nonce CSP. Inline <code>&lt;style&gt;</code> passes with <code>style-src 'unsafe-inline'</code>; inline <code>&lt;script&gt;</code> needs a matching nonce; dynamically injected <code>&lt;script src&gt;</code> — what <code>dashboard.html</code> does — is blocked. Local resources need <code>asWebviewUri()</code> under <code>localResourceRoots</code>; sibling links need rewriting or <code>command:</code> URIs.</i></p>
+
+<div class="grid">
+  <div class="alt">
+    <h3>B1 — Delegate to VS Code's Built-In Rendering</h3>
+    <p><code>markdown.showPreviewToSide</code> for md; <code>env.openExternal</code> or Simple Browser for companions. The extension renders nothing.</p>
+    <div class="k">Pros</div>
+    <ul><li>Zero rendering code</li><li>VS Code's preview is excellent, accessible, theme-correct, honours user md extensions</li><li>Companions work perfectly in a real browser — they were built for one</li></ul>
+    <div class="k">Cons</div>
+    <ul><li><span class="fail">Contradicts the GitLens self-sufficiency property</span></li><li>Ada's pain answered with "open it in Chrome"</li><li>No pinned § 7, no breadcrumb, no deep-linking from a decision to an anchor</li><li>No task context around the document</li></ul>
+    <p class="per"><b>Personas:</b> Marek adequate · Ada <span class="fail">fails in spirit</span> · Irena neutral</p>
+  </div>
+
+  <div class="alt rec">
+    <h3>B2 — Render Markdown In-Extension <span class="badge">recommended spine</span></h3>
+    <p>Bundle <code>markdown-it</code> + GFM table and task-list plugins (for <code>- [ ]</code>/<code>- [x]</code>/<code>- [~]</code> in <code>implementation-plan.md</code>). Parse, sanitise, rewrite images to <code>asWebviewUri</code> and sibling <code>.md</code> links to <code>command:</code> URIs, post HTML to the webview. CSS against <code>--vscode-*</code> vars and <code>.vscode-light/dark/high-contrast</code>.</p>
+    <div class="k">Pros</div>
+    <ul><li>§ 7 block hoistable into a pinned header card</li><li>Sibling links become in-panel navigation — the self-sufficiency enabler</li><li>Anchors allow tree-decision → heading deep links (Irena's journey)</li><li>Plan checkboxes give real per-step progress free</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Re-implements VS Code's preview, worse at the margins (no Mermaid/math/user plugins)</li><li>Sanitisation and link rewriting are correctness-sensitive</li><li>Bundle size, cold parse cost, long-doc virtualisation</li></ul>
+    <p class="per"><b>Personas:</b> all three; primary enabler for Ada</p>
+  </div>
+
+  <div class="alt rec">
+    <h3>B3 — Re-Host Maister's HTML Companions <span class="badge">recommended, layered</span></h3>
+    <p>For the 13 companion kinds: read, nonce or strip inline scripts, rewrite relative <code>href</code>/<code>src</code> to <code>asWebviewUri</code> or <code>command:</code> URIs, emit a compatible CSP, inject directly or into a sandboxed <code>&lt;iframe srcdoc&gt;</code>.</p>
+    <div class="k">Pros</div>
+    <ul><li>Reuses real maintained design — breadcrumb, badge header, stat tiles, TL;DR, TOC</li><li>Severity badges and tiles arrive free</li><li>Stays correct as Maister evolves its companion style</li><li>Cheapest route to a rich reading surface</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Companions use <code>prefers-color-scheme</code>, <b>not</b> VS Code theme vars — visible theme clash</li><li>Older tasks carry older styles → inconsistent by task age</li><li><code>html_output: false</code> removes companions; B2 fallback mandatory</li><li><code>iframe srcdoc</code> isolates styling but blocks scroll/anchor/link interception</li></ul>
+    <p class="per"><b>Personas:</b> strong for Ada when companions exist; unreliable alone</p>
+  </div>
+
+  <div class="alt">
+    <h3>B4 — Structured Extraction Instead of Rendering</h3>
+    <p>Parse each artifact into a model — § 7 block plus per-kind structures (<code>spec.md</code> sections, plan task groups, verification verdicts, <code>design-context/INDEX.md</code> ID table, <code>work-log.md</code> entries) — and render native components. "Open full document" as escape hatch.</p>
+    <div class="k">Pros</div>
+    <ul><li>Most product-like: information designed, not transcribed</li><li>Cross-task aggregation nearly free — Irena's roll-up is a query</li><li>Decisions/risks search becomes a first-class facet</li><li>Kilobyte payloads instead of full rendered reports</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Maximum coupling to schemas that are prose followed by an LLM</li><li>Per-kind parsers degrade silently as Maister drifts</li><li>Unmodelled content becomes invisible — the plugin <i>hides</i> things</li><li>§ 7 exempts work logs, mockups, screenshots → escape hatch mandatory anyway</li><li>Highest build cost of the four</li></ul>
+    <p class="per"><b>Personas:</b> Irena ✔✔ · Ada ✔✔ (skim) · Marek risks frustration — he needs reports verbatim</p>
+  </div>
+</div>
+
+<div class="rec-box">
+  <p style="margin:0 0 6px"><b>Recommendation — B2 as the spine, B3 for companions where they exist, B4 applied narrowly to the § 7 block only.</b></p>
+  <p style="margin:0">Extract and pin § 7 from every markdown artifact (narrow B4 — the one structure guaranteed across workflows); render the body with <code>markdown-it</code> (B2); offer the styled companion via the rewrite pass when it exists (B3). This makes the degraded <code>html_output: false</code> mode the <i>default</i> path rather than a fallback, matching Phase 2's finding that degraded modes are normal. Full B4 is rejected as a spine for schema-coupling risk.</p>
+  <p style="margin:6px 0 0;color:var(--dim)"><b>Coupling:</b> B2/B3/B4 all need a webview → foreclose A1. B1 is the only option compatible with A1, at the cost of the floor. B3 becomes nearly free if E2 is chosen — same rewrite machinery.</p>
+</div>
+</section>
+
+<!-- ============ AREA C ============ -->
+<section class="area" id="c">
+<h2>Decision Area C — Data Layer &amp; Indexing</h2>
+<p><i>No registry (discovery is <code>workspace.findFiles('.maister/tasks/*/*/orchestrator-state.yml')</code>); model-authored YAML with confirmed drift; <code>dashboard-data.js</code> is JS not JSON; resume logic can <b>shrink</b> <code>completed_phases</code>; search must span metadata, decisions/risks, full text and structured facets.</i></p>
+
+<div class="grid">
+  <div class="alt">
+    <h3>C1 — Lazy, In-Memory Only</h3>
+    <p><code>findFiles</code> on activation, parse nothing. A <code>Map</code> fills on demand; one <code>FileSystemWatcher</code> invalidates. No persistence. Search is metadata-only over whatever is loaded.</p>
+    <div class="k">Pros</div>
+    <ul><li>Simplest correct thing — no invalidation, no format to version</li><li>Instant activation at any task count</li><li>Memory proportional to what was actually opened</li></ul>
+    <div class="k">Cons</div>
+    <ul><li><span class="fail">Fails success criterion 3</span> — cannot filter/sort by status, type, verdict or staleness without a full parse anyway</li><li>Irena's view impossible; no full-text at all</li><li>First-use latency on every list operation</li></ul>
+    <p class="per"><b>Personas:</b> Marek adequate (single live task) · Ada and Irena <span class="fail">fail</span></p>
+  </div>
+
+  <div class="alt rec">
+    <h3>C2 — Two-Tier Index: Eager Metadata, Lazy Bodies, Persisted <span class="badge">recommended</span></h3>
+    <p>Tier 1: parse only cheap fields from each state file, persist as JSON in <code>ExtensionContext.storageUri</code>, each entry stamped with <code>mtime</code>+<code>size</code>; re-stat and re-parse only what changed. Tier 2: artifact bodies parsed on open, LRU-bounded in memory, never persisted. Watcher with create/change/delete handlers, ~250ms debounce to absorb Maister's full-file rewrites.</p>
+    <div class="k">Pros</div>
+    <ul><li>Portfolio, facets, staleness (<code>now - mtime</code>) and decisions search all work off tier 1</li><li>Near-instant second-and-later activations — daily-use extension</li><li>mtime/size is a cheap reliable invalidation key</li><li>Debouncing handles phase-boundary full rewrites</li><li>Bounded memory</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>A cache can go wrong — needs a schema version stamp to discard on upgrade</li><li>Cold-start tier-1 parse of hundreds of YAMLs must run off the activation path</li><li>No true full-text over bodies</li><li>Two cache layers, two lifetimes</li></ul>
+    <p class="per"><b>Personas:</b> all three; the only option making Irena's portfolio affordable</p>
+  </div>
+
+  <div class="alt">
+    <h3>C3 — Full Inverted Index in the Extension Host</h3>
+    <p>C2 tier 1 plus a background job feeding every markdown artifact into <code>minisearch</code>/<code>lunr</code>/<code>flexsearch</code>, with field boosting so titles and § 7 decisions outrank body prose. Serialised and incrementally updated.</p>
+    <div class="k">Pros</div>
+    <ul><li>All four search modes with one ranking model — compound queries like <code>type:development + verdict:failed + free text</code></li><li>Fuzzy, prefix, ranking, snippets are library features</li><li>Fully offline, independent of other tooling</li></ul>
+    <div class="k">Cons</div>
+    <ul><li><span class="sev critical">critical</span>Largest single cost item in the design</li><li>Tens of MB of I/O; serialised index may exceed the source data</li><li>Incremental correctness is genuinely hard (identity across renames)</li><li>Resident memory in a shared extension host</li><li>Duplicates ripgrep, which VS Code already ships and which is faster</li></ul>
+    <p class="per"><b>Personas:</b> best search for all three; hardest to justify for a first release</p>
+  </div>
+
+  <div class="alt rec">
+    <h3>C4 — Delegate Full-Text to ripgrep <span class="badge">recommended for v1</span></h3>
+    <p>C2 tier 1 for facets. For free text: either <code>workbench.action.findInFiles</code> scoped by <code>filesToInclude</code>, or spawn the bundled ripgrep against the tasks tree and parse its JSON into the extension's own result list, joining hits to tasks by path.</p>
+    <div class="k">Pros</div>
+    <ul><li>Near-zero build cost, faster than any JS index</li><li>No index to build, persist, invalidate or version — always current</li><li>Path-to-task join is trivial: the layout <i>is</i> the identity</li><li>Composes with facets: narrow first, grep only survivors</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Spawning VS Code's vendored ripgrep is undocumented and platform-variable</li><li>The supported alternative hands the user to the search panel — breaks self-sufficiency</li><li>No ranking, fuzzy matching or field boosting; hits land on syntax as often as meaning</li></ul>
+    <p class="per"><b>Personas:</b> Marek ✔✔ (remembered phrases) · Ada ✔ (she searches by concept)</p>
+  </div>
+</div>
+
+<div class="rec-box">
+  <p style="margin:0 0 6px"><b>Recommendation — C2, with C4 as the first-release full-text answer and C3 held as a later upgrade.</b></p>
+  <p style="margin:0">C2 is non-negotiable: every requirement above the single-task level needs a metadata index. Facet-first-then-grep makes ripgrep's lack of ranking much less painful because the candidate set is already small. C3 earns its cost only if usage shows people searching the corpus by concept rather than by remembered phrase.</p>
+  <p style="margin:6px 0 0;color:var(--dim)"><b>Coupling:</b> C sits behind A and B. D3 requires C2's eager tier 1; D1/D4 tolerate C1. E4 materially cuts tier-1 cold-start cost.</p>
+</div>
+</section>
+
+<!-- ============ AREA D ============ -->
+<section class="area" id="d">
+<h2>Decision Area D — Navigation Model</h2>
+<p><i>How personas move between portfolio, task, phase and artifact, and how affinity, ownership, staleness and verification outcome are exposed.</i></p>
+
+<div class="grid">
+  <div class="alt">
+    <h3>D1 — One Tree, Grouping Switcher</h3>
+    <p>A single <code>TreeView</code> whose root level is set by a grouping mode in the title menu (<code>menus.view/title</code> + context keys): by type, status, owner, or recency. Non-active facets show as <code>description</code> text and file decorations.</p>
+    <div class="k">Pros</div>
+    <ul><li>One mental model, one component, minimal chrome</li><li>Familiar VS Code idiom (SCM, Testing views)</li><li>Affinity served by defaulting to group-by-type and remembering collapse state</li><li>Cheap and fully accessible</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>One dimension at a time; title bars fit ~3 actions</li><li>Live run and browse compete in the same tree — Marek wants phases expanded, Ada wants a flat recent list</li><li>Aggregate counts only fit in group labels</li></ul>
+    <p class="per"><b>Personas:</b> Marek ✔ · Ada ✔ (awkward together) · Irena thin</p>
+  </div>
+
+  <div class="alt rec">
+    <h3>D2 — Three Surfaces: Now / Browse / Task <span class="badge">recommended</span></h3>
+    <p><b>Now</b> — compact always-visible view of tasks with recent write activity: phase, elapsed, last decision, artifacts as they land, watcher-driven not polled. <b>Browse</b> — filterable, facetable portfolio list, escalating to the panel for roll-up tiles. <b>Task</b> — the reusable webview panel; the terminal surface and the only place documents render.</p>
+    <div class="k">Pros</div>
+    <ul><li>Maps one-to-one onto the jobs Phase 2 identified</li><li>Each surface optimised rather than compromised across three</li><li>All three personas converge on an identical Task surface — the Phase 3 principle, literally</li><li>An empty Now is an honest expression of never-assert-what-you-cannot-observe</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>More chrome, more sidebar real estate, more to explain</li><li>Now and Browse overlap — a live task appears in both</li><li>Now is permanently empty for non-runners (Irena) — a third of the UI dead weight</li><li>More view contributions and more state to sync</li></ul>
+    <p class="per"><b>Personas:</b> all three with the least compromise; empty-Now mitigable by default collapse</p>
+  </div>
+
+  <div class="alt">
+    <h3>D3 — Portfolio Dashboard as Home</h3>
+    <p>Opens to a webview portfolio: status counts, type distribution, in-flight, stalled, failed verifications, recent completions. Everything is reached by drilling from there.</p>
+    <div class="k">Pros</div>
+    <ul><li>Strongest orientation story, most immediately impressive</li><li>Delivers Irena's journey step one directly</li><li>Aggregate-to-artifact drill-down is the natural gesture</li><li>Feels like a product, matching the vision's framing</li></ul>
+    <div class="k">Cons</div>
+    <ul><li><span class="sev warning">warning</span>Inverts the Phase 2 priority — live monitoring becomes a tile</li><li>Marek wants one task live, not a portfolio</li><li>Needs C2's full eager index before anything renders — worst cold start</li><li>Most likely surface to show numbers the data cannot honestly support (constraint 4)</li></ul>
+    <p class="per"><b>Personas:</b> Irena ✔✔ · Ada ✔ · Marek poorly aligned</p>
+  </div>
+
+  <div class="alt">
+    <h3>D4 — Command-Palette / Quick-Pick Centric</h3>
+    <p><code>Maister: Go to Task</code> opens a <code>QuickPick</code> with fuzzy matching over the metadata index, <code>detail</code> carrying the § 7 TL;DR and <code>buttons</code> for actions. <code>Maister: Find Decision</code> searches decisions and risks. A minimal tree shows only the live run.</p>
+    <div class="k">Pros</div>
+    <ul><li>Fastest recall once internalised; very cheap to build</li><li>Excellent for "that migration from two months ago"</li><li>Scales to thousands of tasks with no UI work</li><li>Minimal screen real estate</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Discovery-hostile — nothing is browsable</li><li>Cannot answer Ada's "what is worth reading?"</li><li>No aggregation, no ambient awareness</li><li>Suits code-first users; the target audience is explicitly not code-first</li></ul>
+    <p class="per"><b>Personas:</b> Marek ✔✔ · Ada weak · Irena <span class="fail">fails</span></p>
+  </div>
+</div>
+
+<div class="rec-box">
+  <p style="margin:0 0 6px"><b>Recommendation — D2, with D4's Quick Picks added as an accelerator rather than a model.</b></p>
+  <p style="margin:0">D2 is the only model respecting the Phase 2 priority ordering while still giving Irena a real aggregation surface, and it embodies the one-identical-reading-experience principle by making Task the single terminal surface. D3's content is not rejected — it becomes a <i>mode</i> of Browse rather than the front door. D4 costs almost nothing on top of C2 and should ship as commands even in v1.</p>
+  <p style="margin:6px 0 0;color:var(--dim)"><b>Coupling:</b> D2 and D3 require A2 or A3. D1 and D4 are the only models compatible with A1. D3 requires C2's eager tier 1.</p>
+</div>
+</section>
+
+<!-- ============ AREA E ============ -->
+<section class="area" id="e">
+<h2>Decision Area E — Relationship to Maister's <code>dashboard.html</code></h2>
+<p><i>615 lines / 32.6 KB, self-contained, copied verbatim into each task root and pinned to the Maister version that created it. Loads data by injecting <code>&lt;script src="dashboard-data.js?t=…"&gt;</code> — blocked by webview CSP — and polls every 5 s. <code>dashboard-data.js</code> is <code>window.MAISTER_DATA = {…};</code>, a lossy projection, absent when <code>html_output: false</code>.</i></p>
+
+<div class="grid">
+  <div class="alt">
+    <h3>E1 — Ignore It Entirely</h3>
+    <p>Parse <code>orchestrator-state.yml</code> with <code>yaml</code>/<code>js-yaml</code> behind a tolerant adapter normalising the known hazards: semantic vs <code>phase-N</code> keying, <code>options</code> at two nesting levels, <code>clarifications</code> as a list among map siblings, unknown fields preserved.</p>
+    <div class="k">Pros</div>
+    <ul><li>One source of truth, no lossy projection, no <code>html_output</code> dependence</li><li>Access to domain blocks the projection flattens away (<code>task_characteristics</code>, <code>breaking_changes</code>, <code>bottleneck_priorities</code>…)</li><li>Freedom to design for VS Code idioms</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Discards good maintained design work; guarantees visual divergence</li><li>Full YAML parse per task is the expensive tier-1 path</li><li>Every future dashboard improvement must be re-implemented</li></ul>
+  </div>
+
+  <div class="alt">
+    <h3>E2 — Host the Real <code>dashboard.html</code></h3>
+    <p>Rewrite pass: replace the dynamic <code>&lt;script src&gt;</code> loader with a nonce'd inline bootstrap receiving <code>MAISTER_DATA</code> by <code>postMessage</code>, nonce remaining scripts, rewrite artifact <code>href</code>s to <code>command:</code> URIs, emit a compatible CSP, replace the 5 s poll with watcher pushes.</p>
+    <div class="k">Pros</div>
+    <ul><li>Perfect fidelity: <code>HERO_MAP</code>, drawers, expanded-state preservation, verification rendering</li><li>A lot of working UI for a modest rewrite pass</li><li>Inherits future dashboard improvements automatically</li></ul>
+    <div class="k">Cons</div>
+    <ul><li><span class="sev critical">critical</span>Depends on the internals of a file the extension does not own — breaks silently, no contract</li><li>Each task holds a different vintage → N structural variants, inconsistent UI by task age</li><li>Styles via <code>prefers-color-scheme</code>, not VS Code theme vars → clashes with the editor</li><li><code>html_output: false</code> removes it; single-task by construction, so it answers one of three surfaces</li><li>Accessibility unaudited against the project standard</li></ul>
+  </div>
+
+  <div class="alt rec">
+    <h3>E3 — Reimplement the Visual Language Natively <span class="badge">recommended</span></h3>
+    <p>Treat the dashboard as a design reference, as Phase 2 framed it. Adopt its IA — phase timeline, hero artifacts per type (<code>HERO_MAP</code> equivalent), decisions/risks drawers, verification section, <code>icon_hint</code> → codicon mapping — re-expressed with VS Code theme vars and the project's frontend standards. Source data is the state file.</p>
+    <div class="k">Pros</div>
+    <ul><li>Keeps the good structural decisions, sheds the file-protocol browser constraints</li><li>Theme-correct, accessible, consistent across task ages, works with <code>html_output: false</code></li><li>Extends naturally to Portfolio and Now, which E2 cannot</li><li><code>HERO_MAP</code> is the direct answer to "twenty files with no signal about which matters"</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Build cost, plus ongoing drift from Maister's dashboard as it evolves</li><li>Requires re-making judgement calls (which artifacts are heroes per type) — visibly wrong if missed</li></ul>
+  </div>
+
+  <div class="alt rec">
+    <h3>E4 — <code>dashboard-data.js</code> Fast Path, YAML Fallback <span class="badge">recommended, conditional</span></h3>
+    <p>Orthogonal data-source choice. Extract the object with a bounded regex from <code>window.MAISTER_DATA =</code> to the trailing <code>;</code> and <code>JSON.parse</code> it; fall back to a globals-free <code>vm</code> sandbox only if needed, never bare <code>eval</code>. Missing or unparseable → YAML. Both behind one interface.</p>
+    <div class="k">Pros</div>
+    <ul><li>3.5 KB near-JSON parses far faster than full state YAML — directly cuts C2 cold start</li><li>Flatter, already-normalised schema, free of the <code>phase_summaries</code> keying inconsistency</li><li>Rewritten at every meaningful state change — equivalent freshness for monitoring</li></ul>
+    <div class="k">Cons</div>
+    <ul><li>Lossy — domain blocks unavailable, so the fallback is not optional</li><li>Absent entirely under <code>html_output: false</code></li><li>Executing model-authored JS, even sandboxed, is a real risk surface</li><li>Two code paths → a subtle "works on my task" failure class</li></ul>
+  </div>
+</div>
+
+<div class="rec-box">
+  <p style="margin:0 0 6px"><b>Recommendation — E3 for presentation, E4 for data acquisition, with E1's tolerant YAML parser as the mandatory foundation beneath both.</b></p>
+  <p style="margin:0">E2 is the fastest route to a good-looking task view but fails on three counts that matter more than speed: theme clash every session, per-task version drift, and inability to serve Portfolio and Now. Phase 2 already framed the dashboard as "a design reference, not a droppable asset" — E3 carries that through. Take E4 only with <code>JSON.parse</code>-first extraction and a complete, independently-correct YAML path; if measurement shows YAML parsing is not actually the bottleneck at target scale, drop E4 as unnecessary complexity under the minimal-implementation standard.</p>
+  <p style="margin:6px 0 0;color:var(--dim)"><b>Coupling:</b> E2 requires a webview (rules out A1) and shares its whole rewrite machinery with B3. E4 improves C2's cold-start budget. E1's parser is required regardless.</p>
+</div>
+</section>
+
+<!-- ============ COUPLING ============ -->
+<section class="area" id="coupling">
+<h2>Cross-Area Coupling Summary</h2>
+<table>
+  <thead><tr><th>If you choose…</th><th>You foreclose…</th><th>Because</th></tr></thead>
+  <tbody>
+    <tr><td><b>A1</b> tree-first</td><td>B2, B3, B4; D2, D3; E2</td><td>No webview exists to render documents or roll-ups in</td></tr>
+    <tr><td><b>B1</b> delegate rendering</td><td>The self-sufficiency property</td><td>Reading always leaves the extension's surface</td></tr>
+    <tr><td><b>B3</b> re-host companions</td><td>Nothing, but requires a B2 fallback</td><td><code>html_output: false</code> removes all companions</td></tr>
+    <tr><td><b>C1</b> lazy, in-memory</td><td>D3; most of Irena's requirements</td><td>Facets and roll-ups need an index that exists before you look</td></tr>
+    <tr><td><b>D3</b> portfolio home</td><td>The stated primary job ordering</td><td>Live monitoring becomes a tile</td></tr>
+    <tr><td><b>E2</b> host the dashboard</td><td>A1; consistent theming; portfolio reuse</td><td>Needs a webview; styles outside VS Code's theme; single-task by construction</td></tr>
+  </tbody>
+</table>
+<p>Two pairs are cheaper together than apart: <b>B3 + E2</b> share one HTML rewrite pass, and <b>C2 + E4</b> share one parse pipeline.</p>
+</section>
+
+<!-- ============ SCOPE ============ -->
+<section class="area scope" id="scope">
+<h2>Scope Guardrails</h2>
+<p>The two largest cost drivers identified across Phases 1–3 are <b>full-text search</b> (four modes at once, hundreds of tasks) and <b>portfolio aggregation</b> (every roll-up computed by globbing and parsing, with no Maister support). Both are deferrable. Neither is in the universal floor.</p>
+
+<div class="card">
+  <h3><span class="badge" style="background:var(--ok-soft);color:var(--ok)">minimum viable</span> The spine that satisfies the floor</h3>
+  <ul>
+    <li><b>A2</b> tree + one reusable webview panel</li>
+    <li><b>B2</b> in-extension markdown rendering, with the <b>§ 7 block extracted and pinned</b> (narrow B4)</li>
+    <li><b>C2 tier 1 only</b> — metadata index, persisted, watcher-invalidated. No full-text.</li>
+    <li><b>D2's Now and Task surfaces</b> — Browse present as a flat, type-filterable list without facets or roll-up</li>
+    <li><b>E1 + E3's <code>HERO_MAP</code> idea</b> — tolerant YAML parser plus per-type hero artifacts. No <code>dashboard-data.js</code> fast path.</li>
+    <li>Workflow launching via <code>Terminal.sendText</code> with composed <code>/maister:*</code> commands — cheap, central to two personas</li>
+  </ul>
+  <p style="margin:8px 0 0">Clears all four success criteria except "recall in seconds," partially cleared via type/status/recency filtering and title matching.</p>
+</div>
+
+<div class="card">
+  <h3><span class="badge" style="background:var(--info-soft);color:var(--info)">first release</span> The credible increment</h3>
+  <ul>
+    <li><b>C4</b> free-text search, facet-narrowed first. If spawning the vendored ripgrep proves unreliable, ship search over the indexed § 7 blocks only — and state that limitation plainly in the UI.</li>
+    <li><b>B3</b> companion re-hosting behind an explicit "styled report" affordance, B2 as default</li>
+    <li><b>Staleness and verification outcome</b> as tier-1 facets — nearly free once tier 1 exists, and what Irena needs most</li>
+    <li><b>D4 Quick Picks</b> (<code>Go to Task</code>, <code>Find Decision</code>) — very cheap on top of tier 1, large recall gain</li>
+  </ul>
+</div>
+
+<details class="card">
+  <summary><span class="badge" style="background:var(--warn-soft);color:var(--warn)">expansive</span> &nbsp;Defer and justify with usage</summary>
+  <ul>
+    <li><b>C3</b> full inverted index with ranking and fuzzy matching</li>
+    <li><b>D3's</b> full portfolio dashboard with counts, distributions and drill-down tiles</li>
+    <li><b>Throughput and duration metrics</b> — depend on model-authored timestamps Phase 3 flagged as possibly missing or malformed in older tasks, and are the easiest place to violate constraint 4</li>
+    <li><b>E2</b> hosting the real dashboard — revisit only if E3 drifts badly from Maister's evolving output</li>
+    <li><b>Git-derived attribution</b> — useful to Irena, but a <code>git log</code> child process per task dir, fails for uncommitted tasks, and attributes to the committer rather than the operator. After the floor is solid.</li>
+  </ul>
+</details>
+
+<div class="card">
+  <h3>Explicit non-goals restated</h3>
+  <p style="margin:0">Repository/git change viewing as a browsable surface, any write to task files or <code>orchestrator-state.yml</code>, and answering orchestrator gates from the UI all remain out of scope per Phase 2. No alternative above crosses those lines; anything that appears to (attribution via git) is a data source only.</p>
+</div>
+</section>
+
+</main>
+</body>
+</html>

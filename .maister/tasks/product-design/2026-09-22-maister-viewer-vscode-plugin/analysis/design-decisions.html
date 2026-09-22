@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Decisions — Maister Viewer VS Code Extension</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+
+/* extensions */
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+header h1 { margin:6px 0 4px; }
+header .meta { color:var(--dim); font-size:12.5px; }
+.tldr { border-left:4px solid var(--accent); }
+.tldr h2 { margin-top:0; }
+.tldr h3 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); margin:18px 0 6px; }
+.tldr p { margin:6px 0; }
+.tldr ul { margin:4px 0; padding-left:20px; }
+.tldr li { margin:4px 0; }
+.risks li::marker { color:var(--warn); }
+.grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+.grid2 .card { margin:0; }
+.area { border-top:4px solid var(--accent); }
+.area-head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.area-head h3 { margin:0; font-size:15px; }
+.letter { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+  border-radius:50%; background:var(--accent); color:var(--surface); font-weight:700; font-size:13px; }
+.chosen { background:var(--accent-soft); border:1px solid var(--accent); border-radius:8px;
+  padding:10px 12px; margin:12px 0; }
+.chosen .lbl, .field .lbl { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); display:block; margin-bottom:3px; }
+.field { margin:10px 0; }
+.field .lbl { color:var(--dim); }
+.field.conseq { background:var(--warn-soft); border-radius:8px; padding:8px 12px; }
+.field.conseq .lbl { color:var(--warn); }
+.area details { margin-top:10px; border-top:1px dashed var(--border); padding-top:8px; }
+.area details summary { font-size:12.5px; color:var(--dim); }
+.area details ul { margin:6px 0 0; padding-left:20px; }
+.user-orig { background:var(--ok-soft); color:var(--ok); }
+.mode { border-left:3px solid var(--info); }
+.mode h4 { margin:0 0 4px; font-size:13.5px; }
+.mode p { margin:0; }
+.num { font-weight:700; color:var(--accent); width:32px; }
+ul.plain { padding-left:20px; margin:6px 0; } ul.plain li { margin:5px 0; }
+.note { color:var(--dim); font-size:13px; }
+.revised { background:var(--info-soft); border:1px solid var(--info); border-left:4px solid var(--info); }
+.revised .lbl { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--info); display:block; margin-bottom:4px; }
+.revised p { margin:0; }
+@media (max-width:600px) { .crumbs a.md { margin-left:0; } td, th { padding:6px; } }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">&larr; Dashboard</a>
+  <a href="problem-statement.md" target="_blank" rel="noopener">Problem Statement</a>
+  <a href="personas.md" target="_blank" rel="noopener">Personas</a>
+  <a href="alternatives.html">Alternatives</a>
+  <span class="here">Design Decisions</span>
+  <a href="feature-spec.html">Feature Specification</a>
+  <a href="design-decisions.md" target="_blank" rel="noopener" class="md">md twin &nearr;</a>
+</nav>
+
+<header>
+  <span class="badge">Design Decisions</span>
+  <h1>Design Decisions — Maister Viewer VS Code Extension</h1>
+  <div class="meta">Product design · analysis/design-decisions.md · 2026-09-22</div>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>5</b><span>decision areas</span></div>
+  <div class="tile"><b>7</b><span>trade-offs accepted</span></div>
+  <div class="tile"><b>6</b><span>open risks</span></div>
+  <div class="tile"><b>2</b><span>sidebar views</span></div>
+  <div class="tile"><b>20</b><span>alternatives considered</span></div>
+</div>
+
+<section class="card tldr" id="tldr">
+  <h2>TL;DR</h2>
+  <p>The extension combines sidebar tree views with one reusable webview panel, plus a compact Overview webview view. The sidebar stacks two natively collapsible views, <b>Now</b> and <b>Overview</b> (counts, filters and the task list; Browse merged in at Phase 7), and the panel switches between <b>Task</b> and <b>Dashboard</b> modes.</p>
+  <p>Task mode hosts each task's own Maister <code>dashboard.html</code>, unmodified in styling, loading its own data natively inside the webview sandbox, with links intercepted for in-panel navigation. Tasks with no hostable dashboard get a minimal native summary instead.</p>
+  <p>A tolerant <code>orchestrator-state.yml</code> parser powers everything else: Now, Overview, Dashboard mode, and a persisted two-tier index of metadata plus the TL;DR/decision/risk blocks.</p>
+  <p>Artifacts render in-extension as markdown with the TL;DR block pinned. Maister's styled HTML companions open on request. Full-text search over artifact bodies is deferred.</p>
+
+  <h3>Key Decisions</h3>
+  <ul>
+    <li><b>A2</b> presentation (tree + reusable webview panel), extended with a sidebar Overview webview view — the floor requires a webview and live monitoring requires an always-visible surface.</li>
+    <li><b>B2 + B3 + narrow B4</b> rendering — markdown rendered in-extension by default, § 7 block pinned, companions re-hosted on request; the markdown-only degraded mode is the default path.</li>
+    <li><b>C2 only</b> for data — persisted metadata index including § 7 blocks, lazy bodies, no full-text search in the first release.</li>
+    <li><b>D2 + D3</b> merged navigation — Now and Overview collapsible in the sidebar (Browse merged into Overview at Phase 7); Overview tiles filter its own task list; panel toggles Task &#8646; Dashboard; no Quick Pick accelerators. Every task carries a one-click next action.</li>
+    <li><b>E2 + E1</b> — each task's own <code>dashboard.html</code> hosted for the Task view with Maister's styling unmodified; the tolerant YAML parser is the source for every other surface and for the native fallback Task view.</li>
+  </ul>
+
+  <h3>Open Questions / Risks</h3>
+  <ul class="risks">
+    <li>The hosted dashboard themes itself from the OS <code>prefers-color-scheme</code>, not the VS Code theme — a light dashboard can appear in a dark editor (and ignores high-contrast themes).</li>
+    <li>Each task carries the <code>dashboard.html</code> vintage that created it; the rewrite pass must recognise every structural variant present, and an unrecognised variant silently degrades to the native fallback.</li>
+    <li>Two Task views exist (hosted dashboard and native fallback); users must be able to tell which they are seeing and why.</li>
+    <li>The hosted dashboard's accessibility is unaudited against the project's frontend accessibility standard and cannot be fixed without modifying it.</li>
+    <li>Full-text search deferral narrows Phase 2's four requested search modes to three; success criterion 3 ("recall in seconds") is met for titles, metadata and decisions/risks, not for artifact bodies.</li>
+    <li>Three distinct VS Code surface types (TreeView, WebviewView, WebviewPanel) each need their own accessibility and theming work.</li>
+  </ul>
+</section>
+
+<main>
+
+<!-- 1. Selected Approach -->
+<h2 id="approach">1. Selected Approach</h2>
+<div class="card revised" role="note">
+  <span class="lbl">Revised at Phase 7 (mockup review)</span>
+  <p>The Browse tree was merged into Overview, which now also lists the filtered tasks. The sidebar is <b>Now + Overview</b>, with <b>Open Dashboard</b> as a native Overview title-bar action. Launching also became task-contextual: every task carries a <b>next action</b> (Resume · Start development · Continue from research), one click away on its row, task view and dashboard row. See feature-spec § 4 and § 7.2.</p>
+</div>
+<p class="note">The design splits into <b>sidebar navigation</b> and <b>one reading panel</b>, with two data sources that each do what they are best at.</p>
+
+<div class="card">
+  <h3 style="margin-top:0;font-size:14px">Sidebar — one view container, two stacked, natively collapsible views</h3>
+  <table>
+    <thead><tr><th>View</th><th>Surface type</th><th>Job</th><th>Data source</th></tr></thead>
+    <tbody>
+      <tr><td><b>Now</b></td><td><code>TreeView</code></td><td>Every unfinished task in this working copy (in progress, pending, blocked), newest activity first: current phase, last recorded decision, artifacts as they land, next action. No time cutoff <span class="note">(revised at Phase 7: colleagues' tasks arrive completed, so unfinished tasks are effectively the user's own)</span>.</td><td>YAML parser + <code>FileSystemWatcher</code></td></tr>
+      <tr><td><b>Overview</b></td><td><code>WebviewView</code></td><td>Counts by status and type, attention tiles, search, and the <b>filtered task list</b> grouped by type (the former Browse), with each task's next-action button. The title-bar action opens Dashboard mode in the panel.</td><td>Tier-1 index</td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin-bottom:0">VS Code persists each user's collapse state per view, so the layout adapts: Marek collapses Overview and lives in Now; Irena keeps Overview expanded; Ada uses Overview tiles as her daily starting point.</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;font-size:14px">Panel — one reusable <code>WebviewPanel</code>, two modes</h3>
+  <div class="grid2">
+    <div class="card mode"><h4>Task mode</h4><p>Hosts the task's own <code>dashboard.html</code>. An injected shim adds the CSP nonce to the dashboard's own <code>&lt;script src="dashboard-data.js"&gt;</code> loader, so the data file loads natively inside the webview sandbox (the extension host never parses or evaluates it); watcher-driven refresh signals trigger immediate re-renders; artifact link clicks are intercepted so they navigate <em>within the panel</em>, where the artifact renders.</p><p class="note" style="margin-top:8px"><em>Refined in Phase 6, feature-spec § 5.3 — originally specified as data fed by <code>postMessage</code>, which would have required parsing a non-JSON JavaScript literal in the extension host.</em></p></div>
+    <div class="card mode"><h4>Artifact rendering (within Task mode)</h4><p>Markdown rendered in-extension with the § 7 block extracted and pinned as a header card; a "styled report" affordance re-hosts the <code>.html</code> companion where one exists.</p></div>
+    <div class="card mode"><h4>Native fallback Task view</h4><p>For tasks with no hostable dashboard (<code>html_output: false</code>, or an unrecognised dashboard vintage): header, phase list, § 7 decisions and risks, artifact list, all from the YAML parser. Clearly labelled as the fallback.</p></div>
+    <div class="card mode"><h4>Dashboard mode</h4><p>Full-width portfolio roll-up built on the tier-1 index, drilling into Task mode.</p></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;font-size:14px">Data</h3>
+  <table>
+    <thead><tr><th>Component</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td><b>Tolerant YAML parser</b></td><td>Over <code>orchestrator-state.yml</code> — the single source of truth for every surface except the hosted dashboard's own rendering. Normalises the known drift (semantic vs <code>phase-N</code> summary keys, <code>options</code> at two nesting levels, list-where-map-expected, unknown fields preserved).</td></tr>
+      <tr><td><b>Tier-1 index</b></td><td>Task metadata plus the § 7 block of every artifact (first ~40 lines read), persisted in extension storage, invalidated per file by <code>mtime</code> + <code>size</code>, with a schema version stamp. Rebuilt off the activation path behind a loading state.</td></tr>
+      <tr><td><b>Tier-2</b></td><td>Artifact bodies parsed on open, held in a bounded in-memory cache, never persisted.</td></tr>
+      <tr><td><code>dashboard-data.js</code></td><td>Loaded only by the hosted dashboard itself, inside the webview sandbox — never parsed by the extension and never an index source. The extension only stats it to track activity.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 2. Decisions by Area -->
+<h2 id="areas">2. Decisions by Area</h2>
+<div class="grid2">
+
+  <div class="card area" id="area-a">
+    <div class="area-head"><span class="letter">A</span><h3>Presentation Architecture</h3><span class="badge">A2, extended</span></div>
+    <div class="chosen"><span class="lbl">Chosen</span>Tree views for navigation and live state, one reusable webview panel for reading. Extended during Area D convergence with a compact <code>WebviewView</code> (Overview) in the sidebar.</div>
+    <div class="field"><span class="lbl">Rationale</span>The universal floor (rendered reading) requires a webview somewhere, ruling out A1. The primary job (live monitoring) requires an always-visible surface, ruling out A4 as a spine. A2 meets both without rebuilding tree behaviour in HTML (A3's cost), and degrades gracefully — the trees are useful on their own.</div>
+    <details><summary>Rejected alternatives (3)</summary>
+      <ul><li><b>A1</b> — fails the floor</li><li><b>A3</b> — narrow sidebar, rebuilds free tree behaviour</li><li><b>A4</b> — no always-visible surface; may be added later as an extra entry point</li></ul>
+    </details>
+  </div>
+
+  <div class="card area" id="area-b">
+    <div class="area-head"><span class="letter">B</span><h3>Artifact Rendering</h3><span class="badge">B2 + B3 + narrow B4</span></div>
+    <div class="chosen"><span class="lbl">Chosen</span>In-extension markdown rendering (<code>markdown-it</code> with GFM tables and task-list checkboxes, sanitised, links rewritten) as the default; the § 7 TL;DR / Key Decisions / Open Questions block extracted and pinned as a structured header; the <code>.html</code> companion re-hosted through a CSP rewrite pass on explicit request.</div>
+    <div class="field"><span class="lbl">Rationale</span>Makes the markdown-only mode — which <code>html_output: false</code> forces — the default path rather than a fallback. The § 7 block is the one structure guaranteed across every workflow, so extracting only it avoids the schema-coupling risk of full structured extraction.</div>
+    <details><summary>Rejected alternatives (4)</summary>
+      <ul><li><b>B1</b> — breaks self-sufficiency</li><li><b>B3-first</b> — theme clash and vintage inconsistency as default</li><li><b>Full B4</b> — fragile per-kind parsers that can hide content</li><li><b>B2-only</b> — discards Maister's styled reports</li></ul>
+    </details>
+  </div>
+
+  <div class="card area" id="area-c">
+    <div class="area-head"><span class="letter">C</span><h3>Data Layer &amp; Indexing</h3><span class="badge">C2 only</span></div>
+    <div class="chosen"><span class="lbl">Chosen</span>Two-tier persisted index — eager metadata plus § 7 blocks, lazy artifact bodies. No full-text search over artifact bodies in the first release.</div>
+    <div class="field"><span class="lbl">Rationale</span>Every requirement above single-task level depends on a metadata index; persistence makes daily use near-instant. Deferring full-text avoids both the inverted-index cost (C3) and the unsupported vendored-ripgrep path (C4).</div>
+    <div class="field conseq"><span class="lbl">Consequence</span>Of Phase 2's four search modes, three ship — task lookup by metadata, decision/risk recall, faceted filtering. Full-text search is deferred.</div>
+    <details><summary>Rejected for now (3)</summary>
+      <ul><li><b>C1</b> — fails recall-in-seconds and Irena's portfolio</li><li><b>C3</b> — largest single cost</li><li><b>C4</b> — unsupported binary path or breaks self-sufficiency</li></ul>
+    </details>
+  </div>
+
+  <div class="card area" id="area-d">
+    <div class="area-head"><span class="letter">D</span><h3>Navigation Model</h3><span class="badge">D2 + D3 merged</span><span class="badge user-orig">user-originated</span></div>
+    <div class="chosen"><span class="lbl">Chosen</span>Now and Overview stacked and natively collapsible in the sidebar (Browse merged into Overview at Phase 7); Overview tiles and search filter Overview's own task list; panel toggles between Task and Dashboard (plus Risks mode, added at Phase 7). No Quick Pick accelerators.</div>
+    <div class="field"><span class="lbl">Rationale</span>The user proposed merging the three-surface model with the portfolio dashboard so the dashboard is revealed on demand rather than being the front door. This resolves D3's core flaw (demoting live monitoring) while giving Irena a real portfolio surface and Ada an at-a-glance starting point. All three personas still converge on the identical Task surface.</div>
+    <div class="field conseq"><span class="lbl">Constraint carried</span>Overview and Dashboard show only observable facts — counts, verdicts, "quiet for N days" — never throughput, durations or "abandoned" in the first release.</div>
+    <details><summary>Rejected alternatives (3 + Quick Picks)</summary>
+      <ul><li><b>D1</b> — one dimension at a time; live and browse compete</li><li><b>D3 as home</b> — inverts priority</li><li><b>D4 as model</b> — discovery-hostile</li><li>Quick Picks declined for the first release</li></ul>
+    </details>
+  </div>
+
+  <div class="card area" id="area-e">
+    <div class="area-head"><span class="letter">E</span><h3>Relationship to <code>dashboard.html</code></h3><span class="badge">E2 + E1</span><span class="badge user-orig">user-originated</span></div>
+    <div class="chosen"><span class="lbl">Chosen</span>Host each task's own <code>dashboard.html</code> for Task mode, with Maister's styling left unmodified; the tolerant YAML parser (E1) powers Now, Overview, Dashboard mode, Risks mode, the index, and the native fallback Task view.</div>
+    <div class="field"><span class="lbl">Sub-decisions</span>
+      <table>
+        <tbody>
+          <tr><td><b>Which copy</b></td><td>Each task's own copy — true to what that task's Maister version produced, and automatically follows Maister's evolution.</td></tr>
+          <tr><td><b>Theming</b></td><td>Left as Maister styles it (OS <code>prefers-color-scheme</code>), not mapped to VS Code theme variables.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="field"><span class="lbl">Rationale</span>Maximum fidelity to Maister's own per-task view, including <code>HERO_MAP</code>, decision/risk drawers and verification rendering, at the cost of a rewrite pass. Shares its rewrite machinery with B3 companion re-hosting.</div>
+    <div class="field conseq"><span class="lbl">Consequence</span>Tasks with no hostable dashboard need a native fallback view built from the YAML parser.</div>
+    <details><summary>Rejected alternatives (2 + copy options)</summary>
+      <ul><li><b>E3</b> — reimplementation: build cost and drift</li><li><b>E4</b> — fast path not needed since the index reads YAML directly; model-authored JS risk</li><li>Bundled pinned copy and latest-from-install alternatives for the copy sub-decision</li></ul>
+    </details>
+  </div>
+
+</div>
+
+<!-- 3. Trade-Offs -->
+<h2 id="tradeoffs">3. Trade-Offs Accepted</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>#</th><th>Trade-off</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td><b>Theme inconsistency</b></td><td>The hosted dashboard follows the OS light/dark setting and ignores VS Code theming, including high-contrast.</td></tr>
+      <tr><td class="num">2</td><td><b>Vintage handling</b></td><td>The rewrite pass must recognise every <code>dashboard.html</code> version present in the repository; unrecognised versions fall back to the native view.</td></tr>
+      <tr><td class="num">3</td><td><b>Two Task views</b></td><td>The hosted dashboard and the native fallback coexist; which one is shown must be explicit to the user.</td></tr>
+      <tr><td class="num">4</td><td><b>Unaudited accessibility</b></td><td>In the hosted dashboard, which cannot be corrected without modifying it.</td></tr>
+      <tr><td class="num">5</td><td><b>No full-text search</b></td><td>Over artifact bodies in the first release.</td></tr>
+      <tr><td class="num">6</td><td><b>Three surface types</b></td><td>In the sidebar and panel, each needing separate accessibility and theming work.</td></tr>
+      <tr><td class="num">7</td><td><b>No keyboard Quick Pick accelerators</b></td><td>In the first release.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 4. Coupling -->
+<h2 id="coupling">4. Coupling Consequences Realised</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>Pairing</th><th>Consequence</th></tr></thead>
+    <tbody>
+      <tr><td><b>A2</b> + webview-based <b>B2/B3</b></td><td>Keeps the universal floor intact.</td></tr>
+      <tr><td><b>B3</b> + <b>E2</b></td><td>Share one HTML rewrite pass — nonce injection, link rewriting, CSP emission — so the pair is cheaper together than apart.</td></tr>
+      <tr><td><b>D2 + D3</b> merged &rarr; <b>C2</b></td><td>Requires C2's eager tier 1 for Overview counts, which is the chosen data layer.</td></tr>
+      <tr><td><b>E2</b> per-task copies + <code>html_output: false</code></td><td>The native fallback view is mandatory, not optional.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 5. Alternatives -->
+<h2 id="alternatives">5. Alternatives Considered</h2>
+<div class="card">
+  <p style="margin:0">Full detail of all twenty alternatives, their pros, cons and persona impact is in <a href="alternatives.md" target="_blank" rel="noopener"><code>analysis/alternatives.md</code></a> (companion: <a href="alternatives.html"><code>analysis/alternatives.html</code></a>).</p>
+</div>
+
+</main>
+</body>
+</html>

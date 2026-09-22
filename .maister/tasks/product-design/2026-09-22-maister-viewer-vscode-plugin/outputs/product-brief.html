@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Brief — Maister Lens</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+
+header h1 { margin:6px 0 4px; }
+header .meta { color:var(--dim); font-size:13px; }
+.tldr { border-left:4px solid var(--accent); }
+.tldr h3 { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); margin:16px 0 6px; }
+.tldr h3:first-child { margin-top:0; }
+.tldr p { margin:4px 0; }
+.tldr ul { margin:4px 0; padding-left:20px; }
+.tldr li { margin:3px 0; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:760px) { .grid2 { grid-template-columns:1fr; } }
+.grid2 > .card { margin:0; }
+.toc { font-size:13px; color:var(--dim); margin:10px 0 4px; line-height:1.9; }
+.followups { border:1px solid var(--warn); background:var(--warn-soft); }
+.followups h2 { margin-top:0; color:var(--warn); }
+.followups ol { margin:6px 0 0; padding-left:22px; }
+.followups li { margin:8px 0; }
+.layer { font-size:11px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; display:block; }
+.persona-head { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:760px) { .persona-head { grid-template-columns:1fr; } }
+.persona-head .card { margin:0; }
+.persona-head h3 { margin:0 0 4px; font-size:15px; }
+.src { font-size:12.5px; color:var(--dim); margin-top:8px; }
+ol.num li, ul.plain li { margin:5px 0; }
+td.surface { white-space:nowrap; font-weight:600; }
+.mock a { font-weight:600; }
+.table-wrap { overflow-x:auto; }
+.ac-crit { list-style:none; padding:0; margin:6px 0 0; }
+.ac-crit li { padding:6px 0; border-bottom:1px solid var(--border); }
+.ac-crit li:last-child { border-bottom:0; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../analysis/problem-statement.md" target="_blank" rel="noopener">Problem Statement ↗</a>
+  <a href="../analysis/personas.md" target="_blank" rel="noopener">Personas ↗</a>
+  <a href="../analysis/design-decisions.html">Design Decisions</a>
+  <a href="../analysis/feature-spec.html">Feature Specification</a>
+  <span class="here">Product Brief</span>
+  <a href="product-brief.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Product Brief</span>
+  <h1>Product Brief — Maister Lens</h1>
+  <div class="meta">Product-design handoff · 2026-09-22 · <a href="product-brief.md" target="_blank" rel="noopener">product-brief.md ↗</a></div>
+</header>
+
+<section class="card tldr" id="tldr">
+  <h3>TL;DR</h3>
+  <p>Maister Lens is a VS Code extension that makes Maister's output visible and navigable without leaving the editor, and it always shows artifacts rendered, never as source.</p>
+  <p>Its sidebar has two views: <b>Now</b> (every unfinished task) and <b>Overview</b> (counts, filters, search and the task list). One reusable panel switches between Task, Artifact, Dashboard (KPI tiles and charts) and Risks modes.</p>
+  <p>Each task carries a one-click <b>next action</b> (Resume, Start development, or Continue from research). It's sent pre-filled to Claude Code, then Copilot, then the terminal, and never submitted without the user.</p>
+  <p>It is built to be honest: a parser that never throws, no guessed states, no durations, and no severities Maister doesn't record.</p>
+  <p>The design is ready to hand off to <code>/maister:development</code>, with an eight-section implementation spec, 18 acceptance criteria and six approved mockups.</p>
+
+  <h3>Key Decisions</h3>
+  <ul>
+    <li>Scope is Maister tasks only. Git is used solely to attribute tasks to authors, never as a browsable feature.</li>
+    <li>Task mode hosts each task's own <code>dashboard.html</code> unmodified, with its data loaded natively inside the webview sandbox. Tasks without a hostable dashboard get a native fallback view.</li>
+    <li>Markdown is rendered in the extension with the TL;DR / Key Decisions / Risks block pinned. Maister's styled HTML companions open on request.</li>
+    <li>A persisted two-tier index searches metadata and each artifact's summary block. There's no full-text search in the first release.</li>
+    <li>Now lists every unfinished task with no time window, because colleagues' tasks reach a working copy only after they're completed.</li>
+    <li>Launching is task-contextual (next actions), with a configurable target order: Claude Code, then Copilot Chat, then terminal, then clipboard.</li>
+  </ul>
+
+  <h3>Open Questions / Risks</h3>
+  <ul>
+    <li>The Claude Code launch target depends on an undocumented command signature, <code>claude-vscode.editor.open(sessionId, prompt)</code>, observed in Claude Code 2.1.278.</li>
+    <li>Copilot Chat can run <code>/maister:*</code> commands only if the user's Copilot setup provides Maister's skills.</li>
+    <li>The hosted dashboard and companions follow the OS light/dark setting rather than the VS Code theme, and their accessibility is unaudited.</li>
+    <li>Performance targets (warm start under 300 ms, cold index of 300 tasks under 5 s) are specified but not yet measured.</li>
+    <li><code>vision.md</code> still promises a view of repository changes and needs amending. Testing standards are not yet initialized.</li>
+  </ul>
+</section>
+
+<div class="tiles">
+  <div class="tile"><b>7</b><span>surfaces</span></div>
+  <div class="tile"><b>18</b><span>acceptance criteria</span></div>
+  <div class="tile"><b>6</b><span>approved mockups</span></div>
+  <div class="tile"><b>3</b><span>personas</span></div>
+  <div class="tile"><b>2</b><span>runtime dependencies</span></div>
+</div>
+
+<nav class="toc">Contents:
+  <a href="#followups">Follow-ups outside the build</a> ·
+  <a href="#layer0">Layer 0 — Core Brief</a> ·
+  <a href="#features">Feature overview</a> ·
+  <a href="#criteria">Success &amp; acceptance criteria</a> ·
+  <a href="#layer1">Layer 1 — Personas</a> ·
+  <a href="#layer2">Layer 2 — Design Decisions</a> ·
+  <a href="#layer3">Layer 3 — Mockups</a> ·
+  <a href="#references">References</a>
+</nav>
+
+<main>
+
+<section class="card followups" id="followups">
+  <h2>Follow-ups outside the build</h2>
+  <ol>
+    <li><b>Amend <code>vision.md</code>.</b> Key feature #3 ("top layer view over all maister and repository changes") should become "top layer view over all Maister tasks". Its success criteria can take this brief's four.</li>
+    <li><b>Ratify testing standards.</b> § 8.6 of the spec proposes unit tests (mocha), integration tests (<code>@vscode/test-electron</code>), and a 300-task performance generator. Record them via <code>/maister:standards-update</code>.</li>
+    <li><b>Re-verify the Claude Code pre-fill</b> (AC11) whenever the Claude Code extension updates.</li>
+  </ol>
+</section>
+
+<h2 id="layer0"><span class="layer">Layer 0</span>Core Brief</h2>
+
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">Problem</h3>
+    <p>Maister produces large amounts of well-structured output quickly: phase state, decisions, risks, specs, plans, verification verdicts and 13 kinds of styled HTML report. All of it is reachable only as files. VS Code's file explorer can't show what a task is or what state it's in, and clicking an HTML report displays its <b>source code</b>. Maister's own <code>dashboard.html</code> solves this for one task at a time, in a browser, outside the editor.</p>
+    <div class="src">Full detail: <a href="../analysis/problem-statement.md" target="_blank" rel="noopener">analysis/problem-statement.md ↗</a></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Target users</h3>
+    <p>Contributors who are distinguished by which workflows they use, <b>not</b> by a reader/writer role. Everyone contributes to their own tasks and reads everyone else's, through one reading experience.</p>
+    <ul class="plain">
+      <li><b>Marek</b>, an engineering contributor, builds through Maister (development, migrations). The Now view is his working surface.</li>
+      <li><b>Ada</b>, a business-oriented contributor, runs product-design and research workflows and reads engineering output. For her the plugin is the way in.</li>
+      <li><b>Irena</b>, a delivery lead, needs portfolio oversight: failed verifications, stalled tasks and open risks in aggregate.</li>
+    </ul>
+  </div>
+</div>
+
+<h3 id="features">Feature overview</h3>
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>Surface</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="surface">Now <span class="badge">sidebar tree</span></td><td>Every unfinished task in the working copy, newest activity first: current phase, last recorded decision, recent artifacts, open risks, and an inline ▶ next action</td></tr>
+      <tr><td class="surface">Overview <span class="badge">sidebar webview</span></td><td>Search, Mine/Everyone, status/type/attention tiles, and the filtered task list grouped by type with next-action buttons. Title-bar actions: Open Dashboard, Open Risks, Group By, Clear filters, Refresh.</td></tr>
+      <tr><td class="surface">Task mode <span class="badge">panel</span></td><td>Hosts the task's own Maister <code>dashboard.html</code> unmodified, or a clearly labelled native fallback view with phases, key artifacts, decisions, risks, raw state and the next-action button</td></tr>
+      <tr><td class="surface">Artifact reader <span class="badge">panel</span></td><td>Rendered markdown with a pinned summary card, checklist progress, chips to jump between key artifacts, and in-panel link navigation. The styled HTML companion is available as a toggle.</td></tr>
+      <tr><td class="surface">Dashboard mode <span class="badge">panel</span></td><td>Four KPI tiles, four charts that double as filters (status, verification, workflow type, created per week), and the filtered task table with a Next column</td></tr>
+      <tr><td class="surface">Risks mode <span class="badge">panel</span></td><td>Every open risk across tasks, grouped by task with its source and the task's next action. No severity or age is shown, because Maister records neither.</td></tr>
+      <tr><td class="surface">Launching</td><td>Next actions (Resume · Start development · Continue from research) and Start Workflow…, sent pre-filled per <code>maisterLens.launch.targetOrder</code></td></tr>
+    </tbody>
+  </table>
+  <div class="src">Full detail: <a href="../analysis/feature-spec.md" target="_blank" rel="noopener">analysis/feature-spec.md ↗</a> §§ 1–8 · <a href="../analysis/feature-spec.html">HTML companion</a></div>
+</div>
+
+<h3>Constraints</h3>
+<div class="card">
+  <ol class="num">
+    <li>Maister keeps no task registry. Tasks are found by globbing for <code>orchestrator-state.yml</code>.</li>
+    <li>Parsing must be tolerant. The schemas are prose followed by an LLM, and real files drift.</li>
+    <li>Hundreds of tasks require a persisted, change-stamped index.</li>
+    <li>The extension never asserts what isn't on disk: no "running", "waiting", "stalled" or "abandoned".</li>
+    <li>Webview CSP: model-written JavaScript runs only in the sandbox, never in the extension host.</li>
+    <li>Degraded modes are normal: <code>html_output: false</code>, unrecognized dashboard versions, unreadable state.</li>
+    <li>Only two runtime dependencies: <code>yaml</code> and <code>markdown-it</code>.</li>
+  </ol>
+</div>
+
+<div class="grid2" id="criteria">
+  <div class="card">
+    <h3 style="margin-top:0">Success criteria</h3>
+    <ol class="num">
+      <li><b>Live answer without leaving the editor.</b> "What is my task doing?" is answered from the sidebar.</li>
+      <li><b>Rendered, always.</b> No artifact is ever shown as source through the extension's own navigation.</li>
+      <li><b>Recall in seconds.</b> A task or past decision is found among hundreds without the file explorer or grep.</li>
+      <li><b>Honest state.</b> Nothing is displayed that can't be justified from files on disk.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Acceptance criteria (condensed)</h3>
+    <p>AC1–AC18 in <a href="../analysis/feature-spec.md" target="_blank" rel="noopener">analysis/feature-spec.md ↗</a> § 8.7. The critical ones:</p>
+    <ul class="ac-crit">
+      <li><span class="badge">AC1</span> Now updates within 1.5 s of a state write.</li>
+      <li><span class="badge">AC4</span> <span class="badge">AC5</span> Artifacts open rendered in the same panel.</li>
+      <li><span class="badge">AC7</span> Decision search in under 100 ms across 300 tasks.</li>
+      <li><span class="badge">AC9</span> Warm start in under 300 ms; cold start for 300 tasks in under 5 s.</li>
+      <li><span class="badge">AC11</span> <span class="badge">AC17</span> Next actions are one click away and land pre-filled.</li>
+      <li><span class="badge">AC13</span> None of the forbidden state words appear.</li>
+      <li><span class="badge">AC15</span> Untrusted workspaces execute no hosted HTML.</li>
+      <li><span class="badge">AC18</span> Every open risk is listed once per task, with no invented severity.</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="layer1"><span class="layer">Layer 1</span>Persona Cards</h2>
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th></th><th>Marek (engineering)</th><th>Ada (business)</th><th>Irena (delivery lead)</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Workflows</th><td>development, migrations</td><td>product-design, research</td><td>occasional research</td></tr>
+      <tr><th scope="row">Primary surface</th><td>Now → reader</td><td>Overview → reader</td><td>Dashboard, Risks</td></tr>
+      <tr><th scope="row">Core need</th><td>Follow and judge his own running task; reach the spec, plan and verification in one move</td><td>Documents, not files; know what's worth reading</td><td>Aggregate trouble: failed verifications, quiet tasks, open risks</td></tr>
+      <tr><th scope="row">Next action they use most</th><td>Resume</td><td>Start development (from her briefs); Continue from research</td><td>Resume (via the task's owner)</td></tr>
+    </tbody>
+  </table>
+  <div class="src">Full cards and journeys: <a href="../analysis/personas.md" target="_blank" rel="noopener">analysis/personas.md ↗</a></div>
+</div>
+
+<h2 id="layer2"><span class="layer">Layer 2</span>Design Decisions</h2>
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>Area</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr><td class="surface">A — Presentation</td><td>Tree (Now) + Overview webview view + one reusable webview panel</td></tr>
+      <tr><td class="surface">B — Rendering</td><td>In-extension markdown with the summary block pinned; HTML companions re-hosted on request</td></tr>
+      <tr><td class="surface">C — Data</td><td>Persisted two-tier index (metadata and summary blocks eager, bodies lazy); no full-text search</td></tr>
+      <tr><td class="surface">D — Navigation</td><td>Now + Overview (Browse merged in at Phase 7); panel modes Task, Artifact, Dashboard and Risks; no Quick Picks</td></tr>
+      <tr><td class="surface">E — Maister dashboard</td><td>Each task's own <code>dashboard.html</code> hosted with its styling unmodified; tolerant YAML parser for everything else</td></tr>
+      <tr><td class="surface">Launching</td><td>Task next actions; configurable target order: Claude Code → Copilot → terminal → clipboard</td></tr>
+    </tbody>
+  </table>
+</div>
+<details class="card" open>
+  <summary>Decisions that changed after convergence (recorded in the spec)</summary>
+  <ul class="plain">
+    <li>Dashboard data is loaded natively in the sandbox rather than passed by message (§ 5.3).</li>
+    <li>Browse was merged into Overview (§ 4).</li>
+    <li>Now has no time window (§ 4.1).</li>
+    <li>Next actions were added (§ 7.2).</li>
+    <li>The Dashboard gained validated charts (§ 5.5).</li>
+    <li>Risks mode was added (§ 5.7).</li>
+    <li>The extension is named <b>Maister Lens</b>.</li>
+  </ul>
+</details>
+<div class="src">Full rationale: <a href="../analysis/design-decisions.md" target="_blank" rel="noopener">analysis/design-decisions.md ↗</a> · <a href="../analysis/design-decisions.html">HTML companion</a>. All 20 alternatives considered: <a href="../analysis/alternatives.md" target="_blank" rel="noopener">analysis/alternatives.md ↗</a> · <a href="../analysis/alternatives.html">HTML companion</a>.</div>
+
+<h2 id="layer3"><span class="layer">Layer 3</span>Mockup References</h2>
+<p>HTML mockups in VS Code Dark+ (approved at Phase 7), in <code>analysis/mockups/</code>:</p>
+<div class="card table-wrap mock">
+  <table>
+    <thead><tr><th>Screen</th><th>File</th></tr></thead>
+    <tbody>
+      <tr><td>Sidebar — Now + Overview (tiles, filtered task list, next actions)</td><td><a href="../analysis/mockups/sidebar-now-overview.html">sidebar-now-overview.html</a></td></tr>
+      <tr><td>Task mode — native fallback view</td><td><a href="../analysis/mockups/task-fallback-view.html">task-fallback-view.html</a></td></tr>
+      <tr><td>Artifact reader — Implementation Plan</td><td><a href="../analysis/mockups/artifact-reader-implementation-plan.html">artifact-reader-implementation-plan.html</a></td></tr>
+      <tr><td>Dashboard mode — KPI tiles, charts, table</td><td><a href="../analysis/mockups/dashboard-mode.html">dashboard-mode.html</a></td></tr>
+      <tr><td>Open risks</td><td><a href="../analysis/mockups/open-risks.html">open-risks.html</a></td></tr>
+      <tr><td>Start Workflow flow → Claude Code pre-fill</td><td><a href="../analysis/mockups/start-workflow-flow.html">start-workflow-flow.html</a></td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="src">The hosted Maister dashboard is intentionally not mocked up, because it is Maister's existing UI shown unmodified. Design-resource discovery: <a href="../analysis/design-context/design-resources.md" target="_blank" rel="noopener">analysis/design-context/design-resources.md ↗</a></p>
+
+<h2 id="references">References</h2>
+<div class="card table-wrap">
+  <table>
+    <tbody>
+      <tr><td><a href="../analysis/design-context.md" target="_blank" rel="noopener">analysis/design-context.md ↗</a></td><td>Inventory of Maister's data (task types, state schema, artifacts, dashboard)</td></tr>
+      <tr><td><a href="../analysis/problem-statement.md" target="_blank" rel="noopener">analysis/problem-statement.md ↗</a></td><td>Problem, scope, constraints, success criteria</td></tr>
+      <tr><td><a href="../analysis/personas.md" target="_blank" rel="noopener">analysis/personas.md ↗</a></td><td>Three personas and the cross-persona requirements matrix</td></tr>
+      <tr><td><a href="../analysis/alternatives.md" target="_blank" rel="noopener">analysis/alternatives.md ↗</a> · <a href="../analysis/alternatives.html">.html</a></td><td>20 alternatives across 5 decision areas</td></tr>
+      <tr><td><a href="../analysis/design-decisions.md" target="_blank" rel="noopener">analysis/design-decisions.md ↗</a> · <a href="../analysis/design-decisions.html">.html</a></td><td>The chosen direction and its trade-offs</td></tr>
+      <tr><td><a href="../analysis/feature-spec.md" target="_blank" rel="noopener">analysis/feature-spec.md ↗</a> · <a href="../analysis/feature-spec.html">.html</a></td><td>The implementation-ready specification</td></tr>
+      <tr><td><code>analysis/mockups/*.html</code></td><td>Approved screens (linked individually under <a href="#layer3">Layer 3</a>)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</main>
+</body>
+</html>
