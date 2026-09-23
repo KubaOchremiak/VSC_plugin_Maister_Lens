@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Verification — dashboard-nav-buttons</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { border-left:4px solid var(--warn); background:var(--warn-soft); }
+.verdict h2 { margin-top:0; }
+.tldr { border-left:4px solid var(--accent); }
+.toc { font-size:12.5px; color:var(--dim); margin:10px 0 4px; }
+.ok-row { color:var(--ok); font-weight:600; }
+.muted { color:var(--dim); }
+ul.tight { margin:6px 0; padding-left:20px; }
+ul.tight li { margin:4px 0; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../implementation/spec.html">Spec</a>
+  <a href="../implementation/implementation-plan.html">Plan</a>
+  <span class="here">Verification</span>
+  <a href="e2e-verification-report.html">E2E</a>
+  <a href="implementation-verification.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>Implementation Verification — Dashboard Navigation Affordances</h1>
+  <p class="muted">
+    <span class="badge">verification</span>
+    Generated 2026-09-23T17:20:00Z · Revised post-fix 2026-09-23T17:48:46Z (re-verify cycles 1–2) ·
+    Task <code>2026-09-23-dashboard-nav-buttons</code>
+  </p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>⚠️</b><span>Passed with issues</span></div>
+  <div class="tile"><b>0</b><span>critical</span></div>
+  <div class="tile"><b>2</b><span>warning remaining</span></div>
+  <div class="tile"><b>10</b><span>info</span></div>
+  <div class="tile"><b>3</b><span>warnings closed</span></div>
+  <div class="tile"><b>38/38</b><span>plan steps</span></div>
+  <div class="tile"><b>114</b><span>tests passing</span></div>
+</div>
+
+<section class="card verdict">
+  <h2>Verdict: ⚠️ Passed with Issues — post-fix</h2>
+  <p>38/38 plan steps verified against real code (not checkboxes), all five FRs traced, all three spec-audit
+  findings closed, and every hard constraint held — including the two zero-line-diff invariants on
+  <code>hostDashboard.ts</code> and <code>messages.ts</code>. <strong>No finding blocks the feature.</strong></p>
+  <p>Two warnings were fixed and one documented in cycle 1; suites re-ran at identical counts with no
+  regressions. <strong>Remaining: 0 critical · 2 warning · 10 info</strong> (down from 0 / 5 / 10). The two
+  remaining warnings are C1 (CHANGELOG rewording, declined) and C3 (stage this feature's files by explicit
+  path — an action at commit time, not a code defect).</p>
+</section>
+
+<section class="card tldr">
+  <h2>Open Questions / Risks</h2>
+  <ul class="tight">
+    <li><strong>The uncommitted, out-of-scope edit at <code>src/panel/panel.ts:1342</code> is still in the working tree.</strong>
+        A <code>git commit -a</code> sweeps it into this feature's commit, invisible in review and mis-attributed on a
+        later bisect. Stage this feature's files by explicit path. Flagged independently by all three verifiers.</li>
+    <li>Two pre-existing release blockers gate any Marketplace publish and are unrelated to this feature:
+        placeholder <code>"publisher": "maister"</code>, and <code>[Unreleased]</code> CHANGELOG against
+        <code>package.json</code> 0.1.0.</li>
+    <li>Sidebar copy needs an operator decision: a one-row tree titled <strong>Overview</strong> now sits beside the
+        renamed <strong>Tasks</strong> webview. Both the code reviewer and the readiness checker asked for
+        confirmation that this is final.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents:
+  <a href="#fixes">Fixes &amp; re-verification</a> ·
+  <a href="#scope">Verifications run</a> ·
+  <a href="#plan">Plan &amp; constraints</a> ·
+  <a href="#tests">Tests</a> ·
+  <a href="#standards">Standards</a> ·
+  <a href="#review">Code review</a> ·
+  <a href="#prod">Production readiness</a> ·
+  <a href="e2e-verification-report.html">E2E</a> ·
+  <a href="#assessment">Overall assessment</a> ·
+  <a href="#attention">Issues requiring attention</a>
+</p>
+
+<main>
+
+
+<section id="fixes">
+  <h2>Fix &amp; Re-Verification History</h2>
+  <div class="card">
+    <p><strong>Cycle 1 — 2026-09-23T17:27:04Z.</strong> Operator selected W2 and W3 for fixing at the Phase 11 gate,
+    chose documentation for W1/C2, and declined C1 and all info items.</p>
+    <table>
+      <tr><th>Issue</th><th>Fix applied</th><th>Re-check outcome</th></tr>
+      <tr><td><strong>W2</strong> — inert <code>z-index</code>, no <code>!important</code>, so the defensive style block did not resist page CSS</td>
+          <td>Replaced the two straight-line property runs in <code>src/webview/shim.ts</code> with <code>BUTTON_STYLE</code>/<code>NAV_STYLE</code> declaration tables applied by a shared <code>applyStyle()</code>. Visibility-critical properties now carry <code>important</code> priority; cosmetic ones stay normal. Inert <code>z-index</code> deleted.</td>
+          <td class="pass">✅ Resolved — the three shim DOM tests still pass, incl. the computed display/visibility assertion against the real hosted fixture.</td></tr>
+      <tr><td><strong>W3</strong> — process-wide global stubbing after module-scope <code>acquireVsCodeApi()</code></td>
+          <td>Stub installation moved to <code>installDomStubs()</code>, called from a <code>before()</code> hook that asserts the stub exists then imports the bundle once into a suite-scoped binding. <code>renderFallback()</code> is now synchronous.</td>
+          <td class="pass">✅ Resolved — <code>fallbackTask/breadcrumb</code> still 4 passing; the failure mode now names its own cause.</td></tr>
+      <tr><td><strong>W1 / C2</strong> — back link injected once, never re-asserted</td>
+          <td>Documented in <code>README.md</code> as unsupported, noting the <code>editor/title</code> Open Dashboard button is always present. No <code>MutationObserver</code> — operator chose documentation over code.</td>
+          <td class="pass">✅ Resolved by decision — behaviour unchanged, now stated honestly in user-facing docs.</td></tr>
+      <tr><td><strong>C1</strong> — CHANGELOG rename wording</td><td>Not applied — operator declined.</td><td class="muted">Residual, carried to commit time.</td></tr>
+      <tr><td><strong>C3</strong> — out-of-scope <code>panel.ts:1342</code> edit in the working tree</td><td>Not a code change; requires explicit-path staging at commit.</td><td class="muted">Residual, actionable at commit.</td></tr>
+      <tr><td><strong>I1–I7, C4</strong></td><td>Not applied — operator declined.</td><td class="muted">Residual, all informational.</td></tr>
+    </table>
+    <p><strong>Post-fix suite run</strong> (identical counts to pre-fix — no regressions, no tests added or removed):
+    <code>lint</code> clean · <code>build</code> clean · <code>tsc --noEmit</code> exit 0 · <code>npm test</code> <span class="pass">54 passing</span> ·
+    <code>test:integration</code> <span class="pass">39 + 1 passing</span> · <code>test:dom</code> <span class="pass">13 passed</span>.
+    Files changed by the fixes: <code>src/webview/shim.ts</code>, <code>test/integration/fallbackTask.test.ts</code>, <code>README.md</code>.</p>
+
+    <h3 style="font-size:13.5px;margin-top:20px">Cycle 2 — 2026-09-23T17:48:46Z (triggered by Phase 12 E2E)</h3>
+    <p>E2E runtime verification found the cycle-1 W2 fix was <strong>narrower than claimed</strong>: 8 of 9 hostile-CSS
+    vectors still neutralised the hosted link. Root cause — the <code>important</code> set was copied from the review note
+    rather than derived from what can actually suppress an element, leaving <code>width</code>/<code>height</code> at
+    <em>normal</em> priority immediately beside <code>overflow</code> at <code>important</code>, so
+    <code>width:0!important</code> won while <code>overflow:hidden!important</code> lost.</p>
+    <table>
+      <tr><th>Issue</th><th>Fix applied</th><th>Re-check outcome</th></tr>
+      <tr><td><strong>W2 (reopened)</strong> — defence covered only six properties</td>
+          <td>Both style tables now mark every suppressing property <code>important</code>: visibility, box collapse, displacement (incl. inset longhands and <code>text-indent</code>), clipping and <code>pointer-events</code>. <code>z-index</code> restored, correctly paired with <code>position: relative</code>.</td>
+          <td class="pass">✅ Resolved — the new hostile-CSS test passes, having gone <strong>red first</strong> against the real defect.</td></tr>
+      <tr><td><strong>Missing test</strong> — nothing asserted hostile-CSS survival</td>
+          <td>Added <code>test/dom/shim.spec.ts</code> › "stays visible and clickable under hostile page CSS": 21 hostile <code>!important</code> declarations, then visibility, non-zero box, topmost-at-its-own-centre via <code>elementFromPoint</code>, and a real click posting exactly one <code>openDashboard</code>.</td>
+          <td class="pass">✅ Resolved — DOM suite 19 → 20.</td></tr>
+    </table>
+    <p><strong>Three further defects surfaced only by running that new test</strong>, each fixed: <code>BUTTON_STYLE</code>
+    pinned no <code>position</code>/inset; <code>inset: auto</code> as a <em>shorthand</em> did not carry <code>important</code>
+    through to longhands in Chromium; and <code>text-indent:-9999px</code> on the <strong>nav</strong> still displaced its
+    inline child, having been pinned on the button only.</p>
+    <p><strong>Accepted limitation</strong> (stated in the code comment): a page can still cover the link with its own
+    stacked overlay — unwinnable from inside the page. The <code>editor/title</code> Open Dashboard button is the
+    guaranteed route back, and the test deliberately omits that vector.</p>
+    <p><strong>Cycle 2 suite run</strong>: lint clean · <code>tsc --noEmit</code> exit 0 · <code>npm test</code>
+    <span class="pass">54 passing</span> · integration <span class="pass">39 + 1 passing</span> · DOM
+    <span class="pass">20 passed</span>. <code>hostDashboard.ts</code> and <code>messages.ts</code> zero-line diffs re-confirmed.</p>
+    <p class="muted"><strong>Working-tree note:</strong> <code>media/webview.css</code>, <code>.vscodeignore</code>,
+    <code>LICENSE</code>, <code>media/maister.svg</code>, <code>test/integration/a18-resolution.test.ts</code>,
+    <code>test/dom/surfaces.spec.ts</code> and a new <code>SUPPORT.md</code> changed during this session from work
+    <strong>outside this task</strong> (theme/contrast and packaging). The DOM baseline rose 13 → 19 for that reason,
+    independently of this feature. This task touched none of them — which makes explicit-path staging (C3) more important, not less.</p>
+  </div>
+</section>
+
+<section id="scope">
+  <h2>Verifications run</h2>
+  <div class="card">
+    <table>
+      <tr><th>Check</th><th>Status</th><th>Report</th></tr>
+      <tr><td>Completeness check</td><td class="ok-row">passed with issues</td><td>inline (this report)</td></tr>
+      <tr><td>Code review</td><td class="ok-row">issues found · 0 critical</td><td><a href="code-review-report.md" target="_blank" rel="noopener">code-review-report.md ↗</a></td></tr>
+      <tr><td>Production readiness</td><td class="ok-row">GO with mitigations · 88%</td><td><a href="production-readiness-report.md" target="_blank" rel="noopener">production-readiness-report.md ↗</a></td></tr>
+      <tr><td>Test suite</td><td class="muted">skipped as a separate step — green during implementation, independently re-run by two verifiers</td><td>—</td></tr>
+      <tr><td>Pragmatic review</td><td class="muted">declined by operator at the Phase 10 gate</td><td>—</td></tr>
+      <tr><td>Reality check</td><td class="muted">declined by operator at the Phase 10 gate</td><td>—</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="plan">
+  <h2>Implementation plan &amp; hard constraints</h2>
+  <div class="card">
+    <p><strong>38/38 steps (100%)</strong> — spot-checked across all five groups against real code. All five FRs trace to shipped code. No missing steps.</p>
+    <h3 style="font-size:13.5px">Audit closures verified at specific lines</h3>
+    <ul class="tight">
+      <li><strong>W3</strong> (silent-green suite) — <code>'navTree'</code> present in <code>SUITES.trusted</code>,
+          <code>test/integration/index.ts:11</code>. <code>navTree.test.ts</code> holds exactly 4 tests, matching the 31→35 proof.</li>
+      <li><strong>W2</strong> (untested rename) — <code>test/unit/manifest.test.ts:147-151</code> asserts
+          <code>overview.name === OVERVIEW.title</code>, plus a literal pin at <code>:144</code>.</li>
+      <li><strong>W4</strong> (unassertable runtime order) — manifest order asserted at <code>:140</code> only;
+          no runtime-order assertion exists. Correct.</li>
+    </ul>
+    <table>
+      <tr><th>Hard constraint</th><th>Result</th></tr>
+      <tr><td><code>src/panel/hostDashboard.ts</code> zero-line diff</td><td class="pass">✅ empty</td></tr>
+      <tr><td><code>src/panel/messages.ts</code> zero-line diff</td><td class="pass">✅ empty</td></tr>
+      <tr><td><code>media/webview.css</code> zero-line diff</td><td class="pass">✅ empty</td></tr>
+      <tr><td>Nine palette-visible commands</td><td class="pass">✅ 9</td></tr>
+      <tr><td>Five DOM surfaces</td><td class="pass">✅ 5</td></tr>
+      <tr><td>No <code>"Project"</code> entry anywhere</td><td class="pass">✅ none</td></tr>
+      <tr><td>No inline <code>style</code> on CSP-restricted surfaces</td><td class="pass">✅ none</td></tr>
+      <tr><td>One <code>acquireVsCodeApi()</code> per webview file</td><td class="pass">✅ confirmed</td></tr>
+      <tr><td>No change introduced at <code>src/panel/panel.ts</code></td><td class="pass">✅ only the pre-existing D6 hunk</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="tests">
+  <h2>Test suite</h2>
+  <div class="card">
+    <p class="muted">Not run as a separate verification step (<code>skip_test_suite: true</code>), but independently re-executed by two verifiers.</p>
+    <table>
+      <tr><th>Runner</th><th>Result</th></tr>
+      <tr><td><code>npm test</code> (unit)</td><td class="pass">54 passing, 0 failing</td></tr>
+      <tr><td><code>npm run test:integration</code> (trusted)</td><td class="pass">39 passing, 0 failing</td></tr>
+      <tr><td><code>npm run test:integration</code> (untrusted)</td><td class="pass">1 passing</td></tr>
+      <tr><td><code>npm run test:dom</code></td><td class="pass">13 passing — incl. 3 new shim tests and the Chromium-enforced CSP test</td></tr>
+      <tr><td><code>npm run lint</code></td><td class="pass">clean</td></tr>
+      <tr><td><code>npx tsc -p tsconfig.json --noEmit</code></td><td class="pass">exit 0</td></tr>
+      <tr><td><code>npm run build</code></td><td class="pass">7 webview bundles — set unchanged</td></tr>
+      <tr><td><code>npx vsce ls</code></td><td class="pass">14 files, no source/test/map leakage</td></tr>
+      <tr><td><code>npm audit --omit=dev</code></td><td class="pass">0 vulnerabilities</td></tr>
+    </table>
+    <p><strong>19 new tests</strong> delivered (3 + 6 + 4 + 3 + 3), inside the plan's 19–25 band.</p>
+  </div>
+</section>
+
+<section id="standards">
+  <h2>Standards compliance</h2>
+  <div class="card">
+    <p><strong>Mostly compliant</strong> — 11 standards checked, 9 applicable, 9 followed.
+    <code>global/validation.md</code> and <code>frontend/responsive.md</code> were assessed not applicable with stated
+    reasoning rather than silently skipped.</p>
+    <p>One gap, and it is an accounting error rather than a code defect: the plan claimed the <code>shim.ts</code>
+    header correction would be "the only comment added by the whole feature", but three convention-conforming purpose
+    doc comments also landed (<code>src/strings.ts:112</code>, <code>src/views/navTree.ts:11</code> and <code>:29</code>).
+    Every <code>strings.ts</code> block carries such a comment and <code>nowTree.ts</code> doc-comments its exports, so
+    <code>global/commenting.md</code> itself is satisfied — the plan's arithmetic was wrong, not the code. No change-log
+    comments anywhere, and no comment repeats the false <code>interceptLink</code> rationale.</p>
+  </div>
+</section>
+
+<section id="review">
+  <h2>Code review <span class="muted" style="font-size:12.5px">— 0 critical · 3 warning · 7 info</span></h2>
+  <div class="card">
+    <p>All four security invariants verified true. Three decisions validated as correct rather than merely
+    plan-compliant — notably <code>NavTreeProvider</code>'s missing <code>dispose()</code> is genuinely leak-free
+    (no emitter, no subscription, no captured disposables), and the asymmetry between <code>class</code> in the native
+    fallback and <code>element.style</code> in the shim correctly tracks each surface's own CSP.</p>
+    <table>
+      <tr><th>ID</th><th>Severity</th><th>Issue</th><th>Location</th><th>Fixable</th></tr>
+      <tr><td>W1</td><td><span class="sev warning" style="opacity:.5;text-decoration:line-through">warning</span> <span class="sev" style="background:var(--ok-soft);color:var(--ok)">resolved (documented)</span></td><td>Injected back link is never re-asserted; a body re-render by the hosted page removes it silently</td><td><code>src/webview/shim.ts:191</code></td><td>no</td></tr>
+      <tr><td>W2</td><td><span class="sev warning" style="opacity:.5;text-decoration:line-through">warning</span> <span class="sev" style="background:var(--ok-soft);color:var(--ok)">fixed</span></td><td>Defensive style block: <code>z-index</code> inert on a <code>position: static</code> element; no <code>!important</code>, so page CSS can still hide the node</td><td><code>src/webview/shim.ts:142-188</code></td><td>yes</td></tr>
+      <tr><td>W3</td><td><span class="sev warning" style="opacity:.5;text-decoration:line-through">warning</span> <span class="sev" style="background:var(--ok-soft);color:var(--ok)">fixed</span></td><td>Process-wide global stubbing after module-scope <code>acquireVsCodeApi()</code>; import-order hazard in the shared mocha run</td><td><code>test/integration/fallbackTask.test.ts:212</code></td><td>yes</td></tr>
+      <tr><td>I1</td><td><span class="sev info">info</span></td><td><code>StubNode</code> cannot observe inline <code>style</code>; add an assertion to pin the CSP-critical property</td><td><code>test/integration/fallbackTask.test.ts:100</code></td><td>yes</td></tr>
+      <tr><td>I2</td><td><span class="sev info">info</span></td><td><code>registerNavTree</code> returns unused <code>provider</code>/<code>view</code>; <code>NAV_VIEW_ID</code> exported but unreferenced</td><td><code>src/views/navTree.ts:29</code></td><td>yes</td></tr>
+      <tr><td>I3</td><td><span class="sev info">info</span></td><td>No <code>isTrusted</code> check on the injected button; impact nil (parameterless allowlisted message)</td><td><code>src/webview/shim.ts:164</code></td><td>no</td></tr>
+      <tr><td>I4</td><td><span class="sev info">info</span></td><td><code>stopPropagation()</code> cannot affect the document capture listener that already ran</td><td><code>src/webview/shim.ts:165</code></td><td>yes</td></tr>
+      <tr><td>I5</td><td><span class="sev info">info</span></td><td>Shim borrows <code>FALLBACK</code> strings; extract a shared <code>BREADCRUMB</code> group (DRY)</td><td><code>src/webview/shim.ts:9</code></td><td>yes</td></tr>
+      <tr><td>I6</td><td><span class="sev info">info</span></td><td>Magic command count <code>9</code> is brittle and adds no coverage over the adjacent prefix assertion</td><td><code>test/unit/manifest.test.ts:159</code></td><td>yes</td></tr>
+      <tr><td>I7</td><td><span class="sev info">info</span></td><td>Sidebar naming: one-row tree titled Overview beside a webview titled Tasks; confirm final copy</td><td><code>package.json:48</code></td><td>no</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="prod">
+  <h2>Production readiness <span class="muted" style="font-size:12.5px">— GO with mitigations · 88%</span></h2>
+  <div class="card">
+    <p>Monitoring/observability correctly assessed <strong>not applicable</strong> (no server, no runtime
+    infrastructure) rather than reported as a manufactured gap. Rollback is a genuine strength: no new command id,
+    no new message type, no new bundle, no persisted state — a single <code>git revert</code> plus one file deletion.</p>
+    <table>
+      <tr><th>ID</th><th>Severity</th><th>Issue</th><th>Location</th><th>Fixable</th></tr>
+      <tr><td>B1</td><td><span class="sev warning">warning</span></td><td><strong>Pre-existing, not this task:</strong> <code>"publisher": "maister"</code> is still the placeholder; <code>vsce publish</code> would fail or publish under the wrong identity</td><td><code>package.json</code></td><td>yes</td></tr>
+      <tr><td>B2</td><td><span class="sev warning">warning</span></td><td><strong>Pre-existing, not this task:</strong> version not bumped; changes sit under <code>[Unreleased]</code> while <code>package.json</code> says 0.1.0</td><td><code>package.json</code>, <code>CHANGELOG.md</code></td><td>yes</td></tr>
+      <tr><td>C1</td><td><span class="sev warning">warning</span></td><td>CHANGELOG rename entry does not name the old location the way a confused user will search for it; "Overview" is simultaneously vacated and reused</td><td><code>CHANGELOG.md</code></td><td>yes</td></tr>
+      <tr><td>C2</td><td><span class="sev warning" style="opacity:.5;text-decoration:line-through">warning</span> <span class="sev" style="background:var(--ok-soft);color:var(--ok)">resolved (documented)</span></td><td>Duplicate of code review W1 — single injection with no re-check. Mitigated by the always-present <code>editor/title</code> Open Dashboard button, so a user can never be stranded</td><td><code>src/webview/shim.ts</code></td><td>no</td></tr>
+      <tr><td>C3</td><td><span class="sev warning">warning</span></td><td>Release hygiene: the uncommitted out-of-scope <code>panel.ts:1342</code> edit would be swept by <code>git commit -a</code></td><td><code>src/panel/panel.ts:1342</code></td><td>yes</td></tr>
+      <tr><td>C4</td><td><span class="sev info">info</span></td><td><code>view/title</code> Open Dashboard button still bound to <code>maister.overview</code> (now "Tasks") — redundant chrome beside the new nav row</td><td><code>package.json</code> menus</td><td>yes</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="assessment">
+  <h2>Overall assessment</h2>
+  <div class="card">
+    <table>
+      <tr><th>Dimension</th><th>Status</th><th>Detail</th></tr>
+      <tr><td>Implementation plan</td><td class="pass">✅ Complete</td><td>38/38 steps (100%), spot-checked against real code</td></tr>
+      <tr><td>Test suite</td><td class="pass">✅ Passing</td><td>54 unit + 40 integration + 13 DOM, 0 failures; lint and <code>tsc</code> clean</td></tr>
+      <tr><td>Standards compliance</td><td>⚠️ Mostly compliant</td><td>9/9 applicable followed; one plan-arithmetic error on the comment budget</td></tr>
+      <tr><td>Documentation</td><td class="pass">✅ Complete</td><td>work-log, README, CHANGELOG all current</td></tr>
+      <tr><td>Code review</td><td>⚠️ Issues found</td><td>0 critical, 3 warning, 7 info</td></tr>
+      <tr><td>Production readiness</td><td>⚠️ GO with mitigations</td><td>0 blockers from this feature; 2 pre-existing release blockers</td></tr>
+      <tr><td><strong>Overall</strong></td><td><strong>⚠️ Passed with Issues</strong></td><td>No critical findings; nothing blocks the feature</td></tr>
+    </table>
+    <p class="muted">Issue counts deduplicated — code review W1 and readiness C2 are the same finding.
+    At verification: 0 critical · 5 warning · 10 info.
+    <strong>After the fix cycle: 0 critical · 2 warning · 10 info</strong> — W2 and W3 fixed, W1/C2 resolved by documentation.</p>
+  </div>
+</section>
+
+<section id="attention">
+  <h2>Issues requiring attention</h2>
+  <div class="card">
+    <p><strong>Before committing</strong></p>
+    <ol class="tight">
+      <li><strong>C3</strong> — Stage this feature's files by explicit path. The out-of-scope <code>panel.ts:1342</code> edit must not ride along.</li>
+    </ol>
+    <p><strong>Fixed in cycle 1</strong> (see <a href="#fixes">Fix &amp; Re-Verification History</a>)</p>
+    <ol class="tight" start="2">
+      <li class="pass">✅ <strong>W2</strong> — Inert <code>z-index</code> deleted; visibility-critical properties now carry <code>important</code> priority via declaration tables.</li>
+      <li class="pass">✅ <strong>W3</strong> — Stubbing moved into a <code>before()</code> hook; the bundle is imported once into a suite-scoped binding.</li>
+      <li class="pass">✅ <strong>W1 / C2</strong> — Resolved by decision; documented in <code>README.md</code>, with the <code>editor/title</code> button keeping the dashboard reachable.</li>
+    </ol>
+    <p><strong>Still open (operator declined in cycle 1)</strong></p>
+    <ol class="tight" start="5">
+      <li><strong>C1</strong> — One-line CHANGELOG rewording so users who go looking for "Overview" find their task list.</li>
+      <li><strong>I7 / C4</strong> — Confirm the Overview/Tasks sidebar copy and whether the now-redundant <code>view/title</code> button stays.</li>
+      <li><strong>I1–I6</strong> — Remaining informational cleanups.</li>
+    </ol>
+    <p class="muted"><strong>Out of scope for this task:</strong> B1, B2 (pre-existing release blockers).</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

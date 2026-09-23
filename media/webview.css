@@ -4,6 +4,16 @@
  * hard-coded colour. The layout is fluid so a 250 px sidebar and a 400 px one both work.
  */
 
+body.vscode-light,
+body.vscode-high-contrast-light {
+  color-scheme: light;
+}
+
+body.vscode-dark,
+body.vscode-high-contrast {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   padding: 0.5rem 0.75rem 1rem;
@@ -94,9 +104,9 @@ body {
   gap: 0.2rem;
   max-width: 100%;
   padding: 0.15rem 0.45rem;
-  color: var(--vscode-foreground);
+  color: var(--vscode-badge-foreground);
   background: var(--vscode-badge-background);
-  border: 1px solid transparent;
+  border: 1px solid var(--vscode-contrastBorder, transparent);
   border-radius: 3px;
   font: inherit;
   font-size: 0.9em;
@@ -104,6 +114,7 @@ body {
 }
 
 .tile:hover {
+  color: var(--vscode-list-hoverForeground, var(--vscode-foreground));
   background: var(--vscode-list-hoverBackground);
 }
 
@@ -114,7 +125,7 @@ body {
 }
 
 .tile-count {
-  color: var(--vscode-badge-foreground);
+  color: inherit;
   font-variant-numeric: tabular-nums;
 }
 

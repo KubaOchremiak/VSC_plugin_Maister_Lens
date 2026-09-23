@@ -62,6 +62,41 @@ async function hostedPanel(prefix: string): Promise<Harness> {
 }
 
 describe('panel/integration', () => {
+  it('opens and reuses the panel in the active editor group', async function () {
+    this.timeout(30_000);
+    const harness = await hostedPanel('panel-active-group');
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(harness.dir, 'dashboard-data.js')));
+    const panelTabs = () => vscode.window.tabGroups.all.flatMap((group) =>
+      group.tabs.filter((tab) => tab.input instanceof vscode.TabInputWebview)
+        .map((tab) => ({ group, tab }))
+    );
+    try {
+      await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+      await harness.panel.show({ mode: 'task', folderUri: harness.folderUri });
+      await waitFor(() => panelTabs().some(({ group, tab }) =>
+        group.viewColumn === vscode.ViewColumn.One && tab.isActive
+      ), 5_000, 'new task panel did not open in the active group');
+      const count = panelTabs().length;
+
+      await vscode.window.showTextDocument(document, vscode.ViewColumn.Two);
+      await harness.panel.show({ mode: 'task', folderUri: harness.folderUri });
+      await waitFor(() => panelTabs().some(({ group, tab }) =>
+        group.viewColumn === vscode.ViewColumn.Two && tab.isActive
+      ) && vscode.window.tabGroups.activeTabGroup.viewColumn === vscode.ViewColumn.Two,
+      5_000, 'reused task panel stayed in its previous group');
+      assert.equal(panelTabs().length, count, 'navigation created a duplicate webview');
+    } finally {
+      await harness.dispose();
+      for (const group of vscode.window.tabGroups.all) {
+        for (const tab of group.tabs) {
+          if (tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === document.uri.toString()) {
+            await vscode.window.tabGroups.close(tab);
+          }
+        }
+      }
+    }
+  });
+
   it('posts refresh to the shim within 1.5 s of a dashboard-data.js change (AC3)', async function () {
     this.timeout(60_000);
 

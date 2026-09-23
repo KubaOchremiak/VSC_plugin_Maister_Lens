@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E2E Verification Report — dashboard-nav-buttons</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+h3 { font-size:14px; margin:0 0 4px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { border-left:4px solid var(--warn); background:var(--warn-soft); }
+.verdict b { font-size:17px; }
+.sc { border-left:4px solid var(--ok); } .sc.bad { border-left-color:var(--crit); }
+.sc.na { border-left-color:var(--warn); }
+.toc { font-size:13px; color:var(--dim); margin:10px 0 4px; }
+.shots { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; margin-top:12px; }
+.shots figcaption { font-size:12px; color:var(--dim); margin-top:5px; }
+figure { margin:0; }
+ul.tight { margin:6px 0; padding-left:20px; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../implementation/spec.md" target="_blank" rel="noopener">Spec ↗</a>
+  <span class="here">E2E Verification</span>
+  <a href="e2e-verification-report.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>E2E Verification Report — Dashboard Navigation Affordances</h1>
+  <p style="color:var(--dim);margin:4px 0 0">
+    <span class="badge">e2e runtime verification</span>
+    &nbsp;2026-09-23 &nbsp;·&nbsp; git <code>a5b106b</code> (main) &nbsp;·&nbsp; Playwright MCP Chromium
+  </p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>7</b><span>passed</span></div>
+  <div class="tile"><b>1</b><span>failed</span></div>
+  <div class="tile"><b>1</b><span>not verifiable</span></div>
+  <div class="tile"><b>1</b><span>major</span></div>
+  <div class="tile"><b>2</b><span>minor</span></div>
+  <div class="tile"><b>88%</b><span>pass rate</span></div>
+</div>
+
+<section class="card verdict">
+  <b>⚠️ GO WITH CAVEATS</b>
+  <p>Both back links (FR3 native, FR4 hosted) pass every runtime check: first DOM node, first Tab stop,
+  accessible name, and exactly <code>{type:'openDashboard'}</code> on activation — zero <code>navigate</code>
+  messages. The W2 defensive-styling fix holds against the exact hostile stylesheet it was written for.
+  But it is narrower than it looks: <strong>8 of 9 hostile-CSS vectors probed still neutralise the link</strong>,
+  because only 6 properties carry <code>important</code> while <code>width</code>, <code>height</code>,
+  <code>font-size</code> and <code>pointer-events</code> do not. FR1 (sidebar tree view) is
+  <strong>not verifiable by this method</strong> — it lives in VS Code chrome.</p>
+
+  <h3 style="margin-top:14px">Open Questions / Risks</h3>
+  <ul class="tight">
+    <li>The W2 claim "survives hostile page CSS" is true only for the specific property set defended.</li>
+    <li><code>width</code>/<code>height</code> sit at <em>normal</em> priority while <code>overflow</code>/<code>max-height</code> are <code>important</code> — an internally inconsistent defence.</li>
+    <li>Removing the inert <code>z-index</code> was correct (inert on <code>position:static</code>), but nothing replaced it, so a page overlay can cover the link.</li>
+    <li>FR1 needs the <code>@vscode/test-electron</code> path or a manual VS Code window.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents:
+  <a href="#route">Route taken</a> ·
+  <a href="#scenarios">Scenarios</a> ·
+  <a href="#w2">W2 hostile-CSS probe</a> ·
+  <a href="#disc">Discrepancies</a> ·
+  <a href="#align">Spec alignment</a> ·
+  <a href="#exit">Exit criteria</a> ·
+  <a href="#rec">Recommendations</a>
+</p>
+
+<main>
+
+<section id="route" class="card">
+  <h2 style="margin-top:0">Route taken — there was no dev server</h2>
+  <p>This is a VS Code extension, so there is no app to point a browser at. I reproduced
+  <code>test/dom/harness.ts</code> outside the Playwright runner: ran <code>npm run build</code>, bundled
+  <code>src/panel/hostDashboard.ts</code> for Node, and regenerated the two pages the harness builds — the
+  <code>fallbackTask</code> bundle shell and the re-hosted <code>dev-real/dashboard.html</code> (three
+  insertions + shim + <code>dashboard-data.js</code>). Because the Playwright MCP browser blocks the
+  <code>file:</code> protocol, I served the tree over <code>http://127.0.0.1:8899</code> and passed that origin
+  as <code>cspSource</code>/<code>baseHref</code>, injecting the harness's <code>acquireVsCodeApi</code> stub as
+  a nonced inline script so the hosted CSP admits it. Every assertion below comes from that live page, not
+  from reading source. Corroboration: <code>npm run test:dom</code> — 19 passed.</p>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Base URL</td><td><code>http://127.0.0.1:8899</code> (local static server over generated surfaces)</td></tr>
+    <tr><td>Browser</td><td>Playwright MCP Chromium</td></tr>
+    <tr><td>Viewport</td><td>1280×720</td></tr>
+    <tr><td>Auth context</td><td>anonymous (n/a — webview surfaces)</td></tr>
+    <tr><td>Test data</td><td><code>test/fixtures/tasks/dev-real/</code>; inline <code>FallbackPayload</code></td></tr>
+  </table>
+</section>
+
+<h2 id="scenarios">Verification Scenarios</h2>
+
+<section class="card sc">
+  <h3>4.1 Native back link — structure and position <span class="pass">✅ Passed</span></h3>
+  <p style="color:var(--dim);margin:2px 0 8px">FR3 AC1, AC3, AC4, AC6</p>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td>Read <code>#root.firstElementChild</code></td><td><code>&lt;nav aria-label="Breadcrumb"&gt;</code></td><td><code>NAV</code>, <code>aria-label="Breadcrumb"</code></td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td>Read its child button</td><td><code>&lt;button type="button" class="link"&gt;← Dashboard&lt;/button&gt;</code></td><td>exact match</td><td class="pass">✅</td></tr>
+    <tr><td>3</td><td>Read <code>tabindex</code></td><td>absent</td><td><code>null</code></td><td class="pass">✅</td></tr>
+  </table>
+</section>
+
+<section class="card sc">
+  <h3>4.2 Native back link — first focusable by real Tab <span class="pass">✅ Passed</span></h3>
+  <p style="color:var(--dim);margin:2px 0 8px">FR3 AC3 · Accessibility Requirements</p>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td>Press Tab once from page start</td><td>Focus on the back link</td><td><code>BUTTON.link</code> "← Dashboard"</td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td>Compare against focusable inventory</td><td>index 0</td><td><code>isFirstFocusable: true</code>, 7 focusables</td><td class="pass">✅</td></tr>
+    <tr><td>3</td><td>Count positive tabindex</td><td>0</td><td><code>0</code></td><td class="pass">✅</td></tr>
+  </table>
+</section>
+
+<section class="card sc">
+  <h3>4.3 Native back link — activation posts exactly <code>openDashboard</code> <span class="pass">✅ Passed</span></h3>
+  <p style="color:var(--dim);margin:2px 0 8px">FR3 AC2</p>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td>Press Enter</td><td>One <code>openDashboard</code></td><td><code>[{"type":"ready"},{"type":"openDashboard"}]</code></td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td>Inspect payload shape</td><td>No extra keys</td><td>exact match</td><td class="pass">✅</td></tr>
+  </table>
+</section>
+
+<section class="card sc">
+  <h3>4.4 Native surface — no inline styles (CSP conformance) <span class="pass">✅ Passed</span></h3>
+  <p style="color:var(--dim);margin:2px 0 8px">FR3 AC5 · Success Criterion 6</p>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td><code>querySelectorAll('[style]').length</code></td><td>0</td><td><code>0</code></td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td><code>style</code> attr on nav and button</td><td><code>null</code></td><td><code>null</code>, <code>null</code></td><td class="pass">✅</td></tr>
+  </table>
+  <p style="color:var(--dim)"><em>Note:</em> computed <code>color</code> was <code>rgb(0,0,0)</code> because
+  <code>--vscode-textLink-foreground</code> is undefined outside VS Code — a harness limitation, not a defect.</p>
+  <div class="shots"><figure>
+    <img class="shot" src="screenshots/01-native-breadcrumb-focused.png" alt="Native task surface with the ← Dashboard breadcrumb focused">
+    <figcaption>screenshots/01-native-breadcrumb-focused.png — the breadcrumb after one Tab press</figcaption>
+  </figure></div>
+</section>
+
+<section class="card sc">
+  <h3>4.5 Hosted back link — injected, first body child, genuinely visible <span class="pass">✅ Passed</span></h3>
+  <p style="color:var(--dim);margin:2px 0 8px">FR4 AC1, AC2, AC4</p>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td><code>document.body.firstChild</code></td><td>the injected nav</td><td><code>NAV.maister-lens-back</code>, <code>isFirstBodyChild: true</code></td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td><code>aria-label</code> / button text</td><td><code>Breadcrumb</code> / <code>← Dashboard</code></td><td>exact match, <code>type="button"</code>, no <code>tabindex</code></td><td class="pass">✅</td></tr>
+    <tr><td>3</td><td>Computed visibility of nav</td><td>block / visible / 1</td><td><code>block</code> / <code>visible</code> / <code>1</code>; max-height <code>none</code>, overflow <code>visible</code>, float <code>none</code></td><td class="pass">✅</td></tr>
+    <tr><td>4</td><td>Computed visibility of button</td><td>visible, themed</td><td><code>inline-block</code> / <code>visible</code> / <code>1</code>, color <code>rgb(55,148,255)</code>, cursor <code>pointer</code></td><td class="pass">✅</td></tr>
+    <tr><td>5</td><td>Layout box &amp; <code>checkVisibility()</code></td><td>non-zero box in viewport</td><td>81.25×18.19 at (12,10); <code>true</code></td><td class="pass">✅</td></tr>
+  </table>
+  <div class="shots"><figure>
+    <img class="shot" src="screenshots/02-hosted-backlink-visible.png" alt="Hosted dashboard page with the injected back link visible at the top">
+    <figcaption>screenshots/02-hosted-backlink-visible.png — the injected link on the real re-hosted dashboard</figcaption>
+  </figure></div>
+</section>
+
+<section class="card sc">
+  <h3>4.6 Hosted back link — one <code>openDashboard</code>, zero <code>navigate</code> <span class="pass">✅ Passed</span></h3>
+  <p style="color:var(--dim);margin:2px 0 8px">FR4 AC3, AC5</p>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td>Click the back link (real mouse event)</td><td>one <code>openDashboard</code></td><td><code>openDashboardCount: 1</code></td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td>Count <code>navigate</code> messages</td><td>0</td><td><code>navigateCount: 0</code></td><td class="pass">✅</td></tr>
+    <tr><td>3</td><td>Park focus on body, Tab once</td><td>focus on the back link</td><td><code>isFirstFocusable: true</code> of 7</td><td class="pass">✅</td></tr>
+    <tr><td>4</td><td>Press Enter</td><td>one <code>openDashboard</code>, zero <code>navigate</code></td><td><code>1</code> / <code>0</code></td><td class="pass">✅</td></tr>
+    <tr><td>5</td><td>Post <code>{type:'refresh'}</code>, await re-render</td><td>still first child and visible</td><td><code>stillFirstChild: true</code>, <code>stillVisible: true</code></td><td class="pass">✅</td></tr>
+  </table>
+</section>
+
+<section class="card sc" id="w2">
+  <h3>4.7 W2 fix — survives the brief's hostile stylesheet <span class="pass">✅ Passed</span></h3>
+  <table>
+    <tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+    <tr><td>1</td><td>Inject <code>display:none / visibility:hidden / opacity:0 / max-height:0 / overflow:hidden</code>, all <code>!important</code></td><td>all five resisted</td><td><code>block</code> / <code>visible</code> / <code>1</code> / <code>none</code> / <code>visible</code></td><td class="pass">✅</td></tr>
+    <tr><td>2</td><td><code>checkVisibility()</code> &amp; box</td><td>visible, non-zero</td><td><code>true</code>; 81.25×18.19 at (12,10)</td><td class="pass">✅</td></tr>
+    <tr><td>3</td><td>Hit-test the box centre</td><td>button is topmost</td><td><code>hitTestIsButton: true</code></td><td class="pass">✅</td></tr>
+    <tr><td>4</td><td>Click it</td><td>one <code>openDashboard</code>, zero <code>navigate</code></td><td><code>1</code> / <code>0</code></td><td class="pass">✅</td></tr>
+  </table>
+  <div class="shots"><figure>
+    <img class="shot" src="screenshots/04-hosted-survives-brief-hostile-css.png" alt="Hosted page still showing the back link after the brief's hostile stylesheet was injected">
+    <figcaption>screenshots/04-hosted-survives-brief-hostile-css.png — link intact under the brief's stylesheet</figcaption>
+  </figure></div>
+</section>
+
+<section class="card sc bad">
+  <h3>4.8 W2 fix — survives <em>broader</em> hostile page CSS <span class="fail">❌ Failed</span></h3>
+  <p>Each rule injected in isolation, measured, then removed. <code>clickable</code> = hit-test at the
+  button's box centre returns the button.</p>
+  <table>
+    <tr><th>#</th><th>Injected rule</th><th>Box (w×h)</th><th>Clickable</th><th>Status</th></tr>
+    <tr><td>0</td><td><em>baseline, no hostile CSS</em></td><td>81×18</td><td>true</td><td class="pass">✅</td></tr>
+    <tr><td>1</td><td><code>pointer-events: none !important</code></td><td>81×18</td><td><strong>false</strong></td><td class="fail">❌</td></tr>
+    <tr><td>2</td><td><code>position:absolute!important; left:-9999px!important</code></td><td>81×18 at x=-9987</td><td><strong>false</strong></td><td class="fail">❌</td></tr>
+    <tr><td>3</td><td><code>button { font-size: 0 !important }</code></td><td><strong>0×0</strong></td><td><strong>false</strong></td><td class="fail">❌</td></tr>
+    <tr><td>4</td><td><code>button { color: transparent !important }</code></td><td>81×18</td><td>true (invisible text)</td><td>⚠️</td></tr>
+    <tr><td>5</td><td><code>clip-path: inset(100%) !important</code></td><td>81×18</td><td><strong>false</strong></td><td class="fail">❌</td></tr>
+    <tr><td>6</td><td><code>transform: scale(0) !important</code></td><td><strong>0×0</strong></td><td><strong>false</strong></td><td class="fail">❌</td></tr>
+    <tr><td>7</td><td><code>content-visibility: hidden !important</code></td><td>81×18</td><td><strong>false</strong> (<code>checkVisibility(): false</code>)</td><td class="fail">❌</td></tr>
+    <tr><td>8</td><td><code>width:0!important; height:0!important; padding:0!important; overflow:hidden!important</code></td><td><strong>0×0</strong></td><td><strong>false</strong></td><td class="fail">❌</td></tr>
+    <tr><td>9</td><td>Full-page <code>body::before</code> overlay at <code>z-index:2147483647</code></td><td>81×18</td><td><strong>false</strong> (covered)</td><td class="fail">❌</td></tr>
+  </table>
+  <p>The combined stylesheet reproduced the same outcome end to end: the six defended properties held
+  (<code>display:block</code>, <code>visibility:visible</code>, <code>opacity:1</code>,
+  <code>max-height:none</code>, <code>overflow:visible</code>, <code>float:none</code>) yet the element
+  collapsed to a 0×0 box at x=-9987 with <code>pointer-events:none</code>, and a real Playwright click
+  timed out with <em>"element is not visible"</em> after 5s of retries.</p>
+  <div class="shots"><figure>
+    <img class="shot" src="screenshots/03-hosted-after-hostile-css.png" alt="Hosted page after the combined hostile CSS injection — the back link is gone from the rendered output">
+    <figcaption>screenshots/03-hosted-after-hostile-css.png — after the combined injection, the link is gone from the rendered output</figcaption>
+  </figure></div>
+</section>
+
+<section class="card sc na">
+  <h3>4.9 FR1 — sidebar "Overview" tree view <span style="color:var(--warn);font-weight:600">⚠️ Not verifiable by this method</span></h3>
+  <p>A <code>tree</code> view is rendered by the VS Code shell, not by a webview, so no browser — Playwright
+  MCP or otherwise — can reach it. Stated honestly as out of reach rather than guessed or marked failed.
+  Verifying FR1 requires the <code>@vscode/test-electron</code> route
+  (<code>npm run test:integration</code>) or manual inspection in a real VS Code window.</p>
+</section>
+
+<h2 id="disc">Discrepancies</h2>
+
+<section class="card">
+  <h3><span class="sev warning">Major</span> 5.2 — hostile-CSS resistance is narrower than claimed</h3>
+  <table>
+    <tr><th>Field</th><th>Detail</th></tr>
+    <tr><td>Spec requirement</td><td>Spec Open Questions — "The injected link must self-style inline and resist inheritance"; the W2 fix's claim that visibility-critical properties are set with <code>important</code> so the link survives hostile page CSS.</td></tr>
+    <tr><td>Expected</td><td>The hosted back link remains visible and clickable regardless of the task-authored dashboard's CSS.</td></tr>
+    <tr><td>Actual</td><td>8 of 9 probed vectors neutralise the link (§4.8). The defended set covers only <code>display</code>, <code>visibility</code>, <code>opacity</code>, <code>max-height</code>, <code>overflow</code>, <code>float</code>.</td></tr>
+    <tr><td>Evidence</td><td><code>screenshots/03-hosted-after-hostile-css.png</code>; §4.8 table; Playwright's own click failure.</td></tr>
+    <tr><td>Root cause hypothesis</td><td><code>BUTTON_STYLE</code>/<code>NAV_STYLE</code> in <code>src/webview/shim.ts</code> mark exactly six properties <code>CRITICAL</code> — a set copied from the W2 review note rather than derived from the properties that can actually suppress an element. Notably <code>['width','auto']</code> and <code>['height','auto']</code> sit at normal priority right next to <code>overflow</code> at <code>important</code>.</td></tr>
+    <tr><td>User impact</td><td>Low in practice, high in principle. Maister's own dashboard has no such rules, so the shipped experience is fine. The exposure is a task-authored dashboard whose CSS collides — that user loses their only way back from the hosted page.</td></tr>
+    <tr><td>Recommended fix</td><td>Promote <code>width</code>, <code>height</code>, <code>min-width</code>, <code>min-height</code>, <code>font-size</code>, <code>pointer-events</code>, <code>transform</code>, <code>clip-path</code>, <code>content-visibility</code> and <code>position</code> to <code>important</code>. For overlay resistance add <code>position:relative!important</code> plus a high <code>z-index!important</code> — <code>z-index</code> only takes effect once the element is positioned.</td></tr>
+    <tr><td>Workaround</td><td>Reopen the dashboard from the sidebar "Overview" → "Dashboard" row (FR1) or the command palette.</td></tr>
+  </table>
+</section>
+
+<section class="card">
+  <h3><span class="sev info">Minor</span> 5.3.1 — inconsistent priority within <code>NAV_STYLE</code></h3>
+  <table>
+    <tr><th>Field</th><th>Detail</th></tr>
+    <tr><td>Spec requirement</td><td>W2 fix intent — visibility-critical properties set with <code>important</code>.</td></tr>
+    <tr><td>Expected</td><td>Properties that jointly decide whether the element occupies space share one priority.</td></tr>
+    <tr><td>Actual</td><td><code>overflow</code> and <code>max-height</code> are <code>important</code> while <code>width</code>/<code>height</code> — which actually zero the box — are normal priority.</td></tr>
+    <tr><td>Evidence</td><td><code>src/webview/shim.ts</code> <code>NAV_STYLE</code>; §4.8 vector 8.</td></tr>
+    <tr><td>Root cause hypothesis</td><td>The <code>important</code> set was copied from the review note's property list rather than reasoned from box-model semantics.</td></tr>
+    <tr><td>User impact</td><td>None on the shipped fixture; it makes the defence look stronger than it is.</td></tr>
+    <tr><td>Recommended fix</td><td>Move <code>width</code>/<code>height</code> to <code>CRITICAL</code> (folded into 5.2's fix).</td></tr>
+    <tr><td>Workaround</td><td>None needed.</td></tr>
+  </table>
+</section>
+
+<section class="card">
+  <h3><span class="sev info">Minor</span> 5.3.2 — nothing replaced the removed <code>z-index</code></h3>
+  <table>
+    <tr><th>Field</th><th>Detail</th></tr>
+    <tr><td>Spec requirement</td><td>FR4 AC4 lists <code>z-index</code> among the properties the element should pin.</td></tr>
+    <tr><td>Expected</td><td>Either a working stacking defence, or an explicit decision that overlays are out of scope.</td></tr>
+    <tr><td>Actual</td><td>The W2 fix removed the <code>z-index</code> as inert and added no replacement; a full-page <code>body::before</code> overlay covers the link (§4.8 vector 9).</td></tr>
+    <tr><td>Evidence</td><td><code>src/webview/shim.ts</code> <code>NAV_STYLE</code>; §4.8 vector 9, <code>hitTestIsButton: false</code>.</td></tr>
+    <tr><td>Root cause hypothesis</td><td>The removal itself was <em>correct</em> — <code>z-index</code> is inert on a <code>position:static</code> element. The gap is that the underlying exposure was never addressed, only the dead code removed.</td></tr>
+    <tr><td>User impact</td><td>A task dashboard with a full-bleed fixed overlay would swallow clicks on the back link.</td></tr>
+    <tr><td>Recommended fix</td><td>Add <code>position:relative!important</code> <em>and</em> <code>z-index:&lt;high&gt;!important</code> together, or record it as accepted risk in the spec.</td></tr>
+    <tr><td>Workaround</td><td>Same as 5.2.</td></tr>
+  </table>
+</section>
+
+<p><strong>Critical:</strong> none observed. &nbsp;<strong>Cosmetic:</strong> none observed.</p>
+
+<h2>Console &amp; Network Errors</h2>
+<section class="card">
+<table>
+  <tr><th>Source</th><th>Message</th><th>Frequency</th><th>Severity</th><th>Impact</th></tr>
+  <tr><td><code>/favicon.ico</code></td><td>Failed to load resource: 404</td><td>1 (native surface)</td><td>Cosmetic</td><td>None — artifact of the static file server</td></tr>
+  <tr><td>hosted page</td><td>0 errors, 0 warnings across load, click, keyboard and refresh</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+<p style="color:var(--dim)">The two <code>[VERBOSE] Rendering was performed in a subtree hidden by
+content-visibility</code> entries were produced by the §4.8 probe, not by the implementation.</p>
+</section>
+
+<h2 id="align">Spec Alignment</h2>
+<section class="card">
+  <h3>Fully implemented</h3>
+  <ul class="tight">
+    <li><strong>FR3 AC1–AC6</strong> — native back link: structure, <code>post</code> wiring, first-node position, unconditional render, zero inline styles, accessible <code>button</code> with no positive tabindex.</li>
+    <li><strong>FR4 AC1–AC5</strong> — hosted back link: labelled <code>&lt;nav&gt;</code> + <code>&lt;button&gt;</code>, first child of <code>body</code>, posts through the existing handle, distinctive class + style properties, <code>stopPropagation()</code> suppressing <code>navigate</code>.</li>
+    <li><strong>FR5</strong> — <code>FALLBACK.breadcrumb</code> / <code>breadcrumbLabel</code> render identically in both surfaces, confirming the shared source.</li>
+    <li><strong>Accessibility Requirements</strong> — both links are <code>&lt;button&gt;</code> inside a labelled <code>&lt;nav&gt;</code>, first in tab order, zero positive tabindex, Enter-operable.</li>
+  </ul>
+  <h3>Partially implemented</h3>
+  <ul class="tight">
+    <li>The hosted-link resilience intent (FR4 AC4's pinned-property list including <code>position</code> and <code>z-index</code>) — six of the needed properties are pinned; <code>position</code> is not pinned and <code>z-index</code> is absent.</li>
+  </ul>
+  <h3>Not implemented</h3>
+  <ul class="tight"><li>None found by this method.</li></ul>
+  <h3>Extra (unspecified) behavior</h3>
+  <ul class="tight"><li>The hosted link survives a <code>refresh</code>-triggered re-render — exceeds FR4 AC2's literal wording and is a genuine strength of attaching to <code>body</code>.</li></ul>
+</section>
+
+<h2>Variances from Plan</h2>
+<section class="card">
+  <ul class="tight">
+    <li><strong>No <code>base_url</code>, no dev server</strong> — harness path rebuilt by hand and served over HTTP because MCP refuses <code>file:</code>; CSP <code>cspSource</code> and <code>&lt;base href&gt;</code> set to that origin, and the <code>acquireVsCodeApi</code> stub inlined with the page's nonce (MCP exposes no <code>addInitScript</code>). Everything downstream is the unmodified real asset.</li>
+    <li><strong>FR1 and FR2's sidebar halves not executed</strong> — unreachable from a browser by construction.</li>
+    <li><strong>Colour contrast not assessed</strong> — <code>--vscode-textLink-foreground</code> undefined outside VS Code. The hosted link did pick up its literal fallback <code>#3794ff</code>, confirming the fallback works.</li>
+    <li><strong>Corroboration</strong> — <code>npm run test:dom</code> 19 passed, including <code>surfaces.spec.ts:258</code> and <code>shim.spec.ts:84</code>/<code>:100</code>. No existing test asserts hostile-CSS survival, which is why §4.8 was worth running.</li>
+  </ul>
+</section>
+
+<h2 id="exit">Evaluation Against Exit Criteria</h2>
+<section class="card">
+<table>
+  <tr><th>Criterion (from spec)</th><th>Status</th><th>Evidence</th></tr>
+  <tr><td>SC1 — Sidebar shows "Overview" (Dashboard row), "Now", "Tasks"</td><td>⚠️</td><td>Not verifiable by browser (§4.9)</td></tr>
+  <tr><td>SC2 — No two sidebar sections share a title</td><td>⚠️</td><td>Manifest-level; not verifiable by this method</td></tr>
+  <tr><td>SC3 — Both task views show "← Dashboard" first and as first tab stop; activating opens the dashboard</td><td class="pass">✅</td><td>§4.1–4.3, §4.5–4.6; <code>isFirstFocusable: true</code> in both</td></tr>
+  <tr><td>SC4 — Zero lines changed in <code>hostDashboard.ts</code>, <code>messages.ts</code>, <code>panel.ts:1342</code></td><td class="pass">✅</td><td><code>git status</code> lists neither file as modified</td></tr>
+  <tr><td>SC5 — All three suites pass; five surfaces; nine palette commands</td><td>⚠️</td><td><code>test:dom</code> 19 passed, five-surface assertion holds; <code>npm test</code> and <code>test:integration</code> not run by this agent</td></tr>
+  <tr><td>SC6 — No inline <code>style</code> attribute in any native-panel bundle</td><td class="pass">✅</td><td>§4.4 — count is <code>0</code></td></tr>
+</table>
+</section>
+
+<h2 id="rec">Recommendations</h2>
+<section class="card">
+  <ul class="tight">
+    <li><strong>Must fix before merge:</strong> none. No Critical finding; §5.2 does not break the shipped experience against Maister's own dashboard.</li>
+    <li><strong>Should fix soon:</strong> §5.2 — widen the <code>important</code> property set (subsumes §5.3.1). Add a DOM test that injects hostile CSS and asserts the link is still hit-testable — no current test covers this, which is how the gap survived the W2 rewrite.</li>
+    <li><strong>Nice-to-have:</strong> §5.3.2 — decide explicitly between an overlay defence and recording overlays as accepted risk.</li>
+  </ul>
+</section>
+
+<h2>Artifacts</h2>
+<section class="card">
+  <ul class="tight">
+    <li>Screenshots: <code>verification/screenshots/</code> (4 files)</li>
+    <li>Visual-fidelity report: <em>not generated (no design context for this task)</em></li>
+    <li>Console log dump: inline above</li>
+  </ul>
+</section>
+
+<h2>Conclusion</h2>
+<section class="card verdict">
+  <b>⚠️ GO WITH CAVEATS</b>
+  <p>Both back links do exactly what FR3 and FR4 require — correct structure, first position, first tab stop,
+  accessible names, keyboard operation, and precisely one <code>openDashboard</code> message with zero
+  <code>navigate</code> leakage — verified live rather than inferred, and the W2 fix genuinely defeats the
+  hostile stylesheet it was written against. The caveat is that its defence is narrower than its claim:
+  eight further hostile-CSS vectors still neutralise the hosted link, and no test guards against any of them.
+  Recommend merge, with §5.2 tracked as a fast follow-up plus a regression test that injects hostile CSS —
+  and FR1's sidebar view confirmed separately through the integration harness or a manual VS Code window,
+  since no browser can reach it.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -7,6 +7,7 @@ const SUITES: Record<string, readonly string[]> = {
     'a18-resolution',
     'index',
     'attribution',
+    'navTree',
     'nowTree',
     'overview',
     'panel',

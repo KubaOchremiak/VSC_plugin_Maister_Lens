@@ -29,4 +29,20 @@ describe('strings', () => {
     const offenders = [...found].filter(([, text]) => FORBIDDEN.test(text));
     assert.deepEqual(offenders, [], `forbidden wording in src/strings.ts: ${JSON.stringify(offenders)}`);
   });
+
+  it('titles the Overview view "Tasks"', () => {
+    assert.equal(strings.OVERVIEW.title, 'Tasks');
+  });
+
+  it('gives the native fallback the same breadcrumb copy as the Risks view', () => {
+    assert.equal(strings.FALLBACK.breadcrumb, '\u2190 Dashboard');
+    assert.equal(strings.FALLBACK.breadcrumbLabel, 'Breadcrumb');
+    assert.equal(strings.FALLBACK.breadcrumb, strings.RISKS.breadcrumb);
+    assert.equal(strings.FALLBACK.breadcrumbLabel, strings.RISKS.breadcrumbLabel);
+  });
+
+  it('exports a visible and an accessible label for the Dashboard nav row', () => {
+    assert.ok(strings.NAV.dashboard.length > 0, 'NAV.dashboard is empty');
+    assert.ok(strings.NAV.dashboardLabel.length > 0, 'NAV.dashboardLabel is empty');
+  });
 });

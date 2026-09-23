@@ -1,6 +1,8 @@
 # Maister Lens
 
-A single view layer over Maister tasks and artifacts inside VS Code.
+<img src="media/icon.png" alt="Maister Lens — AI development lifecycle through a lens" width="128" height="128">
+
+Explore Maister AI development workflows, tasks, artifacts and risks inside VS Code.
 
 Maister writes its work into `.maister/tasks/<type>/<date>-<slug>/` — a state file, markdown
 artifacts, an HTML dashboard. Maister Lens reads those folders and answers "what is my task
@@ -10,14 +12,61 @@ next `/maister:*` command to an assistant or a terminal.
 Maister Lens is **read-only**. It never writes a task file, never edits state, and never runs a
 workflow itself.
 
-## The two sidebar views
+Maister Lens is an independent extension by **Jakub Ochremiak**. It is not an official
+Maister product and does not imply affiliation with or endorsement by the Maister owners.
+
+## Getting started
+
+Requires desktop **VS Code 1.90 or newer** and a local or remote filesystem workspace.
+Open the folder containing `.maister/tasks/<type>/<task>/orchestrator-state.yml`, then
+select the **Maister Lens** icon in the Activity Bar. Use **Overview → Dashboard** for
+all tasks, **Now** for unfinished work, and **Tasks** to search and filter.
+
+Maister Lens reads existing Maister task files; it does not install Maister or create
+workflows by itself. To execute `/maister:*` commands, configure Maister in your chosen
+assistant. Viewing tasks does not require an AI account. Git attribution requires Git.
+Only trust workspaces whose HTML and scripts you are comfortable running.
+
+### Install a local build
+
+With Node.js 22.18 or newer and npm available, run from this repository:
+
+```sh
+npm ci
+npm run package
+code --install-extension ./maister-lens-0.1.0.vsix
+```
+
+Alternatively, run **Extensions: Install from VSIX…** in VS Code and select the package.
+Run **Developer: Reload Window** after updating an existing installation.
+`npm run package` builds the extension automatically before creating the VSIX.
+
+### Light, dark and high-contrast themes
+
+The Activity Bar uses a monochrome SVG that VS Code colors for the active theme.
+Built-in Tasks, Dashboard, Risks, fallback Task and Markdown views use VS Code theme
+colors. Native controls follow the light/dark theme; focus outlines remain visible.
+The Marketplace icon intentionally keeps its black tile, white lens and turquoise
+AI accent in both themes; it is separate from the Activity Bar icon.
+
+Hosted task dashboards and HTML companions keep their authored styles and may follow
+OS color preferences instead of the editor theme. Switch an HTML artifact to Markdown
+for the theme-aware reader. See [release checks](docs/RELEASING.md) for the visual checklist.
+
+## The three sidebar views
 
 | View | What it shows |
 |---|---|
+| **Overview** (tree) | A single row that opens the cross-task **Dashboard** panel. |
 | **Now** (tree) | Every unfinished task (`in_progress`, `pending`, `blocked`), newest write first. Each task expands to its progress line, its last recorded decision, up to five recently modified artifacts and its open-risk count. The view badge carries the unfinished count. An inline ▶ runs the task's next action. |
-| **Overview** (webview) | Orientation and the full portfolio in one column: a search box over task titles, descriptions, tags, recorded decisions, risks and artifact TL;DRs; Mine / Everyone; STATUS, TYPE and ATTENTION filter tiles; and the filtered task list grouped by type, status, author or month. |
+| **Tasks** (webview) | Orientation and the full portfolio in one column: a search box over task titles, descriptions, tags, recorded decisions, risks and artifact TL;DRs; Mine / Everyone; STATUS, TYPE and ATTENTION filter tiles; and the filtered task list grouped by type, status, author or month. |
 
-Both views render from an in-memory index of the workspace — they never read files themselves.
+**Now** and **Tasks** render from an in-memory index of the workspace — they never read files
+themselves.
+
+**Overview** sits above them only on a fresh profile. VS Code remembers each user's own sidebar
+arrangement, so after an update the view is added where your profile has room rather than at the
+top. To restore the intended order, run **Views: Reset View Locations** from the Command Palette.
 
 ## The four panel modes
 
@@ -28,11 +77,17 @@ editor title bar.
 |---|---|
 | **Task** | Maister's own `dashboard.html` for that task, hosted verbatim in a sandboxed webview. When the file is missing or of an unrecognised vintage, a built-in fallback view renders the same facts from the state file: banner, phases, decisions, risks, artifacts and the raw state. |
 | **Artifact** | A markdown artifact rendered as a document — breadcrumb, key-artifact chips, a pinned summary card and the body. An artifact with an `.html` companion can be toggled between the two with **Toggle Styled / Markdown View**. |
-| **Dashboard** | A cross-task dashboard: four KPI tiles, the active filter chips, four charts and a task table. It shares one filter with Overview, so a tile pressed in the sidebar is reflected here. |
+| **Dashboard** | A cross-task dashboard: four KPI tiles, the active filter chips, four charts and a task table. It shares one filter with Tasks, so a tile pressed in the sidebar is reflected here. |
 | **Risks** | Open risks across all tasks, or scoped to one task, grouped by task. Resolved risks appear only while **Show resolved** is on. |
 
 Artifacts are always shown rendered through the extension's own navigation. **Open Source File**
 is the one, explicit way to reach the underlying text in a normal editor.
+
+Task mode adds a **← Dashboard** link at the top of the view. In a hosted `dashboard.html` that
+link is injected once, when the page loads: a dashboard whose own script later replaces
+`document.body` wholesale will remove it. That case is not supported and no re-injection is
+attempted — the **Open Dashboard** button in the editor title bar is always present, so the
+dashboard stays one click away regardless.
 
 ## Settings
 
@@ -82,7 +137,7 @@ In an **untrusted** workspace Maister Lens keeps working, with two capabilities 
 - **No launching.** Every launch command is hidden, and the commands themselves refuse if
   invoked another way.
 
-Indexing, both sidebar views, Dashboard mode, Risks mode and markdown reading are unaffected.
+Indexing, all sidebar views, Dashboard mode, Risks mode and markdown reading are unaffected.
 
 Maister Lens declares `"extensionKind": ["workspace"]`, so under Remote-SSH, WSL or Dev
 Containers it runs where the files live. Virtual workspaces are not supported: attribution
@@ -101,7 +156,7 @@ Exactly two, both load-bearing:
 ## Development
 
 ```sh
-npm install
+npm ci
 npm run build          # esbuild bundle into dist/
 npm run watch
 npm run lint
@@ -116,8 +171,8 @@ npm run lint
 | `npm run bench` | The non-gating performance benchmark over 300 generated task folders. |
 
 Criteria that no harness can reach — hosted-dashboard rendering, the Claude Code pre-fill against
-a real installation, the four themes, a screen-reader pass and mockup comparison — are a signed
-manual checklist, not automation debt.
+a real installation, the four themes, a screen-reader pass and mockup comparison — remain manual release checks; see [the release checklist](docs/RELEASING.md).
+Do not treat automated test results as manual sign-off.
 
 ### Benchmark
 
@@ -153,6 +208,12 @@ Measured on Darwin arm64 over 300 generated task folders. Reported, **not** a ga
 12. `npm run test:min` runs its untrusted-workspace pass on the pinned VS Code build rather than
     on 1.90.0 — the untrusted host launcher reads the pinned version. The engine-floor claim is
     unaffected (the untrusted assertions are not version-sensitive), but the gap is real.
+
+## Packaging and support
+
+- [Release procedure and verification checklist](docs/RELEASING.md)
+- [Icon assets and theme behavior](docs/branding/README.md)
+- [Support and bug reports](SUPPORT.md)
 
 ## License
 

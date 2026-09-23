@@ -109,6 +109,12 @@ export const TIME = {
   spokenQuietDays: 'Quiet for {n} days'
 } as const;
 
+/** The navigation tree that opens the Dashboard. */
+export const NAV = {
+  dashboard: 'Dashboard',
+  dashboardLabel: 'Open the Maister dashboard'
+} as const;
+
 /** The Now tree (§ 4.1, § 4.3, A9). */
 export const NOW = {
   badgeTooltip: '{count} unfinished tasks',
@@ -135,7 +141,7 @@ export const NOW = {
 
 /** The Overview view (§ 4.2, § 4.3). */
 export const OVERVIEW = {
-  title: 'Overview',
+  title: 'Tasks',
   searchLabel: 'Search',
   searchPlaceholder: 'Search tasks, decisions, risks…',
   searchAccessibleLabel: 'Search tasks, decisions and risks',
@@ -224,6 +230,8 @@ export const PHASE_GLYPHS = {
 
 /** The § 5.4 native summary, in the order the sections are rendered. */
 export const FALLBACK = {
+  breadcrumb: '← Dashboard',
+  breadcrumbLabel: 'Breadcrumb',
   typeBadge: '{type}',
   status: 'Status: {status}',
   author: 'Author: {author}',

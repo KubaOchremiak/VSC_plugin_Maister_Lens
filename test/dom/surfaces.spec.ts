@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DASHBOARD, FALLBACK, PANEL, READER, RISKS, format } from '../../src/strings.ts';
+import { DASHBOARD, FALLBACK, OVERVIEW, PANEL, READER, RISKS, format } from '../../src/strings.ts';
 import {
   dashboardPayload,
   fallbackPayload,
@@ -20,6 +20,14 @@ import {
  * `src/strings.ts`, accessible names and the payload an activation posts. Nothing here
  * compares pixels.
  */
+
+const SURFACES = [
+  { bundle: 'overview', payload: overviewPayload() },
+  { bundle: 'fallbackTask', payload: fallbackPayload() },
+  { bundle: 'reader', payload: readerPayload() },
+  { bundle: 'dashboardMode', payload: dashboardPayload() },
+  { bundle: 'risksMode', payload: risksPayload() }
+] as const;
 
 test('dom: the shim turns a click on the real dashboard\'s a[target="_blank"] into a navigate post carrying that href', async ({
   page
@@ -186,15 +194,7 @@ test('dom: a Dashboard bar activation posts setFilter with the right patch; char
 test('dom: every interactive element in all five generated surfaces is a <button>/<a> with an accessible name in a tab-reachable order; each surface renders exactly one next-action control per row, distinct from the title control; Show resolved reveals resolved rows struck through with a visible "Resolved" label', async ({
   page
 }) => {
-  const surfaces = [
-    { bundle: 'overview', payload: overviewPayload() },
-    { bundle: 'fallbackTask', payload: fallbackPayload() },
-    { bundle: 'reader', payload: readerPayload() },
-    { bundle: 'dashboardMode', payload: dashboardPayload() },
-    { bundle: 'risksMode', payload: risksPayload() }
-  ] as const;
-
-  for (const surface of surfaces) {
+  for (const surface of SURFACES) {
     await openSurface(page, surface.bundle, surface.payload);
 
     const controls = await focusables(page);
@@ -247,4 +247,29 @@ test('dom: every interactive element in all five generated surfaces is a <button
   await expect(page.locator('div.head .dim').first()).toContainText(
     format(RISKS.resolvedClause, { n: 1 })
   );
+});
+
+test('dom: the Overview surface labels its document box with OVERVIEW.title', async ({ page }) => {
+  await openSurface(page, 'overview', overviewPayload());
+
+  await expect(page.locator('main#root')).toHaveAttribute('aria-label', OVERVIEW.title);
+});
+
+test('dom: the fallbackTask back link is the first focusable control, and the surface inventory is still five', async ({
+  page
+}) => {
+  expect(SURFACES.map((surface) => surface.bundle)).toEqual([
+    'overview',
+    'fallbackTask',
+    'reader',
+    'dashboardMode',
+    'risksMode'
+  ]);
+
+  await openSurface(page, 'fallbackTask', fallbackPayload());
+
+  const controls = await focusables(page);
+  expect(controls[0].tag).toBe('button');
+  expect(controls[0].name).toBe(FALLBACK.breadcrumb);
+  expect(await tabOrder(page, 1)).toEqual([0]);
 });

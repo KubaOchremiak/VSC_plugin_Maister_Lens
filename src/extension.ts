@@ -4,6 +4,7 @@ import { createTaskWatcher } from './index/watcher.ts';
 import { registerLaunchCommands } from './launch/host.ts';
 import { registerPanel } from './panel/panel.ts';
 import { INDEX } from './strings.ts';
+import { registerNavTree } from './views/navTree.ts';
 import { registerNowTree } from './views/nowTree.ts';
 import { registerOverviewView } from './views/overviewView.ts';
 
@@ -22,12 +23,14 @@ export function activate(context: vscode.ExtensionContext): void {
       vscode.workspace.getConfiguration('maisterLens').get<boolean>('attribution.enabled') ?? true
   });
 
+  const nav = registerNavTree();
   const now = registerNowTree(index);
   const overview = registerOverviewView(context, index, log);
 
   context.subscriptions.push(
     output,
     index,
+    nav,
     now,
     ...overview.disposables,
     createTaskWatcher(context, index, log),

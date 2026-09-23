@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import { openRiskCount } from '../../src/model/risks.ts';
 import { TaskPanel } from '../../src/panel/panel.ts';
 import type { FallbackPayload } from '../../src/webview/fallbackTask.ts';
-import { PANEL } from '../../src/strings.ts';
+import { FALLBACK, PANEL } from '../../src/strings.ts';
 import {
   folderStubs,
   folderUriOf,
@@ -94,5 +94,184 @@ describe('fallbackTask/integration', () => {
       panel.dispose();
       index.dispose();
     }
+  });
+});
+
+class StubNode {
+  private readonly parts: (StubNode | string)[] = [];
+  private readonly attributes = new Map<string, string>();
+  private readonly listeners: (() => void)[] = [];
+
+  constructor(readonly tagName: string) {}
+
+  get children(): StubNode[] {
+    return this.parts.filter((part): part is StubNode => typeof part !== 'string');
+  }
+
+  get textContent(): string {
+    return this.parts
+      .map((part) => (typeof part === 'string' ? part : part.textContent))
+      .join('');
+  }
+
+  setAttribute(name: string, value: string): void {
+    this.attributes.set(name, value);
+  }
+
+  getAttribute(name: string): string | null {
+    return this.attributes.get(name) ?? null;
+  }
+
+  addEventListener(type: string, handler: () => void): void {
+    if (type === 'click') {
+      this.listeners.push(handler);
+    }
+  }
+
+  click(): void {
+    for (const handler of [...this.listeners]) {
+      handler();
+    }
+  }
+
+  append(...items: (StubNode | string | null | undefined)[]): void {
+    for (const item of items) {
+      if (item === null || item === undefined) {
+        continue;
+      }
+      if (typeof item !== 'string' && item.tagName === '#fragment') {
+        this.append(...item.parts);
+        continue;
+      }
+      this.parts.push(item);
+    }
+  }
+
+  replaceChildren(...items: (StubNode | string)[]): void {
+    this.parts.length = 0;
+    this.append(...items);
+  }
+}
+
+interface RenderResult {
+  readonly root: StubNode;
+  readonly posted: unknown[];
+}
+
+function minimalPayload(): FallbackPayload {
+  return {
+    type: 'task',
+    folderUri: 'file:///tmp/empty-task',
+    banner: 'This task has no dashboard.',
+    openInBrowser: false,
+    dashboardRelPath: '',
+    title: 'Empty task',
+    typeLabel: 'development',
+    statusGlyph: '◯',
+    statusText: 'In progress',
+    verdict: 'none yet',
+    author: 'nobody',
+    created: 'today',
+    updated: 'today',
+    parseIssues: [],
+    nextAction: null,
+    phases: [],
+    heroes: [],
+    decisions: [],
+    risks: [],
+    files: [],
+    rawState: ''
+  };
+}
+
+const postedMessages: unknown[] = [];
+
+/**
+ * The bundle calls `acquireVsCodeApi()` at module scope and captures the handle once, so the
+ * stubs must exist before the module is first imported anywhere in this mocha process, and the
+ * module must be loaded exactly once. Both happen in `before()`; `renderFallback()` then only
+ * renders.
+ */
+let bundle: typeof import('../../src/webview/fallbackTask.ts') | undefined;
+
+/**
+ * The extension host has no `document`, and the project carries no DOM library, so the few node
+ * operations `el()` and `render()` perform are stubbed here rather than pulled in as a dependency.
+ */
+function installDomStubs(): void {
+  const globals = globalThis as Record<string, unknown>;
+  globals.document = {
+    createElement: (tag: string) => new StubNode(tag),
+    createDocumentFragment: () => new StubNode('#fragment'),
+    createTextNode: (text: string) => {
+      const node = new StubNode('#text');
+      node.append(text);
+      return node;
+    },
+    getElementById: () => null
+  };
+  globals.window = { addEventListener: () => undefined };
+  globals.acquireVsCodeApi = () => ({
+    postMessage: (message: unknown) => postedMessages.push(message)
+  });
+}
+
+function renderFallback(payload: FallbackPayload): RenderResult {
+  assert.ok(bundle, 'the fallbackTask bundle was not loaded by before()');
+  const root = new StubNode('div');
+  postedMessages.length = 0;
+  bundle.render(payload, root as unknown as HTMLElement);
+  return { root, posted: postedMessages };
+}
+
+describe('fallbackTask/breadcrumb', () => {
+  before(async () => {
+    installDomStubs();
+    assert.equal(
+      typeof (globalThis as Record<string, unknown>).acquireVsCodeApi,
+      'function',
+      'the acquireVsCodeApi stub must exist before the bundle is imported'
+    );
+    bundle = await import('../../src/webview/fallbackTask.ts');
+  });
+
+  after(() => {
+    const globals = globalThis as Record<string, unknown>;
+    delete globals.document;
+    delete globals.window;
+    delete globals.acquireVsCodeApi;
+  });
+
+  it('renders a <nav> labelled by FALLBACK.breadcrumbLabel as the first node (FR3 AC3)', async () => {
+    const { root } = renderFallback(minimalPayload());
+    const first = root.children[0];
+    assert.ok(first !== undefined, 'render() appended nothing');
+    assert.equal(first.tagName, 'nav');
+    assert.equal(first.getAttribute('aria-label'), FALLBACK.breadcrumbLabel);
+  });
+
+  it('wraps a link-styled <button> carrying FALLBACK.breadcrumb (FR3 AC1, AC6)', async () => {
+    const { root } = renderFallback(minimalPayload());
+    const crumb = root.children[0].children[0];
+    assert.ok(crumb !== undefined, 'the nav holds no control');
+    assert.equal(crumb.tagName, 'button');
+    assert.equal(crumb.getAttribute('type'), 'button');
+    assert.equal(crumb.getAttribute('class'), 'link');
+    assert.equal(crumb.getAttribute('tabindex'), null);
+    assert.equal(crumb.textContent, FALLBACK.breadcrumb);
+  });
+
+  it('posts exactly { type: "openDashboard" } when the breadcrumb is clicked (FR3 AC2)', async () => {
+    const { root, posted } = renderFallback(minimalPayload());
+    root.children[0].children[0].click();
+    assert.deepEqual(posted, [{ type: 'openDashboard' }]);
+  });
+
+  it('renders the breadcrumb unconditionally, with no risks, decisions or artifacts (FR3 AC4)', async () => {
+    const payload = minimalPayload();
+    assert.deepEqual([payload.risks, payload.decisions, payload.files, payload.heroes], [[], [], [], []]);
+    const { root } = renderFallback(payload);
+    assert.equal(root.children[0].tagName, 'nav');
+    assert.equal(root.children[0].children[0].textContent, FALLBACK.breadcrumb);
   });
 });

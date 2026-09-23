@@ -362,6 +362,9 @@ export class TaskPanel implements vscode.Disposable {
   }
 
   async show(location: PanelLocation): Promise<void> {
+    // Capture the user's destination before reading task files asynchronously.
+    // A reused/restored panel may still belong to a different editor group.
+    const targetColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
     // § 6.1 — images and everything that is not markdown or HTML belong in a normal editor.
     if (location.mode === 'artifact' && !READABLE.test(location.artifactRelPath)) {
       return this.openInEditor(
@@ -377,7 +380,7 @@ export class TaskPanel implements vscode.Disposable {
       this.history = [...this.history.slice(0, this.cursor + 1), target].slice(-HISTORY_LIMIT);
       this.cursor = this.history.length - 1;
     }
-    await this.render();
+    await this.render(targetColumn);
   }
 
   async back(): Promise<void> {
@@ -622,7 +625,7 @@ export class TaskPanel implements vscode.Disposable {
     return this.options.index.snapshot.tasks.get(folderUri);
   }
 
-  private async render(): Promise<void> {
+  private async render(targetColumn?: vscode.ViewColumn): Promise<void> {
     const location = this.location;
     if (location === undefined) {
       return;
@@ -633,7 +636,7 @@ export class TaskPanel implements vscode.Disposable {
     ) {
       this.options.log(format(PANEL.taskGone, { folderUri: location.folderUri }));
       this.history[this.cursor] = { mode: 'dashboard' };
-      return this.render();
+      return this.render(targetColumn);
     }
 
     const view = await this.buildView(this.history[this.cursor]);
@@ -649,7 +652,9 @@ export class TaskPanel implements vscode.Disposable {
       localResourceRoots: this.resourceRoots()
     };
     panel.webview.html = view.html;
-    panel.reveal(panel.viewColumn, true);
+    // Explicit navigation follows the active group; background refreshes stay put
+    // and preserve focus so watching a task cannot interrupt another editor.
+    panel.reveal(targetColumn ?? panel.viewColumn, targetColumn === undefined);
     await this.applyContextKeys();
     if (view.payload !== undefined) {
       this.publish(view.payload);
@@ -1339,7 +1344,7 @@ export class TaskPanel implements vscode.Disposable {
     const panel = vscode.window.createWebviewPanel(
       PANEL_VIEW_TYPE,
       PANEL.titleDashboard,
-      { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
+      { viewColumn: vscode.ViewColumn.Active, preserveFocus: false },
       {
         enableScripts: true,
         enableCommandUris: false,

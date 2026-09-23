@@ -295,6 +295,11 @@ function rawState(payload: FallbackPayload): HTMLElement {
 
 export function render(payload: FallbackPayload, root: HTMLElement): void {
   const fragment = document.createDocumentFragment();
+
+  const crumb = el('button', { class: 'link', type: 'button' }, [FALLBACK.breadcrumb]);
+  crumb.addEventListener('click', () => post({ type: 'openDashboard' }));
+  fragment.append(el('nav', { 'aria-label': FALLBACK.breadcrumbLabel }, [crumb]));
+
   fragment.append(banner(payload));
   fragment.append(header(payload));
   fragment.append(section(FALLBACK.phasesLabel), phases(payload));

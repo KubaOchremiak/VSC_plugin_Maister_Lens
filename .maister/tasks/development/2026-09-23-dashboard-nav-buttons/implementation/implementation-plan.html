@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — Dashboard Navigation Affordances</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.step.todo::before  { content:"\2610 "; color:var(--dim); }
+.step.done::before  { content:"\2611 "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.group.todo .g-badge::after { content:"pending"; }
+.group.done .g-badge::after { content:"\2713 completed"; color:var(--ok); }
+.g-badge { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.group h3 { margin:0 0 4px; font-size:15px; }
+.ghead { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+ul.steps { list-style:none; padding-left:0; margin:10px 0 0; }
+ul.steps > li { margin:4px 0; }
+ul.steps ul { list-style:none; padding-left:22px; margin:2px 0 6px; font-size:13px; color:var(--dim); }
+ul.steps ul li::before { content:"\2013 "; }
+.meta { font-size:12px; color:var(--dim); margin:2px 0; }
+.chips code { margin-right:5px; display:inline-block; margin-bottom:3px; }
+.dep { font-size:12px; color:var(--warn); font-weight:600; }
+.wave { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; line-height:1.9;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; overflow-x:auto; }
+.ac { background:var(--ok-soft); border-left:3px solid var(--ok); padding:8px 12px; margin-top:10px; border-radius:4px; font-size:13px; }
+.ac ul { margin:4px 0 0; padding-left:18px; }
+.toc { font-size:13px; color:var(--dim); margin:10px 0 0; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="spec.html">Spec</a>
+  <span class="here">Plan</span>
+  <a href="../verification/spec-audit.html">Spec Audit</a>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>Implementation Plan — Dashboard Navigation Affordances</h1>
+  <p class="meta"><span class="badge">implementation plan</span> &nbsp; Generated 2026-09-23 &nbsp;·&nbsp; task <code>2026-09-23-dashboard-nav-buttons</code></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>5</b><span>task groups</span></div>
+  <div class="tile"><b>38</b><span>total steps</span></div>
+  <div class="tile"><b>18-24</b><span>expected tests</span></div>
+  <div class="tile"><b>3</b><span>execution waves</span></div>
+  <div class="tile"><b>3</b><span>parallel groups</span></div>
+</div>
+
+<section class="tldr">
+  <div class="card">
+    <h2 style="margin-top:0">TL;DR</h2>
+    <p>Five task groups, 38 steps, ~20 new tests. Group 1 (strings) is the only true prerequisite; Groups 2, 3 and 4 — sidebar nav view, native back link, hosted back link — then run fully in parallel with zero file overlap. Group 5 closes the audit gaps (rename assertion, docs note) and runs the three suites end to end. All host plumbing already exists: no new command, message type, bundle or CSP surface.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Key Decisions</h2>
+    <table>
+      <tr><th style="width:38%">Decision</th><th>Rationale</th></tr>
+      <tr><td>Strings extracted into their own first group</td><td><code>src/strings.ts</code> is the single file three downstream groups all touch; isolating it removes the only write contention and lets 2/3/4 run concurrently.</td></tr>
+      <tr><td>Nav-provider test at <code>test/integration/navTree.test.ts</code>, not <code>test/unit/</code></td><td><code>TreeDataProvider</code>/<code>ThemeIcon</code>/<code>createTreeView</code> need the live <code>vscode</code> module (audit W3).</td></tr>
+      <tr><td>Suite registration is its own step, with a proof-of-execution sub-step</td><td><code>SUITES.trusted</code> in <code>test/integration/index.ts</code> is hard-coded by name; an unregistered file passes green with zero coverage (audit W3).</td></tr>
+      <tr><td>FR2 rename gets a manifest ↔ <code>strings.ts</code> drift assertion</td><td>Nothing in the repo asserts the literal <code>'Overview'</code> today (audit W2).</td></tr>
+      <tr><td><code>stopPropagation()</code> kept as plain defence-in-depth only</td><td>The spec's rationale is false: <code>interceptLink</code> bails at <code>src/webview/shim.ts:118-121</code> unless <code>closest('a[href]')</code> resolves, and the injected element is a <code>&lt;button&gt;</code> under <code>document.body</code>. No comment may repeat it.</td></tr>
+      <tr><td>No acceptance criterion asserts runtime sidebar order</td><td><code>contributes.views</code> order governs first-install layout only; VS Code persists each user's arrangement (audit W4). Manifest order is asserted; runtime order is documented instead.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Open Questions / Risks</h2>
+    <ul>
+      <li><span class="sev warning">warning</span>Existing users will not see the new "Overview" view first after update. Mitigation is documentation only — README notes the limitation and points at <strong>Views: Reset View Locations</strong>. Do not force placement programmatically.</li>
+      <li><span class="sev warning">warning</span>FR4's visual result inside arbitrary task-authored <code>dashboard.html</code> is untestable — no harness re-hosts a third-party dashboard. Defensive inline styling is the only mitigation.</li>
+      <li><span class="sev info">info</span><code>test/dom/surfaces.spec.ts</code> runs a blanket a11y loop plus a <code>tabOrder</code> check over the first six controls. Prepending a control to <code>fallbackTask</code> shifts indices; Group 3 must re-run <code>npm run test:dom</code> before Group 5 starts.</li>
+      <li><span class="sev info">info</span><code>src/strings.ts</code> is touched by Group 1 only. A later group needing a new key must add it in Group 1's step list, or the parallelism guarantee breaks.</li>
+    </ul>
+  </div>
+
+  <p class="toc">Contents:
+    <a href="#waves">Parallelism</a> ·
+    <a href="#g1">Group 1 Strings</a> ·
+    <a href="#g2">Group 2 Nav View</a> ·
+    <a href="#g3">Group 3 Native Link</a> ·
+    <a href="#g4">Group 4 Hosted Link</a> ·
+    <a href="#g5">Group 5 Review &amp; Docs</a> ·
+    <a href="#standards">Standards</a>
+  </p>
+</section>
+
+<main>
+
+<h2 id="waves">Execution Order &amp; Parallelism</h2>
+<div class="wave">
+  Wave 1 ──▶ <strong>Group 1</strong> Strings Foundation (7 steps)<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──▶ <strong>Group 2</strong> Sidebar Nav View (11 steps) ─┐<br>
+  Wave 2 ─┼──▶ <strong>Group 3</strong> Native Back Link (7 steps) ──┤ &nbsp; concurrent, disjoint files<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──▶ <strong>Group 4</strong> Hosted Back Link (8 steps) ──┤<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+  Wave 3 ────────────────────────────────▶ <strong>Group 5</strong> Test Review &amp; Docs (5 steps)
+</div>
+
+<section id="g1" data-group="1" class="group done">
+  <div class="ghead"><h3>Group 1 — Strings Foundation</h3><span class="g-badge"></span></div>
+  <p class="meta">Dependencies: <span class="dep">None</span> &nbsp;·&nbsp; 7 steps &nbsp;·&nbsp; 3 tests</p>
+  <p class="meta chips">Files: <code>src/strings.ts</code> <code>test/unit/strings.test.ts</code></p>
+  <ul class="steps">
+    <li data-step="1.0" class="step done"><strong>1.0</strong> Land every user-facing string the feature needs, in one file, before any consumer is written</li>
+    <li data-step="1.1" class="step done"><strong>1.1</strong> Write 3 focused tests in <code>test/unit/strings.test.ts</code>
+      <ul>
+        <li><code>OVERVIEW.title === 'Tasks'</code></li>
+        <li><code>FALLBACK.breadcrumb === '← Dashboard'</code> and <code>breadcrumbLabel === 'Breadcrumb'</code> (same values as <code>RISKS</code> at <code>src/strings.ts:329-330</code>)</li>
+        <li>The new <code>NAV</code> block exports a non-empty row label and accessible label</li>
+        <li>No forbidden-wording test — the file's existing <code>running|waiting|stalled|abandoned</code> scan already covers every export</li>
+      </ul>
+    </li>
+    <li data-step="1.2" class="step done"><strong>1.2</strong> Change <code>OVERVIEW.title</code> at <code>src/strings.ts:138</code> from <code>'Overview'</code> to <code>'Tasks'</code>
+      <ul><li>Key name, view id <code>maister.overview</code>, provider and <code>view/title</code> menus unchanged</li>
+      <li>Consumers <code>src/views/overviewView.ts:535,538</code> and <code>test/dom/harness.ts:56</code> follow automatically</li></ul>
+    </li>
+    <li data-step="1.3" class="step done"><strong>1.3</strong> Add <code>breadcrumb</code> / <code>breadcrumbLabel</code> at the TOP of the <code>FALLBACK</code> block (<code>src/strings.ts:226-258</code>)
+      <ul><li>Top placement matches the block's render-order convention</li></ul>
+    </li>
+    <li data-step="1.4" class="step done"><strong>1.4</strong> Add a small <code>NAV</code> block with the sidebar row label (<code>'Dashboard'</code>) and its accessible label
+      <ul><li>One block per surface; follow the <code>NOW</code> / <code>OVERVIEW</code> shape. No inline literal may later appear in <code>src/views/navTree.ts</code></li></ul>
+    </li>
+    <li data-step="1.5" class="step done"><strong>1.5</strong> Verify no new string contains <code>running|waiting|stalled|abandoned</code></li>
+    <li data-step="1.6" class="step done"><strong>1.6</strong> Run <code>npm run lint</code></li>
+    <li data-step="1.7" class="step done"><strong>1.7</strong> Run ONLY the strings tests: <code>npx mocha test/unit/strings.test.ts</code></li>
+  </ul>
+  <div class="ac"><strong>Acceptance Criteria</strong>
+    <ul>
+      <li>The 3 new tests pass; the existing forbidden-wording scan still passes</li>
+      <li><code>OVERVIEW.title === 'Tasks'</code>; key name and view id untouched</li>
+      <li><code>FALLBACK.breadcrumb</code> / <code>breadcrumbLabel</code> at the top of the block; <code>NAV</code> block present</li>
+      <li><code>src/strings.ts</code> still has ZERO imports (required for Group 4's bundle-safe import)</li>
+      <li>No file other than the two listed is touched</li>
+    </ul>
+  </div>
+</section>
+
+<section id="g2" data-group="2" class="group done">
+  <div class="ghead"><h3>Group 2 — Sidebar Nav View (manifest + provider + registration)</h3><span class="g-badge"></span></div>
+  <p class="meta">Dependencies: <span class="dep">Group 1</span> &nbsp;·&nbsp; 11 steps &nbsp;·&nbsp; 6 tests &nbsp;·&nbsp; runs in parallel with Groups 3 &amp; 4</p>
+  <p class="meta chips">Files: <code>package.json</code> <code>src/views/navTree.ts</code> (new) <code>src/extension.ts</code> <code>test/integration/navTree.test.ts</code> (new) <code>test/integration/index.ts</code> <code>test/unit/manifest.test.ts</code></p>
+  <ul class="steps">
+    <li data-step="2.0" class="step done"><strong>2.0</strong> Contribute a first-position <code>tree</code> view whose single row opens the dashboard</li>
+    <li data-step="2.1" class="step done"><strong>2.1</strong> Write 6 focused tests
+      <ul>
+        <li><code>navTree.test.ts</code> (mirroring <code>nowTree.test.ts</code>): (1) <code>getChildren()</code> returns exactly one node; (2) tree item has the <code>NAV</code> label, <code>ThemeIcon('dashboard')</code>, <code>collapsibleState === None</code>; (3) <code>command.command === 'maister.openDashboard'</code> and a non-empty <code>accessibilityInformation.label</code>; (4) <code>getChildren(node)</code> returns <code>[]</code></li>
+        <li><code>manifest.test.ts</code>: (5) <code>contributes.views.maister</code> has exactly three entries in order — nav (<code>type:'tree'</code>, <code>name:'Overview'</code>), <code>maister.now</code>, <code>maister.overview</code>; (6) nine palette-visible commands, no new command declared</li>
+        <li>Assert MANIFEST order only — never runtime sidebar order (audit W4)</li>
+      </ul>
+    </li>
+    <li data-step="2.2" class="step done"><strong>2.2</strong> Register <code>'navTree'</code> in <code>SUITES.trusted</code> (<code>test/integration/index.ts:6-18</code>)
+      <ul><li>The array enumerates suite members by HARD-CODED NAME; an unregistered file never loads and the suite passes green with zero FR1 coverage (audit W3)</li></ul>
+    </li>
+    <li data-step="2.3" class="step done"><strong>2.3</strong> PROVE the new test actually executes
+      <ul><li>Record the reported integration test count before and after; it MUST increase by 4. Or deliberately fail one assertion once, confirm red, restore. Not optional.</li></ul>
+    </li>
+    <li data-step="2.4" class="step done"><strong>2.4</strong> Create <code>src/views/navTree.ts</code>
+      <ul>
+        <li>Export <code>NAV_VIEW_ID = 'maister.nav'</code>, mirroring <code>NOW_VIEW_ID</code> (<code>src/views/nowTree.ts:8</code>)</li>
+        <li>Stateless <code>TreeDataProvider</code>, one root node, no <code>TaskIndex</code>, no state, no <code>onDidChangeTreeData</code> firing</li>
+        <li>Item: <code>NAV</code> label, <code>new vscode.ThemeIcon('dashboard')</code>, <code>collapsibleState = None</code>, <code>accessibilityInformation.label</code>, <code>command = { command: 'maister.openDashboard', … }</code></li>
+        <li>Reuse the existing command (<code>package.json:121-126</code>, <code>src/panel/panel.ts:1489-1491</code>, dispatch <code>:513</code>) — declare NO new command. Item shape reference: <code>nowTree.ts:258</code></li>
+      </ul>
+    </li>
+    <li data-step="2.5" class="step done"><strong>2.5</strong> Export <code>registerNavTree()</code> returning <code>{ provider, view, dispose() }</code>
+      <ul><li>Mirror <code>registerNowTree()</code> (<code>src/views/nowTree.ts:402-425</code>), minus the badge and index subscription</li></ul>
+    </li>
+    <li data-step="2.6" class="step done"><strong>2.6</strong> Add the manifest view entry FIRST in <code>contributes.views.maister</code>, above <code>maister.now</code>
+      <ul><li><code>{ "id": "maister.nav", "name": "Overview", "type": "tree" }</code>; no <code>viewsWelcome</code>, no <code>when</code>, no trust gate (<code>src/panel/messages.ts:81</code>)</li></ul>
+    </li>
+    <li data-step="2.7" class="step done"><strong>2.7</strong> Retitle <code>maister.overview</code> to <code>"name": "Tasks"</code>
+      <ul><li>View id, provider and <code>view/title</code> entries unchanged. <code>manifest.test.ts:106,110,115</code> are unaffected. There is NO existing <code>openDashboard</code> <code>navigation@1</code> assertion — do not assume one</li></ul>
+    </li>
+    <li data-step="2.8" class="step done"><strong>2.8</strong> Register the view in <code>src/extension.ts</code>
+      <ul><li>Import beside <code>registerNowTree</code> (<code>:7</code>), call beside <code>:25</code>, push the disposable into <code>context.subscriptions</code> (<code>:28-36</code>). Activation unchanged</li></ul>
+    </li>
+    <li data-step="2.9" class="step done"><strong>2.9</strong> Run <code>npm run lint</code>, <code>npm run build</code>, <code>tsc -p tsconfig.json</code>
+      <ul><li>Confirm NO new bundle — <code>src/views/*</code> is extension-host code, not a webview entry</li></ul>
+    </li>
+    <li data-step="2.10" class="step done"><strong>2.10</strong> Ensure Group 2 tests pass: <code>npm run test:integration</code> and <code>npx mocha test/unit/manifest.test.ts</code>
+      <ul><li>Skip <code>npm run test:dom</code> — no DOM surface changed</li></ul>
+    </li>
+  </ul>
+  <div class="ac"><strong>Acceptance Criteria</strong>
+    <ul>
+      <li>The 6 tests pass; step 2.3's proof shows the integration test count increased by 4</li>
+      <li><code>'navTree'</code> present in <code>SUITES.trusted</code></li>
+      <li>Three view entries, nav first; <code>maister.overview</code> named <code>"Tasks"</code></li>
+      <li>Zero new commands; still nine palette-visible commands; no new esbuild bundle</li>
+      <li>No inline user-facing literal in <code>src/views/navTree.ts</code></li>
+      <li>NO criterion asserts runtime sidebar order</li>
+    </ul>
+  </div>
+</section>
+
+<section id="g3" data-group="3" class="group done">
+  <div class="ghead"><h3>Group 3 — Native Task Back Link</h3><span class="g-badge"></span></div>
+  <p class="meta">Dependencies: <span class="dep">Group 1</span> &nbsp;·&nbsp; 7 steps &nbsp;·&nbsp; 4 tests &nbsp;·&nbsp; runs in parallel with Groups 2 &amp; 4</p>
+  <p class="meta chips">Files: <code>src/webview/fallbackTask.ts</code> <code>test/integration/fallbackTask.test.ts</code></p>
+  <ul class="steps">
+    <li data-step="3.0" class="step done"><strong>3.0</strong> Prepend an unconditional "← Dashboard" breadcrumb to the native task renderer</li>
+    <li data-step="3.1" class="step done"><strong>3.1</strong> Write 4 focused tests in <code>test/integration/fallbackTask.test.ts</code>
+      <ul>
+        <li>First node from <code>render()</code> is a <code>&lt;nav&gt;</code> with <code>aria-label = FALLBACK.breadcrumbLabel</code></li>
+        <li>It contains <code>&lt;button type="button" class="link"&gt;</code> reading <code>FALLBACK.breadcrumb</code></li>
+        <li>Clicking posts exactly <code>{ type: 'openDashboard' }</code></li>
+        <li>Renders for a payload with no risks/decisions/artifacts — unconditional, no origin check</li>
+      </ul>
+    </li>
+    <li data-step="3.2" class="step done"><strong>3.2</strong> In <code>render()</code> (<code>src/webview/fallbackTask.ts:296-307</code>) append the <code>&lt;nav&gt;</code> BEFORE <code>banner(payload)</code>
+      <ul>
+        <li>Mirror <code>src/webview/risksMode.ts:431-433</code> exactly (crumb button, click listener, nav append)</li>
+        <li>Reuse <code>el()</code> (<code>src/webview/components.ts:9-27</code>) — no <code>innerHTML</code> anywhere</li>
+        <li>Reuse the local <code>post()</code> helper (<code>:75-77</code>) and its single <code>acquireVsCodeApi()</code> — no sixth copy of the boilerplate</li>
+        <li>Reuse the already-validated <code>{type:'openDashboard'}</code> message (<code>src/panel/messages.ts:59, 299-300, 363, 378</code>) — change nothing there</li>
+      </ul>
+    </li>
+    <li data-step="3.3" class="step done"><strong>3.3</strong> Confirm NO inline <code>style</code> attribute is introduced
+      <ul><li>Native CSP omits <code>'unsafe-inline'</code> for styles (<code>src/panel/panel.ts:1305</code>); styling comes solely from <code>.link</code> (<code>media/webview.css:259-275</code>). Add NO new CSS rule</li></ul>
+    </li>
+    <li data-step="3.4" class="step done"><strong>3.4</strong> Confirm the control is a <code>&lt;button&gt;</code>, not a heading
+      <ul><li>Do NOT copy the heading-as-button anti-pattern in <code>risksSection()</code> (<code>:84-91</code>). Accessible name from text content; no <code>tabindex</code> attribute at all</li></ul>
+    </li>
+    <li data-step="3.5" class="step done"><strong>3.5</strong> Run <code>npm run lint</code> and <code>npm run build</code></li>
+    <li data-step="3.6" class="step done"><strong>3.6</strong> Run <code>npm run test:dom</code>; <code>surfaces.spec.ts</code> must still pass unchanged
+      <ul><li>Surfaces array stays at FIVE (<code>:189-195</code>); the blanket a11y loop (<code>:199-212</code>) picks the control up automatically; the <code>tabOrder</code> check must pass with the breadcrumb at index 0</li></ul>
+    </li>
+    <li data-step="3.7" class="step done"><strong>3.7</strong> Run ONLY the fallbackTask integration suite</li>
+  </ul>
+  <div class="ac"><strong>Acceptance Criteria</strong>
+    <ul>
+      <li>The 4 tests pass; <code>npm run test:dom</code> passes with five surfaces</li>
+      <li>The <code>&lt;nav&gt;</code> is the first fragment node and therefore the first tab stop</li>
+      <li>Renders on every payload with no condition</li>
+      <li>Zero inline <code>style</code> attributes; zero new CSS rules in <code>media/webview.css</code></li>
+      <li>No change to <code>src/panel/messages.ts</code></li>
+    </ul>
+  </div>
+</section>
+
+<section id="g4" data-group="4" class="group done">
+  <div class="ghead"><h3>Group 4 — Hosted Task Back Link (shim injection)</h3><span class="g-badge"></span></div>
+  <p class="meta">Dependencies: <span class="dep">Group 1</span> &nbsp;·&nbsp; 8 steps &nbsp;·&nbsp; 3 tests &nbsp;·&nbsp; runs in parallel with Groups 2 &amp; 3</p>
+  <p class="meta chips">Files: <code>src/webview/shim.ts</code></p>
+  <ul class="steps">
+    <li data-step="4.0" class="step done"><strong>4.0</strong> Inject one host-owned back link at the top of the re-hosted <code>dashboard.html</code></li>
+    <li data-step="4.1" class="step done"><strong>4.1</strong> Write 3 focused tests where the shim is already exercised (the <code>a18-resolution</code> / <code>dashboardMode</code> path) — do NOT create a sixth DOM surface
+      <ul>
+        <li><code>document.body.firstElementChild</code> is a <code>&lt;nav&gt;</code> containing a <code>&lt;button type="button"&gt;</code> reading <code>FALLBACK.breadcrumb</code></li>
+        <li>Clicking posts exactly <code>{ type: 'openDashboard' }</code> via the existing <code>vscodeApi</code> handle</li>
+        <li>Injection is skipped without throwing when <code>document.body</code> is unavailable; messaging, nonce adoption and link interception still initialise</li>
+      </ul>
+    </li>
+    <li data-step="4.2" class="step done"><strong>4.2</strong> Add an <code>injectBackLink()</code> step to <code>src/webview/shim.ts</code>
+      <ul><li>Build with <code>document.createElement</code>; text from <code>FALLBACK.breadcrumb</code> imported from <code>src/strings.ts</code> (zero imports + tree-shaken IIFE bundling makes this bundle-safe) — do NOT use the spec's shim-local-constant escape hatch</li></ul>
+    </li>
+    <li data-step="4.3" class="step done"><strong>4.3</strong> Insert as the FIRST CHILD of <code>document.body</code>
+      <ul><li>Guard on <code>document.readyState</code>, fall back to <code>DOMContentLoaded</code>. Attach to <code>body</code>, never an author container. If <code>body</code> is unavailable, skip silently and let the rest of the shim run</li></ul>
+    </li>
+    <li data-step="4.4" class="step done"><strong>4.4</strong> Style defensively via <code>element.style</code> PROPERTIES, never a markup string
+      <ul><li>Hosted CSP permits <code>style-src 'unsafe-inline'</code> (<code>src/panel/hostDashboard.ts:93</code>) and the page does NOT load <code>media/webview.css</code></li>
+      <li>Set display, position-in-flow, margin, padding, font, color, background, border, cursor, z-index, visibility — arbitrary task-author CSS must not be able to hide or distort it</li>
+      <li><code>color</code> from a VS Code theme variable with a literal fallback; add a distinctive class (e.g. <code>maister-lens-back</code>)</li></ul>
+    </li>
+    <li data-step="4.5" class="step done"><strong>4.5</strong> Attach the click handler directly to the button; reuse the existing <code>vscodeApi</code> handle (<code>:20</code>)
+      <ul><li>Exactly ONE <code>acquireVsCodeApi()</code> per page — add no second call</li>
+      <li><code>stopPropagation()</code> may be kept as plain defence-in-depth ONLY. Do NOT write a comment claiming it prevents <code>interceptLink</code> — that bails at <code>:118-121</code> unless <code>closest('a[href]')</code> resolves</li></ul>
+    </li>
+    <li data-step="4.6" class="step done"><strong>4.6</strong> Update the shim header doc comment (<code>src/webview/shim.ts:1-6</code>)
+      <ul><li>"It is the only code the extension adds to that page" must now also state it injects exactly one host-owned chrome element, the back link. This is the feature's only added comment</li></ul>
+    </li>
+    <li data-step="4.7" class="step done"><strong>4.7</strong> Verify <code>git diff --stat src/panel/hostDashboard.ts</code> is EMPTY
+      <ul><li>Its "exactly three insertions, all security plumbing" contract (<code>:4-12</code>) is preserved verbatim</li></ul>
+    </li>
+    <li data-step="4.8" class="step done"><strong>4.8</strong> Run <code>npm run lint</code>, <code>npm run build</code>, then ONLY the Group 4 tests; confirm exactly five webview bundles</li>
+  </ul>
+  <div class="ac"><strong>Acceptance Criteria</strong>
+    <ul>
+      <li>The 3 tests pass</li>
+      <li>Back link is <code>document.body</code>'s first child, self-styled via <code>element.style</code> properties</li>
+      <li><code>git diff --stat src/panel/hostDashboard.ts</code> is empty</li>
+      <li>Exactly one <code>acquireVsCodeApi()</code>; no new message type</li>
+      <li>No comment repeats the false <code>interceptLink</code> rationale; the header comment describes the new responsibility</li>
+      <li>Still five webview bundles</li>
+    </ul>
+  </div>
+</section>
+
+<section id="g5" data-group="5" class="group done">
+  <div class="ghead"><h3>Group 5 — Test Review, Rename Coverage &amp; Documentation</h3><span class="g-badge"></span></div>
+  <p class="meta">Dependencies: <span class="dep">Groups 2, 3, 4</span> &nbsp;·&nbsp; 5 steps &nbsp;·&nbsp; up to 6 additional tests</p>
+  <p class="meta chips">Files: <code>test/unit/manifest.test.ts</code> <code>test/dom/surfaces.spec.ts</code> <code>README.md</code> <code>CHANGELOG.md</code></p>
+  <ul class="steps">
+    <li data-step="5.0" class="step done"><strong>5.0</strong> Close the audit gaps and verify the whole feature end to end</li>
+    <li data-step="5.1" class="step done"><strong>5.1</strong> Review the 13 tests written by Groups 1-4 and analyse gaps for THIS feature only</li>
+    <li data-step="5.2" class="step done"><strong>5.2</strong> Write up to 6 additional strategic tests
+      <ul>
+        <li>REQUIRED (audit W2): a drift-catching assertion in <code>manifest.test.ts</code> that the <code>maister.overview</code> manifest view name equals <code>OVERVIEW.title</code></li>
+        <li>REQUIRED: assert the rendered Overview <code>&lt;main aria-label&gt;</code> equals <code>OVERVIEW.title</code> (<code>test/dom/harness.ts:56</code> already sources it)</li>
+        <li>REQUIRED: assert the back link is the FIRST focusable control in the <code>fallbackTask</code> surface and the surfaces array is still exactly five</li>
+        <li>No more than 6; do not broaden beyond this feature</li>
+      </ul>
+    </li>
+    <li data-step="5.3" class="step done"><strong>5.3</strong> Document the view-order limitation for users
+      <ul>
+        <li><code>README.md</code> "The two sidebar views" (<code>:13-18</code>): retitle for three views, add the new <strong>Overview</strong> (tree) row, rename the existing row to <strong>Tasks</strong></li>
+        <li>State that the new view appears first only on a fresh profile — VS Code remembers each user's arrangement; existing users restore it with <strong>Views: Reset View Locations</strong></li>
+        <li>Add a <code>CHANGELOG.md</code> entry for the new view, the rename and the task back links</li>
+        <li>Do NOT force view placement programmatically</li>
+      </ul>
+    </li>
+    <li data-step="5.4" class="step done"><strong>5.4</strong> Run <code>npm test</code>, <code>npm run test:integration</code>, <code>npm run test:dom</code>, <code>npm run lint</code></li>
+    <li data-step="5.5" class="step done"><strong>5.5</strong> Verify the hard constraints on the final diff
+      <ul>
+        <li>ZERO lines in <code>src/panel/hostDashboard.ts</code> and <code>src/panel/messages.ts</code>; no change at <code>src/panel/panel.ts:1342</code></li>
+        <li>Nine palette-visible commands (<code>manifest.test.ts:89-96</code>); five surfaces (<code>surfaces.spec.ts:189-195</code>)</li>
+        <li>No <code>"Project"</code> entry anywhere in the diff</li>
+        <li>No new CSS rule in <code>media/webview.css</code>; no inline <code>style</code> attribute in any native-panel bundle</li>
+      </ul>
+    </li>
+  </ul>
+  <div class="ac"><strong>Acceptance Criteria</strong>
+    <ul>
+      <li>All feature tests pass across the three runners (~19-25 total)</li>
+      <li>No more than 6 additional tests added</li>
+      <li>The rename is covered by a manifest↔<code>strings.ts</code> drift assertion AND a rendered-aria-label assertion</li>
+      <li><code>README.md</code> documents three sidebar views and the first-install-only ordering limitation, naming <strong>Views: Reset View Locations</strong></li>
+      <li>Every hard constraint in 5.5 verified against the real diff</li>
+    </ul>
+  </div>
+</section>
+
+<h2 id="standards">Standards Compliance</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:30%">Standard</th><th>How this plan complies</th></tr>
+    <tr><td><code>global/minimal-implementation.md</code></td><td>"Project" deferred not stubbed; no new command, message type, bundle, CSS rule or speculative abstraction</td></tr>
+    <tr><td><code>global/coding-style.md</code></td><td><code>NAV_VIEW_ID</code> / <code>registerNavTree</code> follow the <code>NOW_VIEW_ID</code> / <code>registerNowTree</code> conventions; the duplicate "Overview" title is resolved</td></tr>
+    <tr><td><code>global/commenting.md</code></td><td>Exactly one comment added (the <code>shim.ts</code> header correction); no change-log comments</td></tr>
+    <tr><td><code>global/error-handling.md</code></td><td>Hosted injection degrades gracefully when <code>document.body</code> is unavailable</td></tr>
+    <tr><td><code>frontend/accessibility.md</code></td><td>Semantic <code>nav</code>/<code>button</code>, aria-labels, <code>accessibilityInformation</code> on the tree item, no positive tabindex, back link first in tab order</td></tr>
+    <tr><td><code>frontend/components.md</code></td><td>The nav provider has a single responsibility, no index dependency, no state</td></tr>
+    <tr><td><code>frontend/css.md</code></td><td>Zero new custom CSS natively; hosted inline styles are the minimum needed and prefer VS Code theme variables</td></tr>
+    <tr><td><code>project/vision.md</code>, <code>project/tech-stack.md</code></td><td>Read-only navigation; no new dependency, no new esbuild entry, five bundles unchanged</td></tr>
+  </table>
+</div>
+
+<h2>Notes</h2>
+<div class="card">
+  <ul>
+    <li><strong>Test-Driven</strong> — each group starts with its 2-8 tests before implementation</li>
+    <li><strong>Run Incrementally</strong> — only the group's own tests after each group; the full three-runner pass happens once, in Group 5</li>
+    <li><strong>Reuse First</strong> — <code>maister.openDashboard</code>, <code>{type:'openDashboard'}</code>, <code>el()</code>, <code>post()</code>, <code>vscodeApi</code>, the <code>.link</code> class and the <code>registerNowTree</code> pattern all already exist; write no equivalent</li>
+  </ul>
+</div>
+
+</main>
+</body>
+</html>

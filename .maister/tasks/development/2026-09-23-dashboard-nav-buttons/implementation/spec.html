@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Dashboard nav buttons</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:720px) { .two { grid-template-columns:1fr; } }
+.tldr { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent);
+  border-radius:var(--radius); padding:16px 18px; margin:14px 0; }
+ul { margin:8px 0; padding-left:20px; } li { margin:4px 0; }
+.toc { font-size:13px; color:var(--dim); margin:10px 0 4px; }
+.frx { font-weight:650; color:var(--accent); }
+.scope-in li::marker { color:var(--ok); }
+.scope-out li::marker { color:var(--crit); }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Spec</span>
+  <a href="implementation-plan.html">Plan</a>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>Dashboard Navigation Affordances — Sidebar Nav View + Task Back Link</h1>
+  <p><span class="badge">specification</span> <span class="badge">risk: medium</span>
+  <span style="color:var(--dim)">2026-09-23 · task <code>2026-09-23-dashboard-nav-buttons</code></span></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>5</b><span>functional reqs</span></div>
+  <div class="tile"><b>9</b><span>assets reused</span></div>
+  <div class="tile"><b>4</b><span>new components</span></div>
+  <div class="tile"><b>6</b><span>test files touched</span></div>
+  <div class="tile"><b>medium</b><span>risk level</span></div>
+</div>
+
+<section class="tldr">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Two navigation affordances over host plumbing that already works. A new first-position <code>tree</code> view titled "Overview" holds one icon-bearing "Dashboard" row that runs the existing <code>maister.openDashboard</code> command; the existing <code>maister.overview</code> webview view is retitled "Tasks" to resolve the title collision. An unconditional "← Dashboard" back link is added at the top of both task renderers — native (<code>fallbackTask.ts</code>, via the existing <code>.link</code> class) and hosted (<code>shim.ts</code>, inline-styled, with <code>hostDashboard.ts</code> untouched). No new command, message type, CSP surface or webview bundle.</p>
+
+  <h2>Key Decisions</h2>
+  <ul>
+    <li>New nav view is a <b>tree</b>, not a webview — no new bundle, no sixth DOM surface, VS Code provides keyboard/screen-reader access for free.</li>
+    <li>Existing <code>maister.overview</code> retitled "Overview" → <b>"Tasks"</b> — the new nav section takes the requested "Overview" title, and "Tasks" describes a task list more accurately.</li>
+    <li>The <b>"Project" entry is deferred</b> to a follow-up task — no destination exists, and a stub violates <code>minimal-implementation.md</code>.</li>
+    <li>The hosted back link is injected from <code>src/webview/shim.ts</code>, never from <code>hostDashboard.ts</code> — its "exactly three insertions, all security plumbing" invariant is preserved verbatim.</li>
+    <li>The back link is <b>unconditional</b> in both renderers, mirroring the risks breadcrumb; origin tracking would require new <code>PanelLocation</code> state for no user-visible gain.</li>
+    <li>Copy lives in new <code>FALLBACK.breadcrumb</code> / <code>breadcrumbLabel</code> keys, reused by both renderers.</li>
+  </ul>
+
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li><span class="sev critical">critical</span> The hosted <code>dashboard.html</code> does not load <code>media/webview.css</code> and carries arbitrary task-author CSS. The injected link must self-style inline and resist inheritance; visual consistency cannot be guaranteed by any test.</li>
+    <li><span class="sev warning">warning</span> <code>shim.ts</code> stops being a pure messaging bridge and begins injecting one host-owned chrome element. Its header doc comment must be updated or it becomes stale documentation.</li>
+    <li><span class="sev warning">warning</span> Three test files encode literal counts (nine palette-visible commands, <code>navigation@1</code>/<code>@2</code>, five DOM surfaces). The chosen design keeps both counts unchanged.</li>
+    <li><span class="sev info">info</span> The deferred "Project" page remains an open design item for a future task.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents:
+  <a href="#scope">Scope</a> ·
+  <a href="#reqs">Requirements</a> ·
+  <a href="#stories">User Stories</a> ·
+  <a href="#reuse">Reuse vs New</a> ·
+  <a href="#a11y">Accessibility</a> ·
+  <a href="#tests">Test Plan</a> ·
+  <a href="#detail">Technical Depth</a>
+</p>
+
+<main>
+
+<h2 id="scope">Scope</h2>
+<div class="two">
+  <div class="card">
+    <h3 style="margin-top:0"><span class="pass">In scope</span></h3>
+    <ul class="scope-in">
+      <li>New first-position <code>tree</code> view "Overview" with one "Dashboard" row.</li>
+      <li>Retitle <code>maister.overview</code> to "Tasks" (manifest + <code>OVERVIEW.title</code>).</li>
+      <li>"← Dashboard" back link in <code>fallbackTask.ts</code> <code>render()</code>.</li>
+      <li>"← Dashboard" back link injected from <code>shim.ts</code> into the hosted page.</li>
+      <li>New <code>FALLBACK.breadcrumb</code> / <code>breadcrumbLabel</code> + nav label strings.</li>
+      <li>Test updates in manifest, fallbackTask, overview, surfaces + a new nav-provider test.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0"><span class="fail">Out of scope</span></h3>
+    <ul class="scope-out">
+      <li>The "Project" nav entry and Project page (deferred).</li>
+      <li>Origin tracking / conditional back link.</li>
+      <li>Any change to <code>src/panel/panel.ts:1342</code>.</li>
+      <li>Any change to <code>hostDashboard.ts</code>, <code>messages.ts</code>, <code>PanelLocation</code>.</li>
+      <li>Refactoring the per-surface <code>acquireVsCodeApi()</code>/<code>post()</code> boilerplate.</li>
+      <li>A shared <code>BREADCRUMB</code> constant across RISKS/FALLBACK/reader.</li>
+      <li>Changing <code>maister.overview</code>'s id, provider or title-bar actions.</li>
+      <li>Any new bundle, CSP change, badge or <code>viewsWelcome</code> entry.</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="goal">Goal</h2>
+<div class="card">Make the Maister dashboard reachable in one click from the sidebar body and from the top of any open task view, in both task renderers, without introducing new host plumbing or a new UI surface type.</div>
+
+<h2 id="reqs">Functional Requirements</h2>
+<table>
+  <thead><tr><th>ID</th><th>Requirement</th><th>Primary files</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td class="frx">FR1</td><td>New sidebar navigation view — a <code>tree</code> contributed first in <code>contributes.views.maister</code>, titled "Overview", with exactly one row: <code>dashboard</code> codicon + "Dashboard", running <code>maister.openDashboard</code>.</td><td><code>package.json</code>, <code>src/views/navTree.ts</code> (new), <code>src/extension.ts</code></td><td><span class="sev critical">must</span></td></tr>
+    <tr><td class="frx">FR2</td><td>Rename the existing Overview view to "Tasks" — manifest <code>name</code> and <code>OVERVIEW.title</code>. View id, provider, menus and behavior unchanged.</td><td><code>package.json</code>, <code>src/strings.ts:138</code></td><td><span class="sev critical">must</span></td></tr>
+    <tr><td class="frx">FR3</td><td>Back link in the native task view — <code>&lt;nav aria-label&gt;</code> + <code>button.link</code> reading "← Dashboard", prepended before <code>banner(payload)</code>, posting <code>{type:'openDashboard'}</code> via the file's existing <code>post()</code>. No inline styles.</td><td><code>src/webview/fallbackTask.ts:296-307</code></td><td><span class="sev critical">must</span></td></tr>
+    <tr><td class="frx">FR4</td><td>Back link in the hosted task view — injected as first child of <code>document.body</code> by the shim, inline-styled, distinctive class, click stops propagation, reuses the existing <code>vscodeApi</code> handle. <code>hostDashboard.ts</code> untouched.</td><td><code>src/webview/shim.ts</code></td><td><span class="sev critical">must</span></td></tr>
+    <tr><td class="frx">FR5</td><td>Strings — <code>breadcrumb: '← Dashboard'</code> and <code>breadcrumbLabel: 'Breadcrumb'</code> in the <code>FALLBACK</code> block; nav row label in <code>strings.ts</code>. No inline user-facing literals in webview or view code.</td><td><code>src/strings.ts:226-258</code></td><td><span class="sev critical">must</span></td></tr>
+  </tbody>
+</table>
+
+<details>
+  <summary>Acceptance criteria, per requirement</summary>
+  <div class="card">
+    <h3>FR1 — New sidebar navigation view</h3>
+    <ol>
+      <li><code>contributes.views.maister</code> lists exactly three entries in order: nav view (<code>type: "tree"</code>, <code>name: "Overview"</code>), <code>maister.now</code>, <code>maister.overview</code>.</li>
+      <li>A new <code>src/views/navTree.ts</code> exports the view id, a <code>TreeDataProvider</code> with one root node, and a <code>register…</code> factory returning <code>{ provider, view, dispose() }</code> — mirroring <code>registerNowTree</code> (<code>nowTree.ts:401-425</code>).</li>
+      <li>The row: label "Dashboard" from <code>strings.ts</code>, <code>iconPath = new vscode.ThemeIcon('dashboard')</code>, <code>collapsibleState: None</code>, an <code>accessibilityInformation.label</code>, and <code>item.command = { command: 'maister.openDashboard', … }</code>.</li>
+      <li><code>getChildren(node)</code> returns <code>[]</code> for any non-root argument.</li>
+      <li>Registered in <code>src/extension.ts</code> alongside <code>registerNowTree</code>; disposable pushed to <code>context.subscriptions</code>.</li>
+      <li>No new command, no new palette entry — <code>PALETTE_VISIBLE_COMMANDS</code> stays at nine.</li>
+      <li>No <code>viewsWelcome</code> entry — the view is never empty.</li>
+      <li>Never gated on workspace trust (the Dashboard command is not trust-gated, <code>messages.ts:81</code>).</li>
+    </ol>
+    <h3>FR2 — Rename the existing Overview view</h3>
+    <ol>
+      <li><code>maister.overview</code> has <code>"name": "Tasks"</code>.</li>
+      <li><code>OVERVIEW.title</code> (<code>strings.ts:138</code>) value becomes <code>'Tasks'</code>; key name, view id, provider and <code>view/title</code> entries (<code>openDashboard</code> @<code>navigation@1</code>, <code>openRisks</code> @<code>navigation@2</code>) unchanged.</li>
+      <li>Its two consumers — <code>&lt;title&gt;</code> and <code>&lt;main aria-label&gt;</code> at <code>overviewView.ts:535,538</code> — pick it up with no code change; <code>test/dom/harness.ts:56</code> follows automatically.</li>
+      <li>No <code>when</code>-clause, context key or <code>view ==</code> selector string changes.</li>
+    </ol>
+    <h3>FR3 — Back link in the native task view</h3>
+    <ol>
+      <li>Structure mirrors <code>risksMode.ts:429-433</code> exactly: <code>el('nav', {'aria-label': FALLBACK.breadcrumbLabel}, [crumb])</code> around <code>el('button', {class:'link', type:'button'}, [FALLBACK.breadcrumb])</code>.</li>
+      <li>Click handler uses the existing local <code>post</code> helper (<code>fallbackTask.ts:75-77</code>) — no new <code>acquireVsCodeApi()</code>, no new <code>post</code>.</li>
+      <li>The <code>&lt;nav&gt;</code> is the first node appended, before <code>banner(payload)</code> — so also first in tab order.</li>
+      <li>Rendered unconditionally on every payload; no origin or condition check.</li>
+      <li>No inline <code>style</code> attribute — the native CSP (<code>panel.ts:1305</code>) omits <code>'unsafe-inline'</code> for styles. Styling comes solely from <code>.link</code> (<code>media/webview.css:260-275</code>); no new CSS rule.</li>
+      <li>Accessible name from text content; no positive <code>tabindex</code>; a <code>button</code>, not a heading — the <code>risksSection()</code> heading-as-button pattern (<code>fallbackTask.ts:85-91</code>) is an existing anti-pattern and is <b>not</b> copied.</li>
+    </ol>
+    <h3>FR4 — Back link in the hosted task view</h3>
+    <ol>
+      <li><code>&lt;nav aria-label&gt;</code> containing a <code>&lt;button type="button"&gt;</code> reading <code>FALLBACK.breadcrumb</code>, imported from <code>strings.ts</code> — no inline literal.</li>
+      <li>Inserted as first child of <code>document.body</code> once the DOM is available (guard on <code>document.readyState</code>, else <code>DOMContentLoaded</code>), so it survives the dashboard's own later rendering.</li>
+      <li>Click posts <code>{type:'openDashboard'}</code> through the existing <code>vscodeApi</code> handle (<code>shim.ts:20</code>) — one <code>acquireVsCodeApi()</code> per page is the hard limit; no new message type.</li>
+      <li>Carries a distinctive class (e.g. <code>maister-lens-back</code>) <b>and</b> inline style properties for every visual property it depends on (display, flow position, margin/padding, font, color, background, border, cursor, z-index, visibility). Set as properties on <code>element.style</code>, never as a markup string.</li>
+      <li>Handler attached directly to the button and calls <code>stopPropagation()</code>, so the shim's capture-phase <code>interceptLink</code> never converts it into a <code>navigate</code> message.</li>
+      <li>The shim's header doc comment (<code>shim.ts:1-6</code>) is updated to state it now also injects exactly one host-owned chrome element.</li>
+      <li><code>hostDashboard.ts</code> has a zero-line diff; its "exactly three insertions" contract (<code>:4-12</code>) is preserved.</li>
+    </ol>
+    <h3>FR5 — Strings</h3>
+    <ol>
+      <li><code>FALLBACK</code> (<code>strings.ts:226-258</code>) gains <code>breadcrumb: '← Dashboard'</code> and <code>breadcrumbLabel: 'Breadcrumb'</code>, mirroring <code>RISKS</code> (<code>:329-330</code>), at the top of the block to match render order.</li>
+      <li>The nav row's label and accessible name live in <code>strings.ts</code> — a small new <code>NAV</code> block or reuse of an existing key; no literal in <code>src/views/</code>.</li>
+      <li>No user-facing literal in <code>fallbackTask.ts</code>, <code>shim.ts</code> or <code>navTree.ts</code> (manifest view titles are necessarily literal in <code>package.json</code>).</li>
+      <li>New strings avoid the wording <code>strings.test.ts</code> forbids (<code>running|waiting|stalled|abandoned</code>).</li>
+    </ol>
+  </div>
+</details>
+
+<h2 id="stories">User Stories</h2>
+<div class="two">
+  <div class="card"><b>Sidebar reachability</b><p>As a developer monitoring Maister state, I want a labelled "Dashboard" row at the top of the Maister Lens sidebar, so that I can open the dashboard without hunting for an unlabelled codicon in a view title bar.</p></div>
+  <div class="card"><b>Return from a task</b><p>As a developer who drilled into a task from the dashboard, I want a "← Dashboard" link at the top of the task view, so that I can return the same way risks mode already lets me.</p></div>
+  <div class="card"><b>Renderer parity</b><p>As a developer using either task renderer (native fallback or the task's own re-hosted <code>dashboard.html</code>), I want the same back link in both, so that navigation does not depend on which renderer happened to be chosen.</p></div>
+</div>
+
+<h2 id="reuse">Reuse vs New</h2>
+<h3>Existing code to leverage — no new equivalent is written</h3>
+<table>
+  <thead><tr><th>Asset</th><th>Location</th><th>Used for</th></tr></thead>
+  <tbody>
+    <tr><td><code>maister.openDashboard</code> command</td><td>declared <code>package.json:129-134</code> (icon <code>dashboard</code>), registered <code>panel.ts:1489-1491</code></td><td>FR1's tree-item command; no new command declared</td></tr>
+    <tr><td><code>{type:'openDashboard'}</code> message</td><td>allowlisted/validated/dispatched <code>messages.ts:59,299-300,363,378</code>; dispatch <code>panel.ts:513-514</code></td><td>FR3 and FR4; no new message type, no <code>messages.ts</code> change</td></tr>
+    <tr><td>Risks breadcrumb template</td><td><code>risksMode.ts:429-433</code></td><td>FR3's exact structure</td></tr>
+    <tr><td><code>.link</code> CSS class</td><td><code>media/webview.css:260-275</code></td><td>FR3's styling; no new CSS</td></tr>
+    <tr><td><code>el()</code> DOM builder</td><td><code>components.ts:9-27</code></td><td>FR3's markup (only permitted builder; no <code>innerHTML</code> anywhere)</td></tr>
+    <tr><td>Local <code>post()</code> helper</td><td><code>fallbackTask.ts:75-77</code></td><td>FR3's dispatch; no sixth copy of the boilerplate</td></tr>
+    <tr><td><code>vscodeApi</code> handle</td><td><code>shim.ts:20</code></td><td>FR4's dispatch; one <code>acquireVsCodeApi()</code> per page is the hard limit</td></tr>
+    <tr><td>Tree-provider + registration pattern</td><td><code>nowTree.ts</code> (<code>NOW_VIEW_ID:8</code>, <code>taskItem():273-300</code>, <code>registerNowTree():401-425</code>)</td><td>FR1's provider shape, item/command wiring, disposal contract</td></tr>
+    <tr><td><code>FALLBACK</code> / <code>RISKS</code> string blocks</td><td><code>strings.ts:226-258</code>, <code>:329-330</code></td><td>FR5's placement convention</td></tr>
+  </tbody>
+</table>
+
+<h3>New components required — and why reuse is not possible</h3>
+<table>
+  <thead><tr><th>New</th><th>Justification</th></tr></thead>
+  <tbody>
+    <tr><td><code>src/views/navTree.ts</code> — view id, <code>TreeDataProvider</code>, register factory</td><td><code>NowTreeProvider</code> is bound to <code>TaskIndex</code> and unfinished-task membership; its data model (<code>NowNode</code>, seven node kinds, badges, artifact mtimes) has nothing in common with one static navigation row. Folding the row in would mix navigation into a task list, breaking single responsibility (<code>components.md</code>). The new provider is index-free and stateless.</td></tr>
+    <tr><td><code>package.json</code> view entry</td><td>VS Code has no container-title contribution point; a contributed view is the only way to place a labelled row above <code>maister.now</code>.</td></tr>
+    <tr><td><code>FALLBACK.breadcrumb</code> / <code>breadcrumbLabel</code> + nav label strings</td><td>No existing key carries this copy in the FALLBACK surface; the file's convention is one block per surface.</td></tr>
+    <tr><td>One <code>&lt;nav&gt;</code>+button in <code>fallbackTask.render()</code>; one injected element in <code>shim.ts</code></td><td>Neither renderer emits any breadcrumb today.</td></tr>
+  </tbody>
+</table>
+<div class="card"><b>Explicitly not created:</b> new command, new message type, new <code>PanelLocation</code> variant, new webview bundle, new CSP surface, new CSS rule, new <code>TaskPanel</code> history API, any origin-tracking state.</div>
+
+<h2 id="a11y">Accessibility Requirements</h2>
+<div class="card">
+<ul>
+  <li>Every new control is a <code>&lt;button&gt;</code> or a tree item — never a <code>&lt;div&gt;</code>, never a heading-as-button.</li>
+  <li>Both back links sit inside a <code>&lt;nav&gt;</code> with an <code>aria-label</code> from <code>FALLBACK.breadcrumbLabel</code>.</li>
+  <li>The tree row sets <code>accessibilityInformation.label</code> (the <code>nowTree.ts</code> convention) so the spoken name is explicit.</li>
+  <li>No positive <code>tabindex</code> anywhere; document order is tab order, and the back link is first.</li>
+  <li>The native link inherits <code>--vscode-textLink-foreground</code> via <code>.link</code>; the hosted link sets <code>color</code> explicitly from a VS Code CSS variable with a literal fallback, since the hosted page's theme variables are not guaranteed.</li>
+  <li><code>test/dom/surfaces.spec.ts:190-213</code> enforces tag/name/tabindex rules automatically for the <code>fallbackTask</code> surface.</li>
+</ul>
+</div>
+
+<h2 id="tests">Test Plan</h2>
+<table>
+  <thead><tr><th>File</th><th>Change</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td><code>test/unit/manifest.test.ts</code></td><td>Assert <code>contributes.views.maister</code> order (nav, <code>maister.now</code>, <code>maister.overview</code>), the nav view's <code>type: "tree"</code> / <code>name: "Overview"</code>, and <code>maister.overview</code>'s <code>name: "Tasks"</code>. Confirm the nine-palette-visible assertion (<code>:89-96</code>) and the <code>navigation@1</code>/<code>@2</code> literals (<code>:106,:111</code>) still pass unchanged.</td><td>FR1, FR2</td></tr>
+    <tr><td><code>test/unit/strings.test.ts</code></td><td>No new test — the forbidden-wording scan covers new keys automatically. Verify it still passes.</td><td>FR5</td></tr>
+    <tr><td><code>test/integration/fallbackTask.test.ts</code></td><td>Assert the first rendered element is a <code>&lt;nav&gt;</code> whose button reads <code>FALLBACK.breadcrumb</code>, and that clicking posts <code>{type:'openDashboard'}</code>.</td><td>FR3</td></tr>
+    <tr><td><code>test/integration/overview.test.ts</code></td><td>Update any assertion on the old "Overview" title/aria-label to "Tasks"; view id and behavior assertions untouched.</td><td>FR2</td></tr>
+    <tr><td><code>test/dom/surfaces.spec.ts</code></td><td>The <code>fallbackTask</code> surface picks the new control up in the blanket a11y loop; assert the back link is the first focusable control. The surfaces array stays at <b>five</b> — no new bundle.</td><td>FR3, a11y</td></tr>
+    <tr><td>New nav-provider unit test</td><td><code>getChildren()</code> returns exactly one node; its tree item has the <code>dashboard</code> <code>ThemeIcon</code>, the <code>maister.openDashboard</code> command, <code>collapsibleState: None</code>, a non-empty accessible label; <code>getChildren(node)</code> returns <code>[]</code>.</td><td>FR1</td></tr>
+  </tbody>
+</table>
+<div class="card">
+  <p><b>Sizing:</b> 2-8 focused tests per implementation task group. Verification runs only the new/affected tests, not the entire suite. Runners: <code>npm test</code> (mocha unit), <code>npm run test:integration</code>, <code>npm run test:dom</code> (Playwright).</p>
+  <p><span class="sev warning">warning</span> <b>Untested by design:</b> FR4's visual appearance inside arbitrary task-authored <code>dashboard.html</code> pages. No harness re-hosts a third-party dashboard; this is accepted risk and is the main reason the element self-styles defensively.</p>
+</div>
+
+<h2 id="detail">Technical Depth</h2>
+
+<details open>
+  <summary>Technical approach</summary>
+  <div class="card">
+    <p><b>Sidebar (FR1/FR2).</b> Manifest-first: reorder/extend <code>contributes.views.maister</code> and retitle <code>maister.overview</code>. The new provider is a stateless <code>TreeDataProvider&lt;NavNode&gt;</code> with one root node and no <code>onDidChangeTreeData</code> firing (the row never changes); registration mirrors <code>registerNowTree</code>, returning a disposable pushed in <code>src/extension.ts</code>. Activation is unchanged — the view is contributed to an existing container. No badge.</p>
+    <p><b>Native back link (FR3).</b> Purely additive inside <code>render()</code>: one <code>&lt;nav&gt;</code> prepended to the existing fragment. The webview → host path is untouched; the click reuses the already-validated <code>openDashboard</code> message, which the host turns into a fresh <code>{mode:'dashboard'}</code> push via <code>TaskPanel.show()</code> — the same forward-navigation semantic risks mode already uses, and the same one that survives reload since history is not persisted.</p>
+    <p><b>Hosted back link (FR4).</b> The shim is the only extension-owned code executing inside the re-hosted page. It gains a small <code>injectBackLink()</code> step: build the node with <code>document.createElement</code>, set inline style properties defensively, attach a click handler that stops propagation and posts <code>openDashboard</code>, and prepend to <code>document.body</code> once the body exists. Because the page's own script may re-render regions, the link attaches to <code>body</code> (not to any author container) so it is not clobbered. The hosted CSP allows inline styles; the security boundary (<code>hostDashboard.ts</code>, <code>messages.ts</code>) is untouched.</p>
+    <p><b>Ordering invariants.</b> Sidebar order becomes nav → Now → Tasks. Task render order becomes nav → banner → header → sections; the back link is therefore also first in tab order in both renderers.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Standards compliance</summary>
+  <div class="card">
+  <table>
+    <tbody>
+      <tr><td><code>global/minimal-implementation.md</code></td><td>"Project" entry deferred rather than stubbed; no new command, message type, bundle, CSS rule or speculative abstraction.</td></tr>
+      <tr><td><code>global/coding-style.md</code></td><td>Duplicate "Overview" title resolved; naming follows <code>NOW_VIEW_ID</code> / <code>registerNowTree</code> conventions.</td></tr>
+      <tr><td><code>global/commenting.md</code></td><td>Only comment added is the <code>shim.ts</code> header correction, documenting a real invariant change; no change-log comments.</td></tr>
+      <tr><td><code>global/error-handling.md</code></td><td>Hosted injection degrades gracefully: if <code>document.body</code> is unavailable, injection is skipped and the rest of the shim is unaffected.</td></tr>
+      <tr><td><code>frontend/accessibility.md</code></td><td>Semantic <code>nav</code>/<code>button</code>, aria-labels, keyboard-first order.</td></tr>
+      <tr><td><code>frontend/components.md</code></td><td>The nav provider has a single responsibility and no props/state beyond its one row.</td></tr>
+      <tr><td><code>frontend/css.md</code></td><td>Zero new custom CSS in the native panel; hosted inline styles are the minimum needed and use VS Code theme variables where available.</td></tr>
+      <tr><td><code>project/vision.md</code></td><td>Both affordances serve "recall in seconds"; both are read-only navigation, consistent with the view-layer scope.</td></tr>
+      <tr><td><code>project/tech-stack.md</code></td><td>No new dependency, no new esbuild entry, no change to the five-bundle DOM surface count.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</details>
+
+<details>
+  <summary>Assumptions</summary>
+  <div class="card">
+    <ul>
+      <li>The new view id is not asserted outside the manifest test, so the implementer may pick it (e.g. <code>maister.nav</code>) without downstream breakage.</li>
+      <li><code>src/strings.ts</code> has no imports and is bundle-safe, so <code>shim.ts</code> may import from it without pulling in extension-host code; if bundle size proves a problem, the copy may instead pass through a narrow shim-local constant <i>sourced from</i> <code>strings.ts</code> at build time — the requirement is no hand-written literal.</li>
+      <li><code>test/integration/overview.test.ts</code> asserts the surface's title/aria-label; if it does not, FR2's test change reduces to a no-op and only the manifest assertion applies.</li>
+      <li>The <code>dashboard</code> codicon is valid as a <code>ThemeIcon</code> id (already used as a command icon in the manifest).</li>
+      <li>Adding a third view to the container does not alter any existing <code>when</code> clause or context key.</li>
+    </ul>
+  </div>
+</details>
+
+<h2 id="success">Success Criteria</h2>
+<div class="card">
+<ol>
+  <li>The sidebar shows, in order: "Overview" (one "Dashboard" row with the dashboard icon), "Now", "Tasks". Clicking the row opens the dashboard panel.</li>
+  <li>No two sidebar sections share a title.</li>
+  <li>Every task view — native and hosted — shows "← Dashboard" as its first element and first tab stop; activating it opens the dashboard.</li>
+  <li><code>git diff --stat</code> shows zero lines changed in <code>hostDashboard.ts</code>, <code>messages.ts</code> and at <code>panel.ts:1342</code>.</li>
+  <li><code>npm test</code>, <code>npm run test:integration</code> and <code>npm run test:dom</code> all pass; <code>surfaces.spec.ts</code> still enumerates five surfaces and <code>manifest.test.ts</code> still asserts nine palette-visible commands.</li>
+  <li>No inline <code>style</code> attribute exists in any native-panel bundle; no new CSS rule was added to <code>media/webview.css</code>.</li>
+</ol>
+</div>
+
+</main>
+</body>
+</html>

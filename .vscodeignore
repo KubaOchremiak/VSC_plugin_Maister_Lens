@@ -20,3 +20,6 @@ tsconfig.json
 package-lock.json
 CLAUDE.md
 *.vsix
+docs/**
+.github/**
+AGENTS.md

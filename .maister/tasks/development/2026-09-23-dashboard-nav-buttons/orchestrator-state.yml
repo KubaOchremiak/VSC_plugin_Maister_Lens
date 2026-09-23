@@ -1,0 +1,167 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: [phase-1, phase-2, phase-5, phase-6, phase-7, phase-8, phase-10, phase-11, phase-12, phase-14]
+  failed_phases: []
+  auto_fix_attempts: {}
+  options:
+    html_output: true
+    mockup_format: html
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: true
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: false
+    reality_check_enabled: false
+    production_check_enabled: true
+  created: 2026-09-23T13:17:46Z
+  updated: 2026-09-23T17:50:22Z
+  task_path: .maister/tasks/development/2026-09-23-dashboard-nav-buttons
+  task_ids: {}
+task:
+  title: Dashboard navigation buttons (Open Dashboard + Back from task view)
+  description: |
+    1. Add an "Open Dashboard" button above the "now" button.
+    2. When opening a task from the dashboard, show a "back" button at the top to return to the dashboard (as already done for risks).
+  status: completed
+  tags: [ui, navigation]
+  priority: null
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: "Manifest-first sidebar (stateless tree view + retitle); purely additive DOM for back links. No new command, message type, PanelLocation variant, bundle or CSP surface."
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: true
+  research_reference:
+    path: null
+  design_reference:
+    source: null
+    mockup_count: 0
+    has_brief: false
+    index_path: null
+  project_doc_paths:
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/tech-stack.md
+  phase_summaries:
+    implementation:
+      summary: "All 5 groups / 38 steps complete across 3 waves (G2+G3+G4 in parallel). 19 new tests; lint, unit (54), integration (39) and DOM (13) all green. hostDashboard.ts and messages.ts kept zero-line diffs; all three audit findings closed."
+      decisions:
+        - {decision: "NavTreeProvider ships with no dispose()", rationale: "It holds no emitter or subscription; an empty dispose() would be a stub forbidden by minimal-implementation.md. Operator accepted at the Phase 8 gate"}
+        - {decision: "Group 4's FR4 tests went into a new test/dom/shim.spec.ts", rationale: "security.spec.ts's scope is CSP/nonce guarantees; the new file adds no surfaces-array entry. Operator accepted at the Phase 8 gate"}
+        - {decision: "Group 3 wrote a local ~60-line StubNode DOM stub rather than adding a DOM devDependency", rationale: "The extension host has no document and the repo deliberately carries no jsdom/happy-dom (conventions.md). Operator accepted at the Phase 8 gate"}
+        - {decision: "Group 5 added 3 tests of a permitted 6", rationale: "Only three real gaps remained after reviewing Groups 1-4"}
+      risks:
+        - "OPEN FOR OPERATOR: the uncommitted ViewColumn.Beside -> Active change at src/panel/panel.ts:1342 is pre-existing and out of scope (D6). No group touched panel.ts, but it will be swept into any git commit -a"
+        - "The StubNode DOM stub in test/integration/fallbackTask.test.ts should move to test/helpers/ if it gets a second consumer"
+        - "The CHANGELOG entry sits under [Unreleased] and needs folding into a version heading at release time"
+      artifacts:
+        - {path: implementation/work-log.md, label: Work Log, html: null}
+    codebase_analysis:
+      summary: "Both features are additive and precedented; the maister.openDashboard command and openDashboard webview message already exist end-to-end. No 'now button' exists - Now is the maister.now tree view."
+      primary_language: TypeScript
+      key_files: [package.json, src/webview/fallbackTask.ts, src/webview/risksMode.ts, src/strings.ts, src/panel/panel.ts, src/panel/hostDashboard.ts, src/webview/shim.ts, src/views/nowTree.ts]
+      decisions: []
+      risks:
+        - "Hosted dashboard.html task view cannot take a DOM insertion without violating the documented 'exactly three insertions, all security plumbing' invariant in hostDashboard.ts"
+        - "No origin tracking exists: openTask carries only folderUri and PanelLocation has no 'from' field"
+        - "test/dom/surfaces.spec.ts has a blanket a11y loop that auto-fails unnamed controls"
+      artifacts:
+        - {path: analysis/codebase-analysis.md, label: Codebase Analysis, html: null}
+    gap_analysis:
+      summary: "Both deliverables are UI-only gaps over host plumbing that already works (maister.openDashboard command, allowlisted openDashboard message, risks breadcrumb pattern). Four blocking decisions must be settled before a spec: Overview title collision, destination-less Project entry, hosted-dashboard.html back link, and new-view type."
+      integration_points: ["package.json contributes.views.maister", "new sidebar view provider alongside src/views/overviewView.ts", "src/webview/fallbackTask.ts render()", "src/webview/shim.ts", "src/strings.ts FALLBACK block", "src/webview/risksMode.ts (pattern source)"]
+      decisions: []
+      risks:
+        - "Duplicate 'Overview' title is a guaranteed defect, not a risk - ships broken unless resolved"
+        - "The 'Project' entry cannot be implemented as requested without violating the no-future-stubs standard"
+        - "Hosted dashboard.html does not load media/webview.css, so an injected back link inherits arbitrary task-author CSS and could render invisible"
+        - "test/unit/manifest.test.ts asserts exactly nine palette-visible commands and literal navigation@1/@2"
+        - "Uncommitted ViewColumn.Beside -> Active edit at src/panel/panel.ts:1342 is outside this task's scope"
+      artifacts:
+        - {path: analysis/gap-analysis.md, label: Gap Analysis, html: null}
+    implementation_plan:
+      summary: "5 task groups, 38 steps, 18-24 expected tests, three waves. Strings pulled into its own group so the three implementation groups run fully parallel in wave 2. Complexity medium-low."
+      decisions:
+        - {decision: "src/strings.ts isolated into Group 1", rationale: "It is the single file all three implementation groups would contend on; isolating it buys full parallelism for the expensive middle wave"}
+        - {decision: "W3 handled by a standalone proof-of-execution step (2.3)", rationale: "Registering the suite is not enough - the test count must be proven to increase or one assertion deliberately failed"}
+        - {decision: "stopPropagation kept as plain defence-in-depth with the false rationale forbidden in comments", rationale: "The interceptLink hazard does not exist; the real behaviour is cited instead"}
+      risks:
+        - "Existing users will not get the new view in first position - docs-only mitigation via 'Views: Reset View Locations'"
+        - "FR4's hosted visual result is untestable by design (arbitrary task-author CSS)"
+        - "surfaces.spec.ts tab-order indices shift when the breadcrumb is prepended, so Group 3 must re-run npm run test:dom before Group 5 starts"
+        - "No TaskCreate/TaskUpdate tool available, so per-group task items were not created; markdown checkboxes and HTML progress markers are the resume source of truth"
+      artifacts:
+        - {path: implementation/implementation-plan.md, label: Implementation Plan, html: implementation/implementation-plan.html}
+    spec_audit:
+      summary: "Verdict pass-with-concerns: 0 critical, 4 warning, 6 info. All operator constraints honoured and every load-bearing technical claim verified true. Two actionable warnings: a mislocated FR1 test that would never run, and an unverified assumption about overview.test.ts coverage."
+      decisions: []
+      risks:
+        - "W3: the FR1 test is mislocated - test/integration/index.ts enumerates suites by hard-coded name, so a new navTree.test.ts not added to SUITES.trusted never loads and the suite passes green with zero FR1 coverage"
+        - "W2: the spec's assumption that test/integration/overview.test.ts asserts the Overview title/aria-label is FALSE, so FR2's rename would ship untested end-to-end"
+        - "W1: FR4 AC5's stopPropagation rationale is factually wrong - interceptLink bails unless event.target.closest('a[href]') resolves, and the injected element is a button"
+        - "W4: contributes.views order only governs first-install layout, so the ordering success criterion is not enforceable for existing users"
+        - "Six drifted file:line references in the spec (all recoverable by symbol name, none point at the wrong file)"
+      artifacts:
+        - {path: verification/spec-audit.md, label: Specification Audit, html: null}
+    specification:
+      summary: "Spec 'Dashboard Navigation Affordances' written: 5 FRs, 9 reused assets, 4 new components, 6 test files. Everything rides the already-allowlisted openDashboard path; hostDashboard.ts keeps a zero-line diff."
+      decisions:
+        - {decision: "New view id left to the implementer (maister.nav suggested)", rationale: "Unasserted outside the manifest test"}
+        - {decision: "FR2 extends the rename to OVERVIEW.title in src/strings.ts:138", rationale: "Otherwise the screen-reader name of the 'Tasks' view would contradict its title"}
+        - {decision: "shim.ts imports FALLBACK.breadcrumb directly", rationale: "strings.ts has no imports, so this satisfies 'no inline literals' without a bundle-size cost"}
+      risks:
+        - "The hosted link's appearance under arbitrary task-author CSS is untestable - mitigated by defensive inline element.style properties and stopPropagation() so the shim's capture-phase interceptLink does not swallow the click"
+        - "shim.ts's header comment must be updated since it stops being a pure messaging bridge"
+      artifacts:
+        - {path: implementation/spec.md, label: Specification, html: implementation/spec.html}
+        - {path: analysis/requirements.md, label: Requirements, html: null}
+    scope_clarifications:
+      scope_expanded: false
+      summary: "All six decisions resolved. Scope reduced: Project entry deferred; existing Overview view renamed 'Tasks'; new tree view titled 'Overview' with a Dashboard row; hosted back link injected from shim.ts."
+      decisions:
+        - {decision: "D1 Overview title collision -> rename existing view to 'Tasks'", rationale: "New nav section takes the 'Overview' title the user asked for; 'Tasks' is more accurate for a task list"}
+        - {decision: "D2 'Project' entry -> defer to a follow-up task", rationale: "No design exists; shipping a stub would violate the no-future-stubs standard"}
+        - {decision: "D3 Hosted dashboard.html back link -> inject from src/webview/shim.ts", rationale: "Keeps hostDashboard.ts three-insertion security contract intact"}
+        - {decision: "D4 New view type -> tree view", rationale: "No new bundle, no new CSP surface, a11y handled by VS Code, matches maister.now"}
+        - {decision: "D5 Back-link strings -> own keys in the FALLBACK block", rationale: "Follows the per-surface grouping convention used by RISKS and READER"}
+        - {decision: "D6 Stray edit at panel.ts:1342 -> leave untouched", rationale: "Outside this task's scope; operator will handle it"}
+      risks:
+        - "Hosted dashboard.html does not load media/webview.css, so the shim-injected link needs inline styling and must resist task-author CSS"
+        - "Renaming the existing Overview view touches test/integration/overview.test.ts"
+        - "The deferred 'Project' page remains an open design item for a future task"
+      artifacts:
+        - {path: analysis/scope-clarifications.md, label: Scope Clarifications, html: null}
+    clarifications:
+      summary: "User wants a new first sidebar view titled 'Overview' holding Dashboard and Project entries; back link in both task renderers, shown unconditionally."
+      decisions:
+        - {decision: "New first sidebar view headed 'Overview' with nav entries", rationale: "User rejected Now title-bar icon and in-tree row; wants a distinct nav section"}
+        - {decision: "Back link in both fallback and hosted task renderers", rationale: "Consistent UX across renderers"}
+        - {decision: "Back link unconditional", rationale: "Mirrors existing risks breadcrumb; avoids origin tracking through the message security boundary"}
+      risks:
+        - "Name collision: a sidebar view titled 'Overview' already exists (maister.overview)"
+        - "'Project' entry has no destination yet - conflicts with the no-future-stubs standard"
+      artifacts:
+        - {path: analysis/clarifications.md, label: Clarifications, html: null}
+verification_context:
+  last_status: passed_with_issues
+  issues_found: [0 critical, 5 warning, 10 info at verification]
+  fixes_applied:
+    - {issue: "W2 defensive styling: inert z-index on a position:static element, no !important", fix: "BUTTON_STYLE/NAV_STYLE declaration tables via a shared applyStyle(); visibility-critical properties carry important priority; z-index deleted", file: src/webview/shim.ts, outcome: resolved}
+    - {issue: "W3 process-wide global stubbing after module-scope acquireVsCodeApi(); import-order hazard", fix: "stubs installed in a before() hook that asserts the stub then imports the bundle once into a suite-scoped binding; renderFallback() now synchronous", file: test/integration/fallbackTask.test.ts, outcome: resolved}
+    - {issue: "W1/C2 back link injected once, never re-asserted", fix: "documented in README.md as unsupported, noting the editor/title Open Dashboard button is always present", file: README.md, outcome: resolved_by_decision}
+  decisions_made:
+    - {decision: "Fix W2 and W3; document W1/C2; decline C1 and all info items", rationale: "Operator selection at the Phase 11 fix gate"}
+    - {decision: "No MutationObserver for the hosted back link", rationale: "Operator chose documentation over code; the editor/title button means no user is ever stranded"}
+  residual_issues:
+    - "C1 CHANGELOG rename wording (declined)"
+    - "C3 stage this feature's files by explicit path so the out-of-scope panel.ts:1342 edit does not ride along"
+    - "I1-I7, C4 informational (declined)"
+  post_fix_counts: {critical: 0, warning: 2, info: 10}
+  e2e_status: go_with_caveats
+  e2e_followup: "W2 widened in fix cycle 2 after E2E found 8 of 9 hostile-CSS vectors still neutralised the link; hostile-CSS DOM test added (red first, then green). Accepted limitation: a stacked page overlay can still cover the link."
+  reverify_count: 2

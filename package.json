@@ -1,18 +1,18 @@
 {
   "name": "maister-lens",
   "displayName": "Maister Lens",
-  "description": "A single view layer over Maister tasks and artifacts inside VS Code.",
+  "description": "Explore Maister AI development workflows, tasks, artifacts and risks inside VS Code.",
   "version": "0.1.0",
-  "publisher": "maister",
+  "publisher": "jakub-ochremiak",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/maister/maister-lens.git"
+    "url": "https://github.com/KubaOchremiak/VSC_Maister_plugin.git"
   },
   "bugs": {
-    "url": "https://github.com/maister/maister-lens/issues"
+    "url": "https://github.com/KubaOchremiak/VSC_Maister_plugin/issues"
   },
-  "homepage": "https://github.com/maister/maister-lens#readme",
+  "homepage": "https://github.com/KubaOchremiak/VSC_Maister_plugin#readme",
   "private": true,
   "engines": {
     "vscode": "^1.90.0"
@@ -46,13 +46,18 @@
     "views": {
       "maister": [
         {
+          "id": "maister.nav",
+          "name": "Overview",
+          "type": "tree"
+        },
+        {
           "id": "maister.now",
           "name": "Now",
           "type": "tree"
         },
         {
           "id": "maister.overview",
-          "name": "Overview",
+          "name": "Tasks",
           "type": "webview"
         }
       ]
@@ -138,13 +143,13 @@
       },
       {
         "command": "maister.startWorkflow",
-        "title": "Start Workflow…",
+        "title": "Start Workflow\u2026",
         "category": "Maister",
         "icon": "add"
       },
       {
         "command": "maister.overview.groupBy",
-        "title": "Group By…",
+        "title": "Group By\u2026",
         "category": "Maister",
         "icon": "group-by-ref-type"
       },
@@ -396,7 +401,12 @@
     "test:integration": "npm run build && tsc -p tsconfig.json && node out/test/runIntegration.js",
     "test:min": "npm run build && tsc -p tsconfig.json && node out/test/runIntegration.js --vscode-version=1.90.0",
     "test:dom": "npm run build && playwright test",
-    "bench": "npm run build && tsc -p tsconfig.json && node scripts/bench.mjs"
+    "bench": "npm run build && tsc -p tsconfig.json && node scripts/bench.mjs",
+    "vscode:prepublish": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "package": "vsce package --no-dependencies",
+    "verify:release": "npm run check && npm run test:dom && npm run test:integration && npm run test:min && npm run package"
   },
   "dependencies": {
     "markdown-it": "^14.1.0",
@@ -416,5 +426,22 @@
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.70.1"
-  }
+  },
+  "icon": "media/icon.png",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "maister",
+    "AI",
+    "SDLC",
+    "workflow",
+    "tasks",
+    "dashboard"
+  ],
+  "galleryBanner": {
+    "color": "#000000",
+    "theme": "dark"
+  },
+  "author": "Jakub Ochremiak (Maister Lens)"
 }

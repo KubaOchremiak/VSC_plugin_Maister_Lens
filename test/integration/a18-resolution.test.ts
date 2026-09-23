@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert';
+import { readFileSync } from 'node:fs';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { TaskPanel } from '../../src/panel/panel.ts';
 import {
@@ -12,7 +14,12 @@ import {
   writeHostedTask
 } from '../helpers/tempWorkspace.ts';
 
-const EXTENSION_ID = 'maister.maister-lens';
+// This suite runs from out/test/integration; use the actual release identity so
+// registering a different publisher does not silently break activation coverage.
+const manifest = JSON.parse(
+  readFileSync(path.resolve(__dirname, '../../../package.json'), 'utf8')
+) as { publisher: string; name: string };
+const EXTENSION_ID = `${manifest.publisher}.${manifest.name}`;
 
 after(() => removeTempDirs());
 

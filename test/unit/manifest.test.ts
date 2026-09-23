@@ -1,12 +1,19 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
+import { OVERVIEW } from '../../src/strings.ts';
 
 interface CommandContribution {
   readonly command: string;
   readonly title: string;
   readonly category?: string;
   readonly icon?: string;
+}
+
+interface ViewContribution {
+  readonly id: string;
+  readonly name: string;
+  readonly type?: string;
 }
 
 interface MenuEntry {
@@ -29,6 +36,7 @@ interface Manifest {
   readonly contributes: {
     commands: CommandContribution[];
     menus: Record<string, MenuEntry[]>;
+    views: Record<string, ViewContribution[]>;
     configuration: { properties: Record<string, Record<string, unknown>> };
   };
 }
@@ -122,6 +130,36 @@ describe('manifest', () => {
       ),
       'maister.openRisks is missing from the panel editor title'
     );
+  });
+
+  it('lists the three sidebar views in manifest order, nav first (FR1 AC1, FR2 AC1)', () => {
+    const views = manifest.contributes.views.maister;
+
+    assert.deepEqual(
+      views.map((view) => view.id),
+      ['maister.nav', 'maister.now', 'maister.overview']
+    );
+    assert.equal(views[0].type, 'tree');
+    assert.equal(views[0].name, 'Overview');
+    assert.equal(views[2].name, 'Tasks');
+  });
+
+  it('keeps the maister.overview manifest name in step with OVERVIEW.title (FR2 AC2)', () => {
+    const overview = manifest.contributes.views.maister.find((view) => view.id === 'maister.overview');
+
+    assert.ok(overview, 'the maister.overview view is missing from the manifest');
+    assert.equal(overview.name, OVERVIEW.title);
+  });
+
+  it('adds the nav view without declaring a new command (FR1 AC6)', () => {
+    const declared = manifest.contributes.commands.map((entry) => entry.command);
+    const hidden = manifest.contributes.menus.commandPalette
+      .filter((entry) => entry.when === 'false')
+      .map((entry) => entry.command);
+
+    assert.equal(declared.filter((command) => !hidden.includes(command)).length, 9);
+    assert.ok(declared.includes('maister.openDashboard'), 'the reused command is missing');
+    assert.ok(!declared.some((command) => command.startsWith('maister.nav')));
   });
 
   it('declares trust, virtual-workspace, extension-kind and activation contracts', () => {
