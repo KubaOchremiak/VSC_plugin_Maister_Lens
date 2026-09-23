@@ -1,0 +1,20 @@
+orchestrator:
+  completed_phases: [phase-1]
+  created: 2026-07-07T09:00:00Z
+  updated: 2026-07-07T10:00:00Z
+task:
+  title: Mixed list entry
+  status: in_progress
+task_context:
+  phase_summaries:
+    clarifications:
+      - {decision: A classifiable decision, rationale: user choice}
+      - {risk: "resolved: a classifiable risk"}
+      - {text: An open risk in text form}
+      - {path: implementation/spec.md, label: Specification, html: null}
+      - A bare string decision
+      - 42
+      - null
+      - [nested, list]
+      - {unrelated: value}
+    handoff: A scalar summary, not a list

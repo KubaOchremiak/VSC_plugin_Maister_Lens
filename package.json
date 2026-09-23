@@ -1,0 +1,420 @@
+{
+  "name": "maister-lens",
+  "displayName": "Maister Lens",
+  "description": "A single view layer over Maister tasks and artifacts inside VS Code.",
+  "version": "0.1.0",
+  "publisher": "maister",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maister/maister-lens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/maister/maister-lens/issues"
+  },
+  "homepage": "https://github.com/maister/maister-lens#readme",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In untrusted workspaces Maister Lens shows tasks and renders markdown, but does not run Maister's HTML dashboards or companions, and cannot launch workflows."
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [
+    "workspaceContains:.maister/tasks/*/*/orchestrator-state.yml",
+    "workspaceContains:.maister/config.yml",
+    "onWebviewPanel:maister.panel"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "maister",
+          "title": "Maister Lens",
+          "icon": "media/maister.svg"
+        }
+      ]
+    },
+    "views": {
+      "maister": [
+        {
+          "id": "maister.now",
+          "name": "Now",
+          "type": "tree"
+        },
+        {
+          "id": "maister.overview",
+          "name": "Overview",
+          "type": "webview"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "maister.now",
+        "contents": "No unfinished Maister tasks in this working copy.\n[Start a workflow](command:maister.startWorkflow)",
+        "when": "isWorkspaceTrusted"
+      },
+      {
+        "view": "maister.now",
+        "contents": "No unfinished Maister tasks in this working copy.\nThis workspace is not trusted, so workflows cannot be launched from here.",
+        "when": "!isWorkspaceTrusted"
+      }
+    ],
+    "commands": [
+      {
+        "command": "maister.openTask",
+        "title": "Open Task",
+        "category": "Maister"
+      },
+      {
+        "command": "maister.openArtifact",
+        "title": "Open Artifact",
+        "category": "Maister"
+      },
+      {
+        "command": "maister.openArtifactSource",
+        "title": "Open Source File",
+        "category": "Maister",
+        "icon": "file-code"
+      },
+      {
+        "command": "maister.revealInExplorer",
+        "title": "Reveal in Explorer",
+        "category": "Maister",
+        "icon": "folder-opened"
+      },
+      {
+        "command": "maister.runNextAction",
+        "title": "Run Next Action",
+        "category": "Maister",
+        "icon": "play"
+      },
+      {
+        "command": "maister.resumeTask",
+        "title": "Resume",
+        "category": "Maister"
+      },
+      {
+        "command": "maister.startDevelopmentFromDesign",
+        "title": "Start Development from This Design",
+        "category": "Maister"
+      },
+      {
+        "command": "maister.designFromResearch",
+        "title": "Design from This Research",
+        "category": "Maister"
+      },
+      {
+        "command": "maister.developFromResearch",
+        "title": "Develop from This Research",
+        "category": "Maister"
+      },
+      {
+        "command": "maister.openDashboard",
+        "title": "Open Dashboard",
+        "category": "Maister",
+        "icon": "dashboard"
+      },
+      {
+        "command": "maister.openRisks",
+        "title": "Open Risks",
+        "category": "Maister",
+        "icon": "warning"
+      },
+      {
+        "command": "maister.refresh",
+        "title": "Refresh",
+        "category": "Maister",
+        "icon": "refresh"
+      },
+      {
+        "command": "maister.startWorkflow",
+        "title": "Start Workflow…",
+        "category": "Maister",
+        "icon": "add"
+      },
+      {
+        "command": "maister.overview.groupBy",
+        "title": "Group By…",
+        "category": "Maister",
+        "icon": "group-by-ref-type"
+      },
+      {
+        "command": "maister.overview.clearFilter",
+        "title": "Clear Filters",
+        "category": "Maister",
+        "icon": "clear-all"
+      },
+      {
+        "command": "maister.panel.back",
+        "title": "Back",
+        "category": "Maister",
+        "icon": "arrow-left"
+      },
+      {
+        "command": "maister.panel.forward",
+        "title": "Forward",
+        "category": "Maister",
+        "icon": "arrow-right"
+      },
+      {
+        "command": "maister.panel.toggleVariant",
+        "title": "Toggle Styled / Markdown View",
+        "category": "Maister",
+        "icon": "markdown"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "maister.openTask",
+          "when": "false"
+        },
+        {
+          "command": "maister.openArtifact",
+          "when": "false"
+        },
+        {
+          "command": "maister.openArtifactSource",
+          "when": "false"
+        },
+        {
+          "command": "maister.revealInExplorer",
+          "when": "false"
+        },
+        {
+          "command": "maister.runNextAction",
+          "when": "false"
+        },
+        {
+          "command": "maister.resumeTask",
+          "when": "false"
+        },
+        {
+          "command": "maister.startDevelopmentFromDesign",
+          "when": "false"
+        },
+        {
+          "command": "maister.designFromResearch",
+          "when": "false"
+        },
+        {
+          "command": "maister.developFromResearch",
+          "when": "false"
+        },
+        {
+          "command": "maister.startWorkflow",
+          "when": "isWorkspaceTrusted"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "maister.startWorkflow",
+          "when": "view == maister.now && isWorkspaceTrusted",
+          "group": "navigation@1"
+        },
+        {
+          "command": "maister.refresh",
+          "when": "view == maister.now",
+          "group": "navigation@2"
+        },
+        {
+          "command": "maister.openDashboard",
+          "when": "view == maister.overview",
+          "group": "navigation@1"
+        },
+        {
+          "command": "maister.openRisks",
+          "when": "view == maister.overview",
+          "group": "navigation@2"
+        },
+        {
+          "command": "maister.overview.groupBy",
+          "when": "view == maister.overview",
+          "group": "navigation@3"
+        },
+        {
+          "command": "maister.overview.clearFilter",
+          "when": "view == maister.overview && maister.overview.filtered",
+          "group": "navigation@4"
+        },
+        {
+          "command": "maister.refresh",
+          "when": "view == maister.overview",
+          "group": "navigation@5"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "maister.runNextAction",
+          "when": "view == maister.now && viewItem =~ /\\.next-(resume|startDevelopment|fromResearch)$/ && isWorkspaceTrusted",
+          "group": "inline"
+        },
+        {
+          "command": "maister.resumeTask",
+          "when": "view == maister.now && viewItem =~ /\\.next-resume$/ && isWorkspaceTrusted",
+          "group": "1_launch@1"
+        },
+        {
+          "command": "maister.startDevelopmentFromDesign",
+          "when": "view == maister.now && viewItem =~ /\\.next-startDevelopment$/ && isWorkspaceTrusted",
+          "group": "1_launch@2"
+        },
+        {
+          "command": "maister.designFromResearch",
+          "when": "view == maister.now && viewItem =~ /\\.next-fromResearch$/ && isWorkspaceTrusted",
+          "group": "1_launch@3"
+        },
+        {
+          "command": "maister.developFromResearch",
+          "when": "view == maister.now && viewItem =~ /\\.next-fromResearch$/ && isWorkspaceTrusted",
+          "group": "1_launch@4"
+        },
+        {
+          "command": "maister.openArtifactSource",
+          "when": "view == maister.now && viewItem =~ /^artifact\\./",
+          "group": "2_open@1"
+        },
+        {
+          "command": "maister.revealInExplorer",
+          "when": "view == maister.now && viewItem =~ /^(task|artifact)\\./",
+          "group": "2_open@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "maister.panel.back",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.canGoBack",
+          "group": "navigation@1"
+        },
+        {
+          "command": "maister.panel.forward",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.canGoForward",
+          "group": "navigation@2"
+        },
+        {
+          "command": "maister.panel.toggleVariant",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.variantAvailable",
+          "group": "navigation@3"
+        },
+        {
+          "command": "maister.openDashboard",
+          "when": "activeWebviewPanelId == 'maister.panel'",
+          "group": "navigation@4"
+        },
+        {
+          "command": "maister.openRisks",
+          "when": "activeWebviewPanelId == 'maister.panel'",
+          "group": "navigation@5"
+        },
+        {
+          "command": "maister.openArtifactSource",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.mode == 'artifact'",
+          "group": "navigation@6"
+        },
+        {
+          "command": "maister.runNextAction",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.hasNextAction && isWorkspaceTrusted",
+          "group": "navigation@7"
+        },
+        {
+          "command": "maister.revealInExplorer",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.mode != 'dashboard'",
+          "group": "navigation@8"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Maister Lens",
+      "properties": {
+        "maisterLens.staleness.quietDays": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 365,
+          "description": "An unfinished task is flagged quiet after this many days without activity."
+        },
+        "maisterLens.attribution.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Derive task authors from git history."
+        },
+        "maisterLens.launch.targetOrder": {
+          "type": "array",
+          "default": [
+            "claudeCode",
+            "copilotChat",
+            "terminal",
+            "clipboard"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "claudeCode",
+              "copilotChat",
+              "terminal",
+              "clipboard"
+            ],
+            "enumDescriptions": [
+              "Claude Code extension",
+              "GitHub Copilot Chat",
+              "An integrated terminal",
+              "The system clipboard"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 1,
+          "description": "Launch destination preference order; the first available target is used."
+        },
+        "maisterLens.launch.autoSubmit": {
+          "type": "boolean",
+          "default": false,
+          "description": "Submit launched commands immediately where the target allows it. Claude Code always pre-fills."
+        },
+        "maisterLens.launch.terminalName": {
+          "type": "string",
+          "default": "",
+          "description": "Preferred terminal name for the terminal launch target."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "eslint src test",
+    "test": "mocha",
+    "test:integration": "npm run build && tsc -p tsconfig.json && node out/test/runIntegration.js",
+    "test:min": "npm run build && tsc -p tsconfig.json && node out/test/runIntegration.js --vscode-version=1.90.0",
+    "test:dom": "npm run build && playwright test",
+    "bench": "npm run build && tsc -p tsconfig.json && node scripts/bench.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0",
+    "yaml": "^2.5.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.5.0",
+    "@types/vscode": "~1.90.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.23.1",
+    "eslint": "^9.9.0",
+    "mocha": "^10.7.3",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.70.1"
+  }
+}

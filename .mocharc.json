@@ -1,0 +1,6 @@
+{
+  "spec": "test/unit/**/*.test.ts",
+  "extension": ["ts"],
+  "node-option": ["disable-warning=MODULE_TYPELESS_PACKAGE_JSON"],
+  "timeout": 10000
+}

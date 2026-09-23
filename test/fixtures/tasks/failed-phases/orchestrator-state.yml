@@ -1,0 +1,17 @@
+orchestrator:
+  started_phase: phase-11
+  completed_phases: [phase-1, phase-2, phase-3, phase-4, phase-5, phase-6, phase-7]
+  failed_phases: [phase-3, phase-7]
+  auto_fix_attempts:
+    phase-3: 2
+    phase-7: 1
+    phase-1: 0
+  created: 2026-06-01T09:00:00Z
+  updated: 2026-06-03T09:00:00Z
+task:
+  title: Task with recorded phase failures
+  status: in_progress
+task_context:
+  phase_summaries:
+    implementation:
+      decisions: [{decision: Retry the failing phase, rationale: auto-fix}]

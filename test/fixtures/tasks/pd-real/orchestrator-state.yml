@@ -1,0 +1,334 @@
+orchestrator:
+  started_phase: phase-8
+  completed_phases: [phase-0, phase-1, phase-2, phase-3, phase-4, phase-5, phase-6, phase-7, phase-8]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-0: 0
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+  options:
+    html_output: true
+    mockup_format: html
+    visual_enabled: true
+  created: 2026-09-22T12:27:56Z
+  updated: 2026-09-22T15:44:50Z
+  task_path: .maister/tasks/product-design/2026-09-22-maister-viewer-vscode-plugin
+  task_ids: {}
+
+task:
+  title: Maister Viewer — VS Code plugin as a single view layer over tasks and artifacts
+  description: >-
+    Maister produces orchestrator-state.yml for each task. Tasks are of different types based on
+    workflows, and the process emits HTML files and other artifacts. Build a Visual Studio Code
+    plugin that acts as a single layer of view over these tasks and artifacts, per the product
+    vision. GitLens is the reference model: the plugin is self-sufficient and delivers all its
+    functionality without forcing the user to jump around the VS Code UI.
+  status: completed
+  tags: [vscode-extension, greenfield, developer-tooling]
+  priority: null
+
+design_context:
+  design_characteristics:
+    is_greenfield: true
+    is_enhancement: false
+    is_ui_focused: true
+    is_backend: true
+    is_complex: true
+    is_simple: false
+  complexity_level: complex
+  collected_urls: []
+  research_topics: []
+  user_files_list: []
+  project_doc_paths:
+    - .maister/docs/INDEX.md
+    - .maister/docs/project/vision.md
+    - .maister/docs/project/tech-stack.md
+  project_context_summary: >-
+    Greenfield VS Code extension. Vision: visual, single-layer access to all Maister flows and
+    artifacts for analytically-minded developers who prefer not to dive into code and git; browser
+    of completed tasks with search and filter; top-layer view over Maister and repository changes.
+    Tech stack is unimplemented but intended: TypeScript, VS Code Extension API (Node.js extension
+    host), npm + tsc, ESLint/Prettier planned, distribution via vsce to Marketplace/Open VSX.
+  refinement_iterations:
+    phase_2: 0
+    phase_3: 2
+    phase_5: 1
+    phase_6_sections: {extension_structure: 1, domain_model_parsing: 0, index_watching_attribution: 0, sidebar_views: 0, panel_task_dashboard: 0, artifact_reading: 0, workflow_launching: 1, degraded_errors_acceptance: 0, manifest_addenda: 0}
+    phase_7: 5
+  visual_companion:
+    available: true
+    port: null
+    pid: null
+    fallback_to_ascii: false
+  design_resources:
+    ran: true
+    standards:
+      - {path: .maister/docs/standards/frontend/accessibility.md, topic: a11y}
+      - {path: .maister/docs/standards/frontend/components.md, topic: components}
+      - {path: .maister/docs/standards/frontend/css.md, topic: css}
+      - {path: .maister/docs/standards/frontend/responsive.md, topic: responsive}
+    design_system: []
+    skill_hints:
+      - {kind: skill, name: dataviz, why: "Chart form and palette validation for Dashboard mode"}
+    found_any: true
+  research_reference:
+    path: null
+    research_question: null
+  next_phase: null
+  scope_exclusions:
+    - "Repository/git change viewing — declared out of scope at the Phase 1 gate. No commit, branch, or diff data is surfaced. vision.md key feature #3 needs amending."
+  phase_summaries:
+    context_synthesis:
+      summary: >-
+        Inventoried Maister 2.2.3's full data surface: 5 orchestrator task types, the
+        orchestrator-state.yml union schema, the dashboard-data.js projection, ~50 artifact kinds
+        with 13 HTML companions. Confirmed no task registry and no git linkage exist anywhere.
+      sources_count: 4
+      decisions:
+        - decision: Treat orchestrator-state.yml as source of truth, dashboard-data.js as optional accelerator
+          rationale: The projection is lossy and absent entirely when html_output is false
+        - decision: Scope the artifact model around the § 7 summary contract rather than per-artifact parsers
+          rationale: It is the one structure guaranteed across all workflows and artifacts
+        - decision: Repository/git integration is out of scope
+          rationale: User decision at the Phase 1 gate; no Maister data backs it and correlation would be built from scratch
+      risks:
+        - "resolved: git-backed 'repository changes' feature — declared out of scope at the Phase 1 gate"
+        - "Maister artifact schemas are prose followed by an LLM, not enforced by code: real files drift (the live task file already carries three fields absent from the published schema)"
+        - "phase_summaries keying is inconsistent across workflows (semantic names vs phase-N), and options appears both nested under orchestrator: and at top level"
+        - ".maister/tasks/mockups/*/ has no orchestrator-state.yml — the 'a task is a folder with a state file' rule leaves it invisible"
+        - "quick-dev, quick-plan and quick-bugfix write no task directory, so a slice of Maister activity is structurally invisible"
+        - "No code exists yet, so every tech-stack assumption (bundler, test runner, webview framework) is still open"
+      artifacts:
+        - {path: analysis/design-context.md, label: Design Context, html: null}
+    problem_exploration:
+      problem_statement: >-
+        Maister produces high-quality structured output fast, but it is reachable only as files —
+        and VS Code's file explorer is the wrong instrument for it, to the point that clicking an
+        HTML companion shows source instead of the rendered report. The primary job is live
+        monitoring of a workflow running in the integrated terminal one pane away; orientation and
+        decision recall across hundreds of tasks come second.
+      constraints:
+        - "No registry exists — tasks are discovered by globbing .maister/tasks/*/*/ for folders containing orchestrator-state.yml"
+        - "Tolerant parsing is mandatory — Maister's schemas are prose followed by an LLM and real files drift from spec"
+        - "Hundreds of tasks plus full-text search rules out eager parsing on activation; an indexing/caching layer is required"
+        - "Never assert what cannot be observed — gate-blocked state is not recorded by Maister"
+        - "VS Code webview CSP blocks the dashboard's script-injection data loading; relative artifact links need asWebviewUri()"
+        - "Degraded modes are normal: html_output false removes all HTML, mockups/ tasks have no state file, quick-* workflows leave no task directory"
+        - "dashboard-data.js is a JS assignment, not JSON, and is a lossy projection of the state file"
+        - "Greenfield — no package.json, no code, no committed tech decisions beyond TypeScript + VS Code Extension API"
+      success_criteria:
+        - "An operator can answer 'what is my running workflow doing?' from the sidebar without switching to a browser or opening a file"
+        - "A reader can open any completed task and read its decisions, risks and reports rendered, never as source, without knowing what a task directory is"
+        - "Finding a task or a past decision among hundreds takes seconds and never falls back to the file explorer or grep"
+        - "The plugin never displays a status it cannot justify from files on disk"
+      decisions:
+        - decision: Repository/git change viewing is out of scope
+          rationale: No Maister data backs it, and correlation would have to be invented from scratch
+        - decision: The plugin may launch and resume workflows via the integrated terminal, but never writes task files itself
+          rationale: Keeps it a view layer while removing the need to hand-compose /maister:* commands
+        - decision: Gate-blocked state is shown as factual activity rather than inferred
+          rationale: Maister does not record gate state; the plugin must not assert what it cannot observe
+        - decision: Design for two personas — the operator and the reader
+          rationale: The analytics-developer audience in vision.md is real, not aspirational; it is the point of the product
+        - decision: Success criteria proposed in the problem statement
+          rationale: vision.md leaves them explicitly TBD
+      risks:
+        - "Search spans four modes at once (metadata, decisions/risks, full-text, structured facets) against hundreds of tasks — the largest scope and performance driver, partly overlapping VS Code's built-in search"
+        - "Rendering artifacts inside the extension duplicates what dashboard.html and the HTML companions already do; the reuse-vs-reimplement boundary is unresolved"
+        - "vision.md still promises a top layer over repository changes and needs amending to match the agreed scope"
+        - "Maister's schemas are prose followed by an LLM, so state and artifact shapes will drift — parsing carries permanent tolerance requirements"
+        - "quick-dev, quick-plan and quick-bugfix write no task directory and are structurally invisible to any viewer"
+      artifacts:
+        - {path: analysis/problem-statement.md, label: Problem Statement, html: null}
+    persona_exploration:
+      summary: >-
+        Two refinement rounds corrected the Phase 2 model: no reader/writer split, contributors
+        differ by workflow affinity, and coding happens through Maister rather than by hand.
+      personas:
+        - "Marek — engineering contributor (development, migrations); builds through Maister rather than typing code; live monitoring is his primary working surface"
+        - "Ada — business-oriented contributor (product-design, research); in VS Code because the plugin is there; needs rendered documents and zero directory-structure exposure"
+        - "Irena — delivery lead; portfolio oversight, staleness and verification outcomes in aggregate; drills from roll-up straight to artifact"
+      user_journeys:
+        - "Marek: frame task → launch workflow → plugin becomes working surface → follow phases live → open verification report rendered → judge → answer gate in terminal"
+        - "Ada: open VS Code → tasks filtered by type, hers first → open a colleague's finished task → read TL;DR and Key Decisions rendered → drill into full report → launch her own research workflow from the plugin"
+        - "Irena: portfolio view → counts by status and type, one task quiet for 3 days → spot failed verification → open report rendered → identify owner via git attribution → raise at standup"
+      decisions:
+        - decision: No separate reading mode for others' tasks vs your own
+          rationale: Ownership determines which tasks you look at, not how you read them
+        - decision: Personas differentiated by workflow affinity rather than read/write role
+          rationale: Corrects the operator/reader split drafted in Phase 2 — everyone is both
+        - decision: Live monitoring is a first-class surface, not peripheral
+          rationale: Coding happens through Maister rather than by hand, so watching a workflow is the primary activity
+        - decision: Staleness expressed observably ('quiet for 3 days') rather than interpreted ('abandoned')
+          rationale: Honours the never-assert-what-you-cannot-observe constraint
+        - decision: Task attribution inferred from git authorship of the task directory
+          rationale: Maister stores no author field; git as data source only, never a browsable feature
+      risks:
+        - "Irena's portfolio view requires cross-task aggregation Maister provides no support for — every roll-up must be computed by globbing and parsing, compounding the indexing cost already driven by search"
+        - "Maister writes task.status completed only at finalization, so interrupted tasks remain in_progress indefinitely; abandoned cannot be distinguished from long-running without inference"
+        - "Throughput and duration metrics depend on model-authored timestamps that may be missing or malformed in older tasks"
+        - "Ada's needs assume HTML companions exist, but html_output false removes them entirely — her experience degrades to markdown-only"
+        - "Git-derived attribution fails for uncommitted tasks and credits whoever committed rather than whoever ran the workflow"
+      artifacts:
+        - {path: analysis/personas.md, label: Personas, html: null}
+    idea_generation:
+      alternatives_count: 20
+      summary: >-
+        Twenty alternatives across five decision areas (presentation, rendering, data layer,
+        navigation, relationship to dashboard.html). Recommended spine: A2 + B2/B3/narrow-B4 + C2(+C4)
+        + D2(+D4) + E3/E4 over E1's tolerant parser.
+      decisions:
+        - decision: Alternatives organised into five decision areas with explicit cross-area coupling
+          rationale: The operator chooses area by area, so foreclosures must be stated up front
+        - decision: Every alternative evaluated against the Phase 3 universal floor
+          rationale: Rendered reading, workflow-type filtering and the § 7 block are pass/fail, not features
+        - decision: Scope guardrails separate a minimum-viable spine from expansive options
+          rationale: Full-text search and portfolio roll-up are the two deferrable cost peaks
+      risks:
+        - "The GitLens self-sufficiency property is in direct tension with the cheapest rendering options — every low-cost rendering alternative pushes the user out to VS Code's own preview or an external browser"
+        - "Webview CSP forces a rewrite pass over Maister's companions; inline script and dynamic script src are blocked, so companion re-hosting is partial reuse"
+        - "Persisted indexes risk staleness across VS Code sessions and Maister upgrades; every persisted index needs a cheap invalidation key"
+        - "Accessibility diverges sharply between areas: TreeView is accessible for free, webviews must be hand-built to the frontend accessibility standard"
+        - "Performance at hundreds of tasks is unvalidated — no alternative has been benchmarked"
+      artifacts:
+        - {path: analysis/alternatives.md, label: Design Alternatives, html: analysis/alternatives.html}
+    idea_convergence:
+      summary: >-
+        Direction approved across five areas. Sidebar stacks collapsible Now / Overview / Browse;
+        panel toggles Task (hosting each task's own dashboard.html) and Dashboard modes; tolerant
+        YAML parser and a persisted two-tier index power every other surface; no full-text search.
+      selected_approach: >-
+        A2 extended (TreeViews + reusable WebviewPanel + Overview WebviewView); B2+B3+narrow B4
+        rendering; C2 only; D2+D3 merged with no Quick Picks; E2 per-task dashboard copy with
+        unmodified styling + E1 tolerant YAML parser for all other surfaces and a native fallback
+        Task view.
+      trade_offs_accepted:
+        - "Hosted dashboard follows OS light/dark, not VS Code theme (including high-contrast)"
+        - "Rewrite pass must recognise every dashboard.html vintage; unrecognised versions fall back to native view"
+        - "Two Task views coexist (hosted dashboard and native fallback)"
+        - "Hosted dashboard accessibility is unaudited and cannot be fixed without modifying it"
+        - "No full-text search over artifact bodies in the first release"
+        - "Three surface types, each needing separate accessibility and theming work"
+        - "No keyboard Quick Pick accelerators in the first release"
+      key_decisions:
+        - "Area A: A2 extended with a sidebar Overview webview view"
+        - "Area B: B2 + B3 + narrow B4 (§ 7 block pinned)"
+        - "Area C: C2 only — no full-text"
+        - "Area D: D2 + D3 merged (user-originated), no Quick Picks"
+        - "Area E: E2 per-task copy, unmodified styling + E1 parser (user-originated)"
+      decisions:
+        - decision: A2 presentation (tree + reusable webview panel), extended with a sidebar Overview webview view
+          rationale: The floor requires a webview and live monitoring requires an always-visible surface
+        - decision: B2 + B3 + narrow B4 rendering
+          rationale: Markdown rendered in-extension by default, § 7 block pinned, companions re-hosted on request; the markdown-only degraded mode is the default path
+        - decision: C2 only for data
+          rationale: Persisted metadata index including § 7 blocks, lazy bodies, no full-text search in the first release
+        - decision: D2 + D3 merged navigation
+          rationale: Now / Overview / Browse collapsible in the sidebar; Overview tiles filter Browse; panel toggles Task ⇄ Dashboard; no Quick Pick accelerators
+        - decision: E2 + E1
+          rationale: Each task's own dashboard.html hosted for the Task view with Maister's styling unmodified; the tolerant YAML parser is the source for every other surface and for the native fallback Task view
+      risks:
+        - "The hosted dashboard themes itself from the OS prefers-color-scheme, not the VS Code theme — a light dashboard can appear in a dark editor (and ignores high-contrast themes)"
+        - "Each task carries the dashboard.html vintage that created it; the rewrite pass must recognise every structural variant present, and an unrecognised variant silently degrades to the native fallback"
+        - "Two Task views exist (hosted dashboard and native fallback); users must be able to tell which they are seeing and why"
+        - "The hosted dashboard's accessibility is unaudited against the project's frontend accessibility standard and cannot be fixed without modifying it"
+        - "Full-text search deferral narrows Phase 2's four requested search modes to three; success criterion 3 is met for titles, metadata and decisions/risks, not for artifact bodies"
+        - "Three distinct VS Code surface types (TreeView, WebviewView, WebviewPanel) each need their own accessibility and theming work"
+      artifacts:
+        - {path: analysis/design-decisions.md, label: Design Decisions, html: analysis/design-decisions.html}
+    feature_specification:
+      summary: >-
+        Eight implementation-ready sections approved individually, plus a § 1.6 manifest addendum
+        from depth verification. Extension named Maister Lens. Dashboard data loading refined to
+        native in-sandbox loading via nonce injection; launch order made configurable (Claude Code →
+        Copilot → terminal → clipboard).
+      spec_sections:
+        extension_structure: approved
+        domain_model_parsing: approved
+        index_watching_attribution: approved
+        sidebar_views: approved
+        panel_task_dashboard: approved
+        artifact_reading: approved
+        workflow_launching: approved
+        degraded_errors_acceptance: approved
+        manifest_addenda: approved
+      sections_count: 8
+      decisions:
+        - decision: "The parser never throws. Every oddity is a ParseIssue, and phase gaps are not_recorded rather than guessed as skipped"
+          rationale: Tolerance and honesty made contractual
+        - decision: dashboard-data.js is loaded natively in the webview sandbox via nonce injection instead of being parsed by the extension host
+          rationale: No unsafe evaluation, no third dependency, higher fidelity (refines the Phase 5 "data fed by message" wording)
+        - decision: Markdown renders with html false as the sanitization strategy; the § 7 block is extracted and pinned, and the body de-duplicated
+          rationale: No sanitizer dependency; summary shown once, prominently
+        - decision: Launch target order is configurable (maisterLens.launch.targetOrder), defaulting to Claude Code → Copilot → terminal → clipboard
+          rationale: Per user direction
+        - decision: "Workspace Trust is limited: untrusted workspaces never execute hosted HTML and cannot launch workflows"
+          rationale: Hosted HTML contains model-authored scripts
+        - decision: Extension named Maister Lens (maister-lens, settings prefix maisterLens.*)
+          rationale: User direction at Section 1 review
+      risks:
+        - "The Claude Code launch target depends on claude-vscode.editor.open(sessionId, prompt), an undocumented signature observed in Claude Code 2.1.278; AC11 must be re-verified against each installed version"
+        - "Copilot Chat receives /maister:* text but can only run it if the user's Copilot setup provides Maister's skills; the extension cannot verify this"
+        - "Dashboard hosting depends on each vintage loading data through a script src dashboard-data.js element; a future Maister that loads data differently will fall to the fallback view"
+        - "The hosted dashboard and companions follow the OS light/dark setting rather than the VS Code theme, and their accessibility is unaudited"
+        - "Performance targets (300 ms warm, 5 s cold for 300 tasks) are specified but unmeasured until the generator-based perf suite runs"
+        - "Testing standards are not initialized; § 8.6 proposes them and should be ratified via /maister:standards-update"
+      artifacts:
+        - {path: analysis/feature-spec.md, label: Feature Specification, html: analysis/feature-spec.html}
+    visual_prototyping:
+      summary: >-
+        Six HTML mockups approved after five review rounds. The review reshaped the design: Browse
+        merged into Overview (tiles + filtered task list), Now shows all unfinished tasks with no
+        time window, every task carries a one-click next action, Dashboard gained KPI tiles and four
+        validated charts, and a new Open Risks view was added. Spec and design decisions updated.
+      mockup_references:
+        - analysis/mockups/sidebar-now-overview.html
+        - analysis/mockups/task-fallback-view.html
+        - analysis/mockups/artifact-reader-implementation-plan.html
+        - analysis/mockups/dashboard-mode.html
+        - analysis/mockups/open-risks.html
+        - analysis/mockups/start-workflow-flow.html
+      decisions:
+        - decision: Browse merged into Overview, which now holds tiles, search and the filtered task list
+          rationale: User observed Overview and Browse overlapped; Overview previously showed counts but no list
+        - decision: Open Dashboard is a native Overview title-bar action
+          rationale: User direction; matches the original § 1.3 spec
+        - decision: Every task carries a computed next action (Resume · Start development · Continue from research) one click away
+          rationale: User clarified that launching means advancing a task from where it stands, not only starting new workflows
+        - decision: Dashboard shows KPI tiles and four labelled bar/column charts that double as filters
+          rationale: User asked for vibrant stats; bars chosen over donuts/stacked bars after color-vision validation and because small counts would vanish
+        - decision: Now shows every unfinished task with no time window; the "written in last 30 min" tile was dropped
+          rationale: Developers commit tasks only after completion, so unfinished tasks in a working copy are the user's own and a 30-minute window drops tasks paused at gates
+        - decision: New Open Risks view aggregates unresolved risks across tasks, grouped by task
+          rationale: Irena's aggregate-risk pain; no severity or age shown because Maister records neither
+      risks:
+        - "Stock VS Code Dark+ chart colors fail the lightness band and red/orange CVD separation; charts depend on labels, icons and hatching as mandatory secondary encoding"
+        - "The Overview webview now hosts the full task list, so keyboard and screen-reader behavior must be hand-built rather than inherited from a native tree"
+        - "Quiet ≥ 3 days and Now reflect only the local working copy — colleagues' unfinished tasks are never visible"
+      artifacts:
+        - {path: analysis/mockups/sidebar-now-overview.html, label: "Mockup: Sidebar (Now + Overview)", html: analysis/mockups/sidebar-now-overview.html}
+        - {path: analysis/mockups/task-fallback-view.html, label: "Mockup: Task fallback view", html: analysis/mockups/task-fallback-view.html}
+        - {path: analysis/mockups/artifact-reader-implementation-plan.html, label: "Mockup: Artifact reader", html: analysis/mockups/artifact-reader-implementation-plan.html}
+        - {path: analysis/mockups/dashboard-mode.html, label: "Mockup: Dashboard mode", html: analysis/mockups/dashboard-mode.html}
+        - {path: analysis/mockups/open-risks.html, label: "Mockup: Open risks", html: analysis/mockups/open-risks.html}
+        - {path: analysis/mockups/start-workflow-flow.html, label: "Mockup: Start workflow flow", html: analysis/mockups/start-workflow-flow.html}
+        - {path: analysis/design-context/design-resources.md, label: Design Resources, html: null}
+    review_handoff:
+      summary: >-
+        Layered product brief approved for handoff to /maister:development. All four layers
+        present; follow-ups outside the build recorded (amend vision.md, ratify testing standards,
+        re-verify Claude Code pre-fill on updates).
+      brief_layers: [core_brief, persona_cards, design_decisions, mockup_references]
+      decisions:
+        - decision: Product brief approved for development handoff
+          rationale: Final approval gate passed
+      risks:
+        - "The Claude Code launch target depends on an undocumented command signature, claude-vscode.editor.open(sessionId, prompt), observed in Claude Code 2.1.278."
+        - "Copilot Chat can run /maister:* commands only if the user's Copilot setup provides Maister's skills."
+        - "The hosted dashboard and companions follow the OS light/dark setting rather than the VS Code theme, and their accessibility is unaudited."
+        - "Performance targets (warm start under 300 ms, cold index of 300 tasks under 5 s) are specified but not yet measured."
+        - "vision.md still promises a view of repository changes and needs amending. Testing standards are not yet initialized."
+      artifacts:
+        - {path: outputs/product-brief.md, label: Product Brief, html: outputs/product-brief.html}

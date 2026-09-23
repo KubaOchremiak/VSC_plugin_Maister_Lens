@@ -1,0 +1,18 @@
+orchestrator:
+  completed_phases: [phase-1, phase-2, phase-3, phase-4, phase-5, phase-6, phase-7, phase-8, phase-9, phase-10, phase-11, phase-12, phase-13, phase-14]
+  options:
+    html_output: false
+  created: 2025-11-02T07:00:00Z
+  updated: 2025-11-08T19:20:00Z
+task:
+  title: Legacy task without HTML output
+  status: completed
+task_context:
+  phase_summaries:
+    implementation:
+      summary: Shipped without HTML companions.
+      decisions: [{decision: Fall back to the native task view, rationale: no dashboard on disk}]
+      risks: ["resolved: no rendered dashboard for this vintage"]
+      artifacts: [{path: implementation/spec.md, label: Specification, html: null}]
+verification_context:
+  last_status: passed

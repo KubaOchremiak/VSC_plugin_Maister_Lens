@@ -1,0 +1,11 @@
+orchestrator:
+  completed_phases: [phase-1]
+  created: 2026-01-09
+  updated: not a date at all
+task:
+  title: Date-only timestamps
+  status: sleeping
+  priority: low
+  tags: [dates, parser]
+research_context:
+  phase_summaries: {}

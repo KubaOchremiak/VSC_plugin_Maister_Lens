@@ -1,0 +1,11 @@
+orchestrator:
+  completed_phases: [phase-1, phase-2]
+  created: 2026-05-20T12:00:00Z
+  updated: 2026-05-21T12:00:00Z
+task:
+  title: An experimental workflow
+  status: in_progress
+task_context:
+  phase_summaries:
+    exploration:
+      decisions: [Recorded even for an unknown workflow]

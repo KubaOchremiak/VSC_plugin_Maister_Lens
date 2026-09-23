@@ -1,0 +1,16 @@
+orchestrator:
+  completed_phases: [phase-1, phase-2, phase-3]
+  created: 2026-02-10T10:00:00Z
+  updated: 2026-02-14T16:30:00Z
+task:
+  title: Auth provider migration
+  status: in_progress
+migration_context:
+  phase_summaries:
+    migration_strategy:
+      summary: Strategy approved.
+      decisions: [{decision: Cut over per tenant, rationale: blast radius}]
+      risks: [Token format changes are irreversible]
+      artifacts: [{path: implementation/spec.md, label: Migration specification, html: null}]
+verification_context:
+  last_status: passed_with_issues

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Maister Lens VS Code extension</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:760px) { .cols { grid-template-columns:1fr; } }
+.cols ul { margin:6px 0 0; padding-left:18px; }
+.cols li { margin-bottom:5px; }
+.toc { font-size:12.5px; color:var(--dim); margin:10px 0 4px; }
+.toc a { margin-right:4px; }
+.kd { list-style:none; padding:0; margin:0; }
+.kd li { padding:6px 0 6px 14px; border-left:3px solid var(--accent); margin-bottom:8px;
+  background:var(--accent-soft); border-radius:0 6px 6px 0; }
+.risks li { margin-bottom:6px; }
+.story { border-left:3px solid var(--info); padding:8px 0 8px 14px; margin-bottom:10px; }
+.story b { display:block; }
+.story span { color:var(--dim); }
+.amend { margin:10px 0; }
+.amend summary { padding:8px 10px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); }
+.amend[open] summary { border-radius:var(--radius) var(--radius) 0 0; }
+.amend .body { border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius);
+  padding:12px 16px; background:var(--surface); }
+.tag { font-size:10.5px; color:var(--dim); font-weight:500; text-transform:none; letter-spacing:0; }
+.out b { color:var(--crit); }
+.dirn { font-size:11px; font-weight:700; color:var(--dim); }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Spec</span>
+  <a href="implementation-plan.html">Plan</a>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>Specification — Maister Lens VS Code extension</h1>
+  <p><span class="badge">specification</span> <span class="badge">greenfield</span>
+  <span class="badge" style="background:var(--warn-soft);color:var(--warn)">risk: medium</span>
+  &nbsp;<span class="tag">generated 2026-09-22 · task <code>2026-09-22-maister-lens-vscode-extension</code></span></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>27</b><span>requirements</span></div>
+  <div class="tile"><b>18</b><span>amendments</span></div>
+  <div class="tile"><b>18</b><span>acceptance criteria</span></div>
+  <div class="tile"><b>0 / 7</b><span>reused / new modules</span></div>
+  <div class="tile"><b>2</b><span>runtime deps</span></div>
+  <div class="tile"><b>~9</b><span>test groups</span></div>
+</div>
+
+<section class="tldr card">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Build the Maister Lens extension exactly as <code>analysis/design-context/feature-spec.md</code> §§ 1–8 describes it, with the amendments A1–A18 taking precedence wherever the two differ.</p>
+  <p>They close the ten spec gaps and the audit's two criticals: <code>folderUri</code> is the task identity, one consolidated webview message table is the security allowlist, <code>risksMode.ts</code> joins the § 1.4 layout, task-argument commands are hidden from the Command Palette, one shared open-risks function feeds every count, AC13 applies to Maister Lens's own strings only, list-shaped <code>phase_summaries</code> entries have explicit extraction semantics, and every AC names a harness that can actually run it.</p>
+  <p>Nothing is reusable in this repo — it is greenfield — so "reuse" means Maister's own <code>dashboard.html</code> hosted unmodified, the two real task folders as fixtures, shared webview primitives across the five bundles, and VS Code theme variables as the only design tokens. Runtime dependencies stay <code>yaml</code> + <code>markdown-it</code>; charts are hand-written SVG; the host never parses or evaluates <code>dashboard-data.js</code>.</p>
+  <p>Tests: mocha unit (no host) + <code>@vscode/test-electron</code> integration on a pinned stable build, AC7/AC9 measured by a non-gating benchmark, a structural DOM pass over generated webview HTML, an explicit manual checklist, and 2–8 focused tests per task group.</p>
+
+  <h2>Key Decisions</h2>
+  <ul class="kd">
+    <li><b>feature-spec.md is referenced, not restated</b> — this spec records only the delta, so implementation follows the amendment where the two disagree.</li>
+    <li><b>Task identity is <code>folderUri</code></b> everywhere (index keys, persisted entries, <code>PanelLocation</code>, every message payload); <code>relPath</code> survives only for display and composed commands — it collides across multi-root workspaces.</li>
+    <li><b>One consolidated message table</b> covers all five surfaces in both directions and doubles as the security allowlist; anything absent is dropped and logged.</li>
+    <li><b>Risks-mode filtering stays in the webview</b> over the full <code>risks</code> payload; only the workflow-type facet round-trips through the shared <code>setFilter</code>.</li>
+    <li><b>Task-argument launch commands are hidden from the palette</b> — it carries no task context and Quick Picks were declined (D7). They are reachable only from ▶ buttons.</li>
+    <li><b>One <code>openRisksOf(task)</code> definition</b> (state + artifact § 7 risks, deduplicated) feeds the Now row, the Dashboard KPI and Risks mode, so a count always matches what a click opens.</li>
+    <li><b>AC13 governs Maister Lens's own strings</b>, which live in one scanned module; Maister's phase names ("Running E2E tests") are constant input, shown verbatim, exempt.</li>
+    <li><b>Claude Code chain</b>: <code>claude-vscode.editor.open(undefined, prompt)</code> → <code>env.uriScheme</code>-built URI (only when the extension is installed but the command is missing/throws, treated as success) → next target.</li>
+    <li><b>Every AC names the harness that can actually run it</b> (A16): the host-observable half in the integration suite, the DOM half as structural assertions over generated webview HTML, the remainder explicitly manual — the host cannot assert inside a webview DOM.</li>
+    <li><b>No chart library, no sanitizer, no status-bar item, no Quick Pick navigation, no writes</b> to any Maister file.</li>
+  </ul>
+
+  <h2>Open Questions / Risks</h2>
+  <ul class="risks">
+    <li><span class="sev warning">warning</span>The Claude Code command signature is undocumented (2.1.278) and ignores the prompt when a session is already open — AC11 pre-fill is manual-only plus a mocked <code>executeCommand</code> unit test.</li>
+    <li><span class="sev warning">warning</span><code>workbench.action.chat.open</code> is registered in VS Code 1.138 whether or not Copilot can answer — the one-time caveat notice is the only mitigation.</li>
+    <li><span class="sev warning">warning</span><code>env.openExternal</code> resolves <code>true</code> even when nothing handles the URI, so the Claude URI attempt effectively ends the chain — hence the install gate.</li>
+    <li><span class="sev warning">warning</span>Node v26.7.0 is very new: esbuild, mocha and <code>@vscode/test-electron</code> must be smoke-tested before any feature code.</li>
+    <li><span class="sev info">info</span>Mockup <code>/screen/*</code> links are preview-server leftovers and the "Browse" wording is stale — the spec wins on wording, the mockups on layout.</li>
+    <li><span class="sev warning">warning</span>The hosted dashboard depends on <code>asWebviewUri</code> + <code>&lt;base href&gt;</code> tolerating the real loader's <code>?t=&lt;epoch&gt;</code> cache-buster — AC3 and AC4 both rest on it. De-risked in the first smoke test with a pre-authorised contingency (A18).</li>
+    <li><span class="sev info">info</span>Claude Code 2.1.278 declares <code>engines.vscode: ^1.94.0</code>, above the <code>^1.90.0</code> floor, so <code>test:min</code> can never exercise the <code>claudeCode</code> target.</li>
+    <li><span class="sev info">info</span>The workflow registry is pinned to Maister 2.2.3; newer phases render by raw id with a warning rather than being hidden.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents:
+  <a href="#scope">Scope</a> ·
+  <a href="#goal">Goal &amp; stories</a> ·
+  <a href="#requirements">Requirements</a> ·
+  <a href="#amendments">Amendments</a> ·
+  <a href="#messages">Message table</a> ·
+  <a href="#visual">Visual design</a> ·
+  <a href="#reuse">Reuse vs new</a> ·
+  <a href="#approach">Technical approach</a> ·
+  <a href="#trace">AC traceability</a> ·
+  <a href="#success">Success criteria</a>
+</p>
+
+<h2 id="scope">Scope</h2>
+<div class="cols">
+  <div class="card">
+    <h3 style="margin-top:0" class="pass">In scope</h3>
+    <ul>
+      <li>feature-spec.md §§ 1–8 in full, AC1–AC18</li>
+      <li>Sidebar: Now tree + Overview webview</li>
+      <li>Panel: Task (hosted &amp; fallback), Artifact reader, Dashboard, Risks</li>
+      <li>Persisted two-tier index, watcher, git attribution</li>
+      <li>Next actions + four-target launch chain</li>
+      <li>Trust gating, degraded modes, accessibility</li>
+      <li>Fixtures, unit + integration suites, perf benchmark</li>
+      <li>Packaging, README, CHANGELOG, project-doc corrections</li>
+    </ul>
+  </div>
+  <div class="card out">
+    <h3 style="margin-top:0" class="fail">Out of scope</h3>
+    <ul>
+      <li><b>Repository / git change browsing</b> — git is attribution only; <code>vision.md</code> corrected</li>
+      <li><b>Full-text search</b> over artifact bodies</li>
+      <li><b>Status-bar item</b> — the view badge carries the count</li>
+      <li><b>Quick Pick task selection / navigation</b> (D7)</li>
+      <li><b>Writing to any Maister file</b> — compose &amp; hand off only</li>
+      <li><b>Charting or sanitizer libraries</b> — SVG by hand, <code>html:false</code></li>
+      <li>Syntax highlighting, Mermaid, remote images/fonts, stateless <code>mockups/</code> folders, <code>quick-*</code> workflows</li>
+      <li>Automated AC11 pre-fill verification</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="goal">Goal &amp; user stories</h2>
+<div class="card">
+  <p><b>Goal.</b> Ship a TypeScript VS Code extension that makes every Maister task in a workspace visible, readable and actionable inside the editor — always rendered, never as source — and puts each task's next <code>/maister:*</code> action one click away.</p>
+  <div class="story"><b>Marek — engineering contributor</b><span>Wants every unfinished task with current phase, last decision, recent artifacts and open risks in a sidebar tree, so he can see what is being written right now and resume it in one click.</span></div>
+  <div class="story"><b>Ada — business-oriented contributor</b><span>Wants to search and filter all tasks from the sidebar and read any artifact rendered, with its TL;DR, decisions and risks pinned.</span></div>
+  <div class="story"><b>Irena — delivery lead</b><span>Wants KPI tiles, filter charts and a portfolio-wide list of open risks, to see failed verifications, quiet tasks and unresolved risks in aggregate.</span></div>
+  <div class="story"><b>Any contributor</b><span>Wants Maister's own <code>dashboard.html</code> shown unmodified inside the editor with live data, so nothing is lost relative to a browser.</span></div>
+  <div class="story"><b>Untrusted-workspace user</b><span>Wants tasks listed and markdown rendered while no model-authored HTML executes and no workflow can be launched.</span></div>
+</div>
+
+<h2 id="requirements">Core requirements</h2>
+<p class="tag">Each requirement is satisfied by the referenced feature-spec section <b>as amended</b>. Priority: <b>core</b> = named by an AC; <b>supporting</b> = required for a core requirement to function.</p>
+<table>
+  <thead><tr><th>#</th><th>Requirement</th><th>Source</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td>R1</td><td>Manifest: id <code>maister-lens</code>, engine <code>^1.90.0</code>, TS strict, esbuild two targets, activation events, trust capabilities</td><td>§ 1.1–1.2, § 1.6</td><td>core</td></tr>
+    <tr><td>R2</td><td>Contributions: container, two views, commands, menus (incl. the Now title bar, A15), context keys, welcome views, five settings</td><td>§ 1.3, § 1.6 + A3, A4, A15</td><td>core</td></tr>
+    <tr><td>R3</td><td>Source layout under <code>src/</code></td><td>§ 1.4 + A3, A5, A6, A13</td><td>supporting</td></tr>
+    <tr><td>R4</td><td>Domain types + workflow registry (5 workflows, phases, activeForms, heroes) pinned to 2.2.3</td><td>§ 2.1–2.2</td><td>core</td></tr>
+    <tr><td>R5</td><td><code>parseState</code> never throws; rules N1–N15; every oddity a <code>ParseIssue</code></td><td>§ 2.3 + A8, A14, A17</td><td>core</td></tr>
+    <tr><td>R6</td><td>Phase status derivation with <code>not_recorded</code> gaps, no guessed skips</td><td>§ 2.4 + A17</td><td>core</td></tr>
+    <tr><td>R7</td><td><code>parseSummary</code>: first 8 KB, leading region, both "/" and "&amp;" risk headings</td><td>§ 2.5 + A8</td><td>core</td></tr>
+    <tr><td>R8</td><td>Two-tier index: tier 1 persisted <code>Task</code>, tier 2 <code>TaskDetail</code> LRU(20)</td><td>§ 3.1</td><td>core</td></tr>
+    <tr><td>R9</td><td>Discovery by <code>.maister/tasks/*/*/orchestrator-state.yml</code>, <code>null</code> excludes</td><td>§ 3.2</td><td>core</td></tr>
+    <tr><td>R10</td><td>Persisted index: version gate, mtime/size invalidation, atomic debounced write, silent rebuild</td><td>§ 3.3 + A1</td><td>core</td></tr>
+    <tr><td>R11</td><td>Load algorithm: cached paint → discover → stat → reconcile → publish, under <code>withProgress</code></td><td>§ 3.4</td><td>core</td></tr>
+    <tr><td>R12</td><td>Watcher: 250 ms per-task debounce, ≤ 1 snapshot / 500 ms, 60 s label refresh, exclude notice</td><td>§ 3.5</td><td>core</td></tr>
+    <tr><td>R13</td><td>Query engine over tier 1: AND tokens, facets, ranking, staleness; no full text</td><td>§ 3.7</td><td>core</td></tr>
+    <tr><td>R14</td><td>Git attribution: one <code>execFile</code> per repo, <code>isMe</code>, degraded cases</td><td>§ 3.8</td><td>core</td></tr>
+    <tr><td>R15</td><td>Now tree: unfinished tasks, badge, node properties, four child kinds, accessible labels</td><td>§ 4.1, § 4.3 + A9, A5</td><td>core</td></tr>
+    <tr><td>R16</td><td>Overview: search, Mine/Everyone, tile toggles, grouped list, next actions, shared query</td><td>§ 4.2 + A2</td><td>core</td></tr>
+    <tr><td>R17</td><td>Panel singleton, four modes, own history (50), editor-title actions, serializer restore</td><td>§ 5.1 + A1</td><td>core</td></tr>
+    <tr><td>R18</td><td><code>recognize()</code>; hosted dashboard with exactly three insertions + shim</td><td>§ 5.2–5.3 + A18</td><td>core</td></tr>
+    <tr><td>R19</td><td>Fallback task view: banner, header + next action, phases, heroes, decisions, risks, files, raw state</td><td>§ 5.4 + A2</td><td>core</td></tr>
+    <tr><td>R20</td><td>Dashboard mode: 4 KPI tiles, 4 SVG charts (bars as filters, Table links), filtered table</td><td>§ 5.5 + A5</td><td>core</td></tr>
+    <tr><td>R21</td><td>Risks mode: breadcrumb, KPI tiles, local filters, task groups, no severity or age</td><td>§ 5.7 + A2, A3, A5</td><td>core</td></tr>
+    <tr><td>R22</td><td>Artifact reader: variants, markdown pipeline, layout, live update with scroll restore</td><td>§ 6</td><td>core</td></tr>
+    <tr><td>R23</td><td>HTML companion re-hosting; refused for <code>&lt;iframe&gt;</code> or &gt; 2 MB</td><td>§ 6.4</td><td>supporting</td></tr>
+    <tr><td>R24</td><td>Launch: composed text, next actions, Start Workflow flow, target chain, terminal quoting</td><td>§ 7 + A7</td><td>core</td></tr>
+    <tr><td>R25</td><td>Degraded modes, trust gating, error rules, security controls, accessibility</td><td>§ 8.1–8.4</td><td>core</td></tr>
+    <tr><td>R26</td><td>Test suites, fixtures, benchmark; every AC verified by a harness that can execute it</td><td>§ 8.6 + A10, A16</td><td>core</td></tr>
+    <tr><td>R27</td><td>Packaging &amp; hygiene: LICENSE, <code>.gitignore</code>, README, CHANGELOG, doc corrections</td><td>A11</td><td>supporting</td></tr>
+  </tbody>
+</table>
+
+<h2 id="amendments">Amendments to feature-spec.md</h2>
+<p class="tag">These supersede feature-spec.md wherever they differ. Everything not listed stands as written.</p>
+
+<details class="amend" open><summary>A1 — Task identity is <code>folderUri</code> <span class="tag">resolves C-1</span></summary>
+<div class="body">
+<p><code>TaskRef.folderUri</code> (absolute URI of the task directory) is the sole identity key, replacing <code>relPath</code> in every structure below. <code>relPath</code> remains only for display and for composing <code>/maister:work {relPath}</code>.</p>
+<table><thead><tr><th>Place</th><th>Was</th><th>Becomes</th></tr></thead><tbody>
+<tr><td><code>IndexSnapshot.tasks</code></td><td><code>Map&lt;relPath, Task&gt;</code></td><td><code>Map&lt;folderUri, Task&gt;</code></td></tr>
+<tr><td><code>getDetail(…)</code> / <code>onDidChange.changed</code></td><td><code>relPath</code></td><td><code>folderUri</code></td></tr>
+<tr><td><code>PersistedIndex.entries</code></td><td><code>Record&lt;relPath, …&gt;</code></td><td><code>Record&lt;folderUri, …&gt;</code></td></tr>
+<tr><td><code>PanelLocation</code> (task, artifact, risks)</td><td><code>relPath</code></td><td><code>folderUri</code></td></tr>
+<tr><td>Every webview message payload</td><td><code>relPath</code></td><td><code>folderUri</code></td></tr>
+<tr><td>Tree item id</td><td><code>now:{relPath}</code></td><td><code>now:{folderUri}</code></td></tr>
+</tbody></table>
+<p>Index-membership validation stays one map lookup. Persisted entries whose <code>folderUri</code> no longer resolves to an open workspace folder are dropped on load.</p>
+</div></details>
+
+<details class="amend"><summary>A2 — Consolidated webview message table <span class="tag">resolves C-2 · see the full table below</span></summary>
+<div class="body"><p>Replaces § 4.2's <code>{type:'overview'}</code> wording, the § 5.6 table and the § 6.5 additions. <code>src/panel/messages.ts</code> exports one <code>validate(raw)</code> used by the panel and the Overview provider. Full table, plus sub-clauses <b>A2.1</b> (navigate containment wins over § 5.3's cross-task row) and <b>A2.2</b> (trust rules on outbound-content messages): <a href="#messages">Message protocol</a>.</p></div></details>
+
+<details class="amend"><summary>A3 — <code>risksMode.ts</code> and <code>maister.openRisks</code> placements <span class="tag">resolves gaps 2–3</span></summary>
+<div class="body">
+<ul>
+<li><code>src/webview/risksMode.ts</code> added to § 1.4 as the fifth browser bundle.</li>
+<li><code>maister.openRisks</code>: <code>view/title</code> <code>navigation@2</code> on <code>maister.overview</code> (icon <code>warning</code>); <code>editor/title</code> navigation when <code>activeWebviewPanelId == 'maister.panel'</code>; stays visible in the Command Palette (takes no task argument — bare invocation opens Risks mode unscoped).</li>
+<li>§ 5.6 and § 5.7 renumbered so the protocol reads after Risks mode.</li>
+</ul>
+</div></details>
+
+<details class="amend"><summary>A4 — Task-argument commands hidden from the Command Palette <span class="tag">resolves gap 4 · I-1</span></summary>
+<div class="body">
+<p><code>openTask</code>, <code>openArtifact</code>, <code>openArtifactSource</code>, <code>revealInExplorer</code>, <code>runNextAction</code>, <code>resumeTask</code>, <code>startDevelopmentFromDesign</code>, <code>designFromResearch</code>, <code>developFromResearch</code> each get <code>commandPalette: { when: "false" }</code>. They are reachable only from ▶ / context-menu surfaces: Now items, Overview rows, the fallback header, Dashboard <b>Next</b> cells, Risks group headers, the panel editor title.</p>
+<p><b>Palette-visible:</b> <code>openDashboard</code>, <code>openRisks</code>, <code>refresh</code>, <code>startWorkflow</code> (trusted only), <code>overview.groupBy</code>, <code>overview.clearFilter</code>, <code>panel.back</code>, <code>panel.forward</code>, <code>panel.toggleVariant</code>. The § 1.3 "Palette … when next action is Resume" wording is withdrawn.</p>
+</div></details>
+
+<details class="amend"><summary>A5 — One definition of "open risks" <span class="tag">resolves gap 5 · I-2</span></summary>
+<div class="body">
+<p><code>src/model/risks.ts</code> exports <code>collectRisks(task)</code> — state risks from <code>phase_summaries</code> plus every registered artifact's § 7 risks, deduplicated per task on normalized text with the artifact winning as <code>source</code> — and <code>openRiskCount(task)</code>. Each risk carries <code>{ text, resolved, source, sourceKind, folderUri }</code>.</p>
+<p>Single source for the Now "{n} open risks" child, the Dashboard <b>Open risks</b> KPI and its "across {k} tasks" line, and Risks mode's data and KPIs — so the number shown always equals the rows a click reveals (AC18).</p>
+</div></details>
+
+<details class="amend" open><summary>A6 — AC13 restated <span class="tag">resolves gap 6 · I-3</span></summary>
+<div class="body">
+<p><b>AC13 (amended):</b> <i>No user-facing string authored by Maister Lens contains "running", "waiting", "stalled" or "abandoned".</i></p>
+<ul>
+<li><b>Exempt as constant input:</b> Maister's own phase names and <code>activeForm</code>s in <code>model/workflows.ts</code> — e.g. development phase 12 "Run E2E tests" / "Running E2E tests". Displayed verbatim; paraphrasing would break the very honesty rule the AC protects.</li>
+<li><b>Also exempt:</b> task data (titles, descriptions, decisions, risks) — user content the extension relays.</li>
+<li><b>In scope:</b> every string Maister Lens authors, all in <code>src/strings.ts</code> — view titles, welcome text, tree labels and descriptions, tooltips, accessible labels, banners, notifications, status-bar messages, webview copy, empty states. Webview bundles import the same module.</li>
+<li><b>Enforcement — one mechanism only:</b> a mocha test asserts no exported value in <code>src/strings.ts</code> matches <code>/\b(running|waiting|stalled|abandoned)\b/i</code> — the mechanism the Phase-2 gate ratified. The boundary (no user-facing string authored outside <code>strings.ts</code>) is a <b>code-review convention, not a test</b>: a whole-tree literal scan would need a TypeScript AST pass to tell a <code>TreeItem</code> label from a log line, and would be a speculative second mechanism for an AC the first already satisfies.</li>
+</ul>
+</div></details>
+
+<details class="amend"><summary>A7 — Launch chain <span class="tag">amends § 7.4 · resolves gap 8 · I-10</span></summary>
+<div class="body">
+<ol>
+<li>Available only if <code>extensions.getExtension('anthropic.claude-code')</code> exists — otherwise skip to the next <code>targetOrder</code> entry.</li>
+<li><code>await ext.activate()</code>, then <code>commands.executeCommand('claude-vscode.editor.open', undefined, prompt)</code>. Success ends the chain.</li>
+<li><b>URI fallback</b>, only when step 1 passed but the command is absent from <code>getCommands(true)</code> or threw: <code>env.openExternal(Uri.parse(`${env.uriScheme}://anthropic.claude-code/open?prompt=…`))</code>. Built from <code>env.uriScheme</code> so Insiders and VSCodium work; <code>openExternal</code> cannot report "unhandled", so it is <b>treated as success and ends the chain</b> (documented as a known limitation).</li>
+<li>Only a missing extension advances the chain.</li>
+</ol>
+<p><b>Copilot:</b> <code>workbench.action.chat.open({ query, isPartialQuery: !autoSubmit })</code>. The availability check is weak — VS Code 1.138 registers the command regardless — so a one-time notice (tracked in <code>globalState</code>) states that <code>/maister:*</code> runs only if the user's Copilot setup provides Maister's skills, with an <b>Adjust launch order</b> button.</p>
+<p><b>Terminal</b> and <b>clipboard</b> unchanged (§ 7.5 / § 7.4). Every target is try/caught; a throw is logged and the chain advances; clipboard always succeeds. <b>Resume</b> composes <code>/maister:work {relPath}</code> for all five types — not <code>/maister:{type}</code>.</p>
+</div></details>
+
+<details class="amend"><summary>A8 — Tolerant parsing: the observed-drift test matrix <span class="tag">amends § 2.3, § 2.5, § 2.6</span></summary>
+<div class="body">
+<table><thead><tr><th>Drift</th><th>Rule</th><th>Fixture</th></tr></thead><tbody>
+<tr><td><code>options</code> under <code>orchestrator</code> or top level</td><td>N7 — read both, <code>orchestrator.options</code> wins</td><td>hand-written</td></tr>
+<tr><td><code>phase_summaries</code> under any <code>*_context</code> key or top level</td><td>N8 — first present wins, extras warn</td><td>real product-design task</td></tr>
+<tr><td>Semantic vs <code>phase-N</code> summary keys</td><td>N9 — key kept verbatim as source, never mapped to a phase</td><td>both real tasks</td></tr>
+<tr><td>A summary entry that is a <b>list</b>, not a map</td><td><b>N9 as extended by A14</b> — items classified by shape into decisions / risks / artifacts; unclassifiable items raise a warning issue</td><td>this task's own <code>phase_summaries.clarifications</code> (assertion in A14)</td></tr>
+<tr><td>Phases starting at 0 or 1</td><td>derivation is registry-driven</td><td>both real tasks</td></tr>
+<tr><td><code>task_ids</code> absent, empty (<code>{}</code>) or partly filled; same for <code>auto_fix_attempts</code></td><td>absent and empty both ignored (N15); a populated <code>auto_fix_attempts</code> is surfaced per A17</td><td>hand-written + real PD task</td></tr>
+<tr><td><code>orchestrator.failed_phases</code> non-empty</td><td><b>A17</b> — warning issue + surfaced as fact; phase stays <code>not_recorded</code></td><td>hand-written, populated</td></tr>
+<tr><td><code>tasks/migrations/</code> vs type <code>migration</code></td><td>N1 — type from <code>dirSegment</code> via the registry</td><td>hand-written</td></tr>
+<tr><td>"Open Questions / Risks" and "&amp; Risks"</td><td>§ 2.5 regex covers <code>/</code>, <code>&amp;</code>, <code>and</code></td><td>hand-written pair</td></tr>
+<tr><td><code>dashboard-data.js</code> as a JS object literal</td><td><b>never parsed or evaluated in the host</b>; loaded only in the webview sandbox</td><td>real product-design task</td></tr>
+<tr><td>Corrupt / truncated YAML, empty file</td><td>status <code>unknown</code>, folder-derived title, one error issue; other tasks unaffected</td><td>hand-written</td></tr>
+<tr><td>No <code>dashboard.html</code> (<code>html_output:false</code>, 2.1.7-era)</td><td>fallback view with the § 5.4 banner</td><td>hand-written</td></tr>
+<tr><td>Unknown workflow directory</td><td>type <code>unknown</code>, still listed, warning</td><td>hand-written</td></tr>
+</tbody></table>
+<p>Governing rule unchanged: <b>the parser never throws</b>, and nothing guessed or skipped is silently discarded.</p>
+</div></details>
+
+<details class="amend"><summary>A9 — Now tree "Recent artifacts" group node <span class="tag">I-5</span></summary>
+<div class="body"><p>§ 4.1's third child becomes a collapsible <b>Recent artifacts</b> group with up to 5 artifact children (mtime desc), as the approved sidebar mockup draws it. Progress, Last recorded decision and Open risks stay direct children.</p></div></details>
+
+<details class="amend"><summary>A10 — Test strategy <span class="tag">amends § 8.6 · I-6, I-7, I-11</span></summary>
+<div class="body">
+<ul>
+<li><b>Unit</b> (mocha, no host): <code>parseState</code> over every A8 fixture, <code>parseSummary</code>, phase derivation, <code>collectRisks</code>, query engine, <code>recognize()</code>, the three insertions, link rewriting, shell quoting, next-action derivation, target-order resolution with mocked availability, message validation, the A6 string scan.</li>
+<li><b>Integration</b> (<code>@vscode/test-electron</code>): downloaded <b>pinned stable</b> cached in <code>.vscode-test/</code>; optional <code>test:min</code> on <b>1.90.0</b> for the engine floor only — Claude Code declares <code>^1.94.0</code>, so the <code>claudeCode</code> branch can never load there. <b>Scope limit driving A16:</b> the host has no handle on a webview DOM, so integration asserts messages, commands, panel state, index/watcher behaviour and <b>the HTML a generator produced</b> — never rendered content or clicks.</li>
+<li><b>DOM (structural)</b>: Playwright loads each bundle's <b>generated HTML</b> with fixture data and a stubbed <code>acquireVsCodeApi</code>. Assertions are structural, <b>never pixel comparison</b>: selectors, section and field order, exact copy from <code>strings.ts</code>, accessible names, and the message a simulated activation posts. Mockup comparison moves to the manual checklist — four of five are declared <i>approximate</i> and all six render full VS Code chrome, so there is no common DOM to diff. Not a third parallel harness: it is gated by the criteria A16 assigns it.</li>
+<li><b>Performance</b>: AC7/AC9 via <code>npm run bench</code>, not CI gates; 300 task folders generated into a temp dir at run time.</li>
+<li><b>Fixtures</b>: committed <b>snapshots</b> of the two real task folders + hand-written hazard fixtures; the 300-task set and the two-author git repo are generated at run time, never committed.</li>
+<li><b>Manual checklist</b> — criteria no harness reaches, signed off rather than implied automated: hosted-dashboard render <b>with data and no CSP violations</b> + live refresh; a real click inside the hosted dashboard (AC4); Claude pre-fill (AC11); four themes; screen-reader pass (AC14); visual comparison against each mockup. <b>AC3's automated half is explicitly downgraded here</b> — § 8.7 says "Integration + manual"; A16 narrows the integration half to insertion and refresh-message assertions.</li>
+<li><code>skip_test_suite</code> is <code>false</code> for this task, so verification runs the suites covering the ACs.</li>
+</ul>
+</div></details>
+
+<details class="amend"><summary>A11 — Packaging, hygiene and documentation <span class="tag">resolves gap 7 · I-8, I-9</span></summary>
+<div class="body">
+<ul>
+<li><code>publisher: "maister"</code> (placeholder), <code>license: "MIT"</code>, <code>LICENSE</code> file.</li>
+<li><code>.gitignore</code>: <code>node_modules/</code>, <code>dist/</code>, <code>out/</code>, <code>*.vsix</code>, <code>.vscode-test/</code>, <code>.playwright-mcp/</code>; the tracked <code>.playwright-mcp/console-*.log</code> untracked via <code>git rm --cached</code>.</li>
+<li><code>.vscodeignore</code> excludes <code>src/</code>, <code>test/</code>, <code>.vscode-test/</code>, analysis assets.</li>
+<li>README rewritten (views, modes, settings, launch caveats, why each runtime dependency, known limitations); <code>CHANGELOG.md</code> with a <code>0.1.0</code> entry.</li>
+<li>At finalization: <code>tech-stack.md</code> corrected, <code>vision.md</code>'s "and repository changes" line amended, § 8.6 testing standards proposed via <code>/maister:standards-update</code>.</li>
+</ul>
+</div></details>
+
+<details class="amend"><summary>A12 — No status-bar item <span class="tag">I-4</span></summary>
+<div class="body"><p>The <code>◈ Maister: 2 unfinished</code> element in the sidebar mockup is not implemented — the <code>maister.now</code> view badge already carries the count, § 1.6 claims to be the complete manifest, and no AC covers it.</p></div></details>
+
+<details class="amend"><summary>A13 — Shared modules the layout did not name</summary>
+<div class="body">
+<table><thead><tr><th>Module</th><th>Purpose</th><th>Consumers</th></tr></thead><tbody>
+<tr><td><code>src/strings.ts</code></td><td>Every Maister Lens-authored user-facing string (A6)</td><td>host + all webview bundles</td></tr>
+<tr><td><code>src/model/risks.ts</code></td><td><code>collectRisks</code> / <code>openRiskCount</code> (A5)</td><td>nowTree, dashboard builder, risks builder</td></tr>
+<tr><td><code>src/panel/messages.ts</code></td><td><code>validate(raw)</code> against A2; path containment + index membership</td><td>panel, overviewView</td></tr>
+</tbody></table>
+</div></details>
+
+
+<details class="amend" open><summary>A14 — List-shaped <code>phase_summaries</code> entries: extraction semantics <span class="tag">closes audit C1 · extends N9</span></summary>
+<div class="body">
+<p>N9 accepted a list-shaped entry but never said what is extracted from it. N10–N12 read <code>entry.decisions</code>/<code>.risks</code>/<code>.artifacts</code> — keys a list does not have — so a literal implementation contributes <b>zero</b> decisions from the spec's own designated fixture and loses four real decisions silently, breaching § 2's "never silently discarded" contract and corrupting both the Now tree's <i>Last recorded decision</i> child and AC7's decision search.</p>
+<p><b>An entry may take exactly three shapes:</b></p>
+<table><thead><tr><th>Shape</th><th>Handling</th></tr></thead><tbody>
+<tr><td><b>Map</b> (§ 2.3 default)</td><td>Unchanged: <code>summary</code>, <code>decisions</code>, <code>risks</code>, <code>artifacts</code> per N10–N12</td></tr>
+<tr><td><b>List</b></td><td>A heterogeneous item array, classified below. <code>summary</code> is <code>null</code>; the entry key remains the <code>source</code></td></tr>
+<tr><td><b>Scalar string</b></td><td>The entry's <code>summary</code>; no decisions, risks or artifacts</td></tr>
+</tbody></table>
+<p><b>Per-item classification, first match wins:</b></p>
+<table><thead><tr><th>Item</th><th>Classified as</th><th>Produces</th></tr></thead><tbody>
+<tr><td>Object with a <code>decision</code> key</td><td>Decision</td><td><code>{ text: String(item.decision), rationale: item.rationale != null ? String(item.rationale) : null, source: &lt;entry key&gt; }</code></td></tr>
+<tr><td>Object with a <code>risk</code> or <code>text</code> key</td><td>Risk</td><td>N11's <code>resolved:</code> / <code>(resolved</code> rule applied to the value</td></tr>
+<tr><td>Object with a <code>path</code> key</td><td>ArtifactRef</td><td>N12: label, <code>html</code> twin, containment, dedup on path</td></tr>
+<tr><td>Plain string</td><td>Decision, <code>rationale: null</code></td><td>Maister's summary contract makes a bare list a decision list</td></tr>
+<tr><td><code>null</code>, a number, a nested list, or an object with none of those keys</td><td><b>Not classified</b></td><td>Dropped <b>and</b> <code>{ severity: 'warning', field: 'phase_summaries.{key}[{i}]', message: 'list item not recognized as a decision, risk or artifact' }</code></td></tr>
+</tbody></table>
+<p>Dedup (N10) and the resolved rule (N11) apply exactly as for map-shaped entries.</p>
+<p><b>Required fixture assertion</b> (snapshot of this development task): <code>task_context.phase_summaries.clarifications</code> yields <b>exactly 4 decisions</b> in file order — <code>"Scope: full spec AC1-AC18"</code>, <code>"Tests: mocha unit + test-electron integration; perf as benchmark script"</code>, <code>"Claude Code launch: editor.open then URI fallback then next target"</code>, <code>"publisher placeholder maister, MIT"</code> — each with <code>rationale: "user choice"</code> and <code>source: "clarifications"</code>; <b>0 risks, 0 artifacts, 0 parse issues</b>. A second fixture mixes in an unclassifiable item and asserts the warning issue plus surviving siblings.</p>
+</div></details>
+
+<details class="amend"><summary>A15 — <code>maister.now</code> view-title menu <span class="tag">closes W6 · § 1.6 completeness</span></summary>
+<div class="body">
+<p>No section gave the <code>when</code>, group, icon or order for <code>view == maister.now</code>, though § 1.3 places two commands there and § 1.6 claims to be a complete manifest source. <code>menus["view/title"]</code> gains, matching the <code>＋ ↻</code> the approved mockup renders:</p>
+<table><thead><tr><th>Command</th><th>Icon</th><th>Position</th><th><code>when</code></th></tr></thead><tbody>
+<tr><td><code>maister.startWorkflow</code></td><td><code>add</code></td><td><code>navigation@1</code></td><td><code>view == maister.now &amp;&amp; isWorkspaceTrusted</code></td></tr>
+<tr><td><code>maister.refresh</code></td><td><code>refresh</code></td><td><code>navigation@2</code></td><td><code>view == maister.now</code></td></tr>
+</tbody></table>
+</div></details>
+
+<details class="amend" open><summary>A16 — Verification methods: which harness actually runs each AC <span class="tag">closes audit C2</span></summary>
+<div class="body">
+<p>The extension host cannot click, query or assert inside a webview DOM — <code>@vscode/test-electron</code> runs mocha <i>in the host</i>, which only posts and receives messages. Eight criteria § 8.7 assigns to "Integration" are assertions about rendered content. Each is <b>split</b> into the part each harness can execute; the remainder is named manual. The <b>Verified by</b> column of the traceability table is authoritative and supersedes § 8.7 wherever they differ.</p>
+<table><thead><tr><th>Harness</th><th>What it may assert</th></tr></thead><tbody>
+<tr><td><b>Unit</b> (mocha, no host)</td><td>Pure-function results over fixtures</td></tr>
+<tr><td><b>Integration</b> (test-electron)</td><td>Messages posted/received, validation outcomes, commands executed and their arguments, panel location and context keys, editor/tab state, index and watcher behaviour, and <b>the HTML string a generator produced</b></td></tr>
+<tr><td><b>DOM</b> (Playwright over generated HTML)</td><td>Structural assertions in a real browser: selectors, section and field order, exact copy, accessible names, and the payload a simulated activation posts through the stubbed <code>acquireVsCodeApi</code></td></tr>
+<tr><td><b>Manual</b> (signed checklist)</td><td>Anything needing a live host rendering third-party HTML, a real assistant, a real screen reader, or a human's eye</td></tr>
+</tbody></table>
+<p><b>The eight splits:</b></p>
+<table><thead><tr><th>AC</th><th>Integration half</th><th>DOM half</th><th>Manual remainder</th></tr></thead><tbody>
+<tr><td>AC3</td><td>Output carries exactly the three insertions with a fresh nonce; a data change posts <code>refresh</code> within 1.5 s</td><td>—</td><td>Renders with its data, <b>no CSP violations</b>, re-renders</td></tr>
+<tr><td>AC4</td><td>A <code>navigate</code> to an in-task <code>.md</code> sets panel location to <code>{mode:'artifact'}</code> — no editor tab, no browser</td><td>Shim's capture listener turns a click on the real dashboard's <code>a[target="_blank"]</code> into a <code>navigate</code> post</td><td>One real click in a live host</td></tr>
+<tr><td>AC5</td><td>Every navigation routes through <code>render.ts</code>; <code>vscode.open</code> only via <code>openSource</code></td><td>Reader HTML contains the summary card whenever <code>summary</code> is non-null</td><td>—</td></tr>
+<tr><td>AC6</td><td><code>task</code> payload for the <code>html_output:false</code> fixture carries banner reason, phases, decisions, risks</td><td>Generated fallback HTML renders all four sections in § 5.4 order</td><td>—</td></tr>
+<tr><td>AC8</td><td><code>setFilter</code>/<code>clearFilter</code>/<code>openDashboard</code> round-trips; Overview and Dashboard read the same <code>TaskQuery</code></td><td>Bar activation posts the right <code>setFilter</code> patch; charts keep all-task counts while rows filter; each <b>Table</b> link matches its chart</td><td>—</td></tr>
+<tr><td>AC14</td><td>Tree items expose complete <code>accessibilityInformation.label</code>s</td><td>Every interactive element is a <code>&lt;button&gt;</code>/<code>&lt;a&gt;</code> with an accessible name and tab-reachable order</td><td>Screen-reader pass</td></tr>
+<tr><td>AC17</td><td><code>runNextAction</code> from each of the four surfaces executes the composed command; <code>openTask</code> launches nothing</td><td>Each surface renders exactly one next-action control per row, distinct from the title control</td><td>—</td></tr>
+<tr><td>AC18</td><td><code>risks</code> payload lists each risk once per task, ordered by <code>activityMtime</code>, no severity or age field</td><td><b>Show resolved</b> reveals resolved rows struck through with a visible "Resolved" label</td><td>—</td></tr>
+</tbody></table>
+<p>AC1, AC2, AC7, AC9, AC10, AC12, AC13, AC15 and AC16 keep their § 8.7 methods as amended by A10.</p>
+</div></details>
+
+<details class="amend"><summary>A17 — <code>failed_phases</code>, <code>started_phase</code> and <code>auto_fix_attempts</code> are observable <span class="tag">corrects § 2.1 · closes W4</span></summary>
+<div class="body">
+<p>§ 2.1 justifies having no <code>failed</code> <code>PhaseStatus</code> by claiming <i>"a phase-level failure is not observable from state"</i>. That is <b>factually wrong</b>: both real state files carry <code>orchestrator.failed_phases</code>, and Maister's own <code>dashboard.html</code> renders a failed-phase glyph. <code>started_phase</code> and a populated <code>auto_fix_attempts</code> are likewise observable, and N15 would drop all three without a <code>ParseIssue</code>, contradicting § 2's governing contract.</p>
+<p><b>The behaviour stands; the rationale and the discard do not.</b></p>
+<ul>
+<li><b>Corrected rationale:</b> <code>PhaseStatus</code> has no <code>failed</code> value because a failed phase is not a <i>durable</i> state — Maister retries it, and the field records attempts rather than an outcome the UI could keep asserting. A gap stays <code>not_recorded</code>, still the honest answer.</li>
+<li><b>Nothing silently discarded (N15 amended):</b> a non-empty <code>failed_phases</code> or populated <code>auto_fix_attempts</code> records a <code>warning</code> <code>ParseIssue</code> naming the phases.</li>
+<li><b>Surfaced as fact, not as a state:</b> the fallback header's parse-issues link and Raw state section state it plainly — <i>"{n} phases recorded as failed: phase-3, phase-7"</i>. No new glyph, no new status word, nothing AC13 forbids.</li>
+<li><b><code>started_phase</code> as a cross-check:</b> § 2.4's derivation still decides <code>currentPhaseId</code>; a disagreement records a <code>warning</code> issue with both values — the derivation wins, and the disagreement is visible rather than hidden.</li>
+<li>A hazard fixture with populated <code>failed_phases</code> and <code>auto_fix_attempts</code> joins the A8 matrix.</li>
+</ul>
+</div></details>
+
+<details class="amend" open><summary>A18 — The hosted dashboard's resource-resolution dependency, de-risked first <span class="tag">closes W9</span></summary>
+<div class="body">
+<p>R18 and R23 rest on one unverified behaviour: the real loader executes <code>s.src = "dashboard-data.js?t=" + Date.now()</code>, so the webview requests <code>…vscode-cdn.net/&lt;taskFolder&gt;/dashboard-data.js?t=1758…</code>. <b>The spec never stated that the resource resolver tolerates the query component.</b> If it does not, AC3 and AC4 both fail and two of the four panel modes lose their primary path.</p>
+<ul>
+<li><b>Stated as a dependency:</b> <code>asWebviewUri</code> + <code>&lt;base href&gt;</code> must resolve a relative <code>src</code> <b>with its query string intact</b>.</li>
+<li><b>Moved into the first smoke test</b>, beside the Node 26 check and before any feature code: host the real fixture <code>dashboard.html</code> in a webview and confirm <code>window.MAISTER_DATA</code> is populated with <code>?t=</code> present.</li>
+<li><b>Pre-authorised contingency</b>, so the discovery costs no re-planning: (1) the shim — which already rewrites the node — strips the query before insertion, and live refresh then relies on the <code>refresh</code> message plus the loader serving from disk per request; (2) if resolution fails regardless, <code>recognize()</code> returns <code>'unrecognized'</code> for every vintage, Task mode degrades to the § 5.4 fallback with its <b>Open dashboard in browser</b> banner, and the loss is recorded in § 8.5.</li>
+</ul>
+</div></details>
+
+<h2 id="messages">Message protocol — the security allowlist (A2)</h2>
+<p class="tag">A message is accepted only if its <code>type</code> is listed, its payload shape matches, and every rule in the last column passes. Anything else is dropped and logged — never acted on.</p>
+
+<p class="dirn">WEBVIEW → EXTENSION</p>
+<table>
+<thead><tr><th>type</th><th>Payload</th><th>Senders</th><th>Host-side validation</th></tr></thead>
+<tbody>
+<tr><td><code>ready</code></td><td>—</td><td>all five bundles</td><td>none; triggers the initial push</td></tr>
+<tr><td><code>navigate</code></td><td><code>{ href }</code></td><td>shim (dashboard, companion)</td><td>resolve against the hosting document's directory; must normalize <b>inside the hosting task folder</b>; else ignore + log. Routed per § 5.3 <b>as narrowed by A2.1</b></td></tr>
+<tr><td><code>openTask</code></td><td><code>{ folderUri }</code></td><td>overview, fallback, dashboard, risks, reader</td><td><code>folderUri</code> ∈ index</td></tr>
+<tr><td><code>openArtifact</code></td><td><code>{ folderUri, artifactRelPath, variant, anchor? }</code></td><td>overview hero expander, fallback, reader, risks source link</td><td>in index; path normalizes inside the task; <code>variant</code> in enum; anchor <code>/^[-\w.]{1,128}$/</code></td></tr>
+<tr><td><code>openSource</code></td><td><code>{ folderUri, artifactRelPath? }</code></td><td>fallback (Open state file), reader toolbar</td><td>as above; omitted path = <code>orchestrator-state.yml</code></td></tr>
+<tr><td><code>openFile</code></td><td><code>{ workspaceRelPath }</code></td><td>reader <code>data-file</code></td><td>resolves inside some workspace folder</td></tr>
+<tr><td><code>openExternal</code></td><td><code>{ url }</code></td><td>reader <code>data-external</code></td><td>scheme <code>http:</code> / <code>https:</code> only</td></tr>
+<tr><td><code>openInBrowser</code></td><td><code>{ folderUri, artifactRelPath }</code></td><td>fallback banner "Open dashboard in browser"</td><td><b>requires <code>isWorkspaceTrusted</code></b> (A2.2); in index; path inside the task <b>and</b> ends <code>.html</code>; dispatched via <code>env.openExternal</code></td></tr>
+<tr><td><code>setFilter</code></td><td><code>{ patch: Partial&lt;TaskQuery&gt; }</code></td><td>overview, dashboard, risks (<b>type facet only</b>)</td><td>known keys; <code>text</code> ≤ 200 chars; <code>types</code>/<code>statuses</code>/<code>verdicts</code> arrays of ≤ 16 enum members; <code>author</code> is <code>'me'</code>, <code>'others'</code> or <code>{ email }</code> with <code>email</code> ≤ 320 chars; <code>quietAtLeastDays</code> a finite number in 0–3650; dates parse</td></tr>
+<tr><td><code>clearFilter</code></td><td>—</td><td>overview, dashboard "Clear all"</td><td>none</td></tr>
+<tr><td><code>setGroupBy</code></td><td><code>{ groupBy }</code></td><td>overview</td><td>enum <code>type|status|author|month</code>; persisted to <code>workspaceState</code></td></tr>
+<tr><td><code>openDashboard</code></td><td>—</td><td>overview "Show all", risks breadcrumb</td><td>none; opens with the current shared filter</td></tr>
+<tr><td><code>openRisks</code></td><td><code>{ folderUri? }</code></td><td>dashboard KPI tile, fallback Risks heading, overview</td><td>when present, ∈ index (scopes the mode)</td></tr>
+<tr><td><code>startWorkflow</code></td><td>—</td><td>overview empty state</td><td>requires <code>isWorkspaceTrusted</code></td></tr>
+<tr><td><code>runNextAction</code></td><td><code>{ folderUri }</code></td><td>overview row, fallback header, dashboard Next, risks group header</td><td>∈ index; trusted only. <b>The host recomputes the action</b> — the webview never supplies command text</td></tr>
+</tbody>
+</table>
+
+<p class="dirn">EXTENSION → WEBVIEW</p>
+<table>
+<thead><tr><th>type</th><th>Payload</th><th>Receiver</th></tr></thead>
+<tbody>
+<tr><td><code>overview</code></td><td><code>{ stats, groups, activeFilter, groupBy, freshness }</code> — row fields only, ≤ 50 tasks/group, never full <code>Task</code> objects (renames § 5.6's <code>stats</code>)</td><td>Overview</td></tr>
+<tr><td><code>task</code></td><td>fallback payload built from <code>Task</code> + <code>TaskDetail</code> (§ 5.4)</td><td>fallbackTask</td></tr>
+<tr><td><code>dashboard</code></td><td><code>{ kpis, charts, rows, filter }</code> — charts pre-aggregated over the whole index, rows ≤ 1,000</td><td>dashboardMode</td></tr>
+<tr><td><code>risks</code></td><td><code>{ kpis, groups, filter }</code> — the full risk set for the scope, so local filtering needs no round-trip</td><td>risksMode</td></tr>
+<tr><td><code>render</code></td><td>the § 6.2 payload</td><td>reader</td></tr>
+<tr><td><code>refresh</code></td><td>—</td><td>shim (calls <code>window.loadData?.(false)</code>)</td></tr>
+</tbody>
+</table>
+<p><b>Webview-local state — deliberately no message:</b> Overview group collapse and search text, Dashboard table sort, Risks text search / status toggles / show-resolved / group-by, reader <code>scrollY</code>. All persist via <code>vscode.getState()/setState()</code>.</p>
+<div class="card"><p><b>A2.1 — <code>navigate</code> containment wins over § 5.3's cross-task row.</b> § 5.3's <i>"<code>dashboard.html</code> of this <b>or another</b> task"</i> row is narrowed to <b>this task only</b>. A link to another task's dashboard is outside the hosting folder, so it is ignored and logged like any other out-of-folder target — one rule instead of two, matching the § 8.3 posture. Overview is the supported way to reach another task.</p>
+<p><b>A2.2 — trust rules on the outbound-content messages.</b> <code>openInBrowser</code> joins <code>startWorkflow</code> and <code>runNextAction</code> as trust-gated: in an untrusted workspace the message is dropped <b>and the fallback banner's "Open dashboard in browser" button is not rendered at all</b>. This closes the hole § 8.1 otherwise opens — an untrusted workspace <i>forces</i> the fallback view, making its banner the most reachable path to handing model-authored HTML to the system browser, outside the sandbox. With this rule § 8.1 and § 8.3 hold as written.<br>
+<code>openExternal</code> from the reader stays available untrusted: it carries only <code>http(s)</code> URLs extracted from markdown, never task-authored HTML, and VS Code's trusted-domain prompt applies — a deliberate exception, recorded so § 8.3 is not read as forbidding it.</p></div>
+
+<h2 id="visual">Visual design</h2>
+<p>Mockups in <code>analysis/design-context/</code> are <b>binding inputs</b> for layout, copy, field order and states — the implementation planner will attach a <code>Visual References</code> block to every UI task group.</p>
+<table>
+<thead><tr><th>ID</th><th>Mockup</th><th>Binding for</th><th>Fidelity</th></tr></thead>
+<tbody>
+<tr><td><code>screen:sidebar-now-overview</code></td><td><a href="../analysis/design-context/mockups/sidebar-now-overview.html">sidebar-now-overview.html</a></td><td>Now node and child order (incl. the A9 Recent artifacts group), inline ▶; Overview search, Mine/Everyone, STATUS/TYPE/ATTENTION tiles, group headers, row anatomy</td><td>Approximate layout, exact copy &amp; field order</td></tr>
+<tr><td><code>screen:task-fallback-view</code></td><td><a href="../analysis/design-context/mockups/task-fallback-view.html">task-fallback-view.html</a></td><td>Banner, header + primary next action, phase glyph list, hero cards, decisions, risks, all artifacts, raw state</td><td>Approximate layout, exact section order</td></tr>
+<tr><td><code>screen:artifact-reader</code></td><td><a href="../analysis/design-context/mockups/artifact-reader-implementation-plan.html">artifact-reader-implementation-plan.html</a></td><td>Breadcrumb, hero chips, pinned summary card, checklist line, body typography</td><td>Approximate layout, exact card contents</td></tr>
+<tr><td><code>screen:dashboard-mode</code></td><td><a href="../analysis/design-context/mockups/dashboard-mode.html">dashboard-mode.html</a></td><td>4 KPI tiles, filter chip bar, 2×2 chart grid with Table links, task table incl. <b>Next</b></td><td>Pixel guide for tiles/charts; exact column order</td></tr>
+<tr><td><code>screen:open-risks</code></td><td><a href="../analysis/design-context/mockups/open-risks.html">open-risks.html</a></td><td>Breadcrumb, KPI tiles, filter bar, group card header fields, risk row + source line</td><td>Approximate layout, exact field order</td></tr>
+<tr><td><code>screen:start-workflow-flow</code></td><td><a href="../analysis/design-context/mockups/start-workflow-flow.html">start-workflow-flow.html</a></td><td>Type prompt, description input, target-order outcome messaging</td><td>Flow reference</td></tr>
+<tr><td><code>component:hosted-dashboard</code></td><td><span class="tag">not mocked</span></td><td>Maister's own <code>dashboard.html</code>, hosted unmodified</td><td>Verbatim — no restyling</td></tr>
+</tbody>
+</table>
+<p><span class="sev warning">warning</span>Three mockup defects are <b>not</b> reproduced: the <code>/screen/*</code> links are preview-server leftovers (non-navigable); the "Browse" wording is stale — Browse was merged into Overview; and <code>open-risks.html</code> renders resolved rows and a <code>· {n} resolved shown struck through</code> heading clause while its <b>Show resolved</b> toggle is off — § 5.7 wins, so the default heading is <code>{open} open across {k} tasks</code> and resolved rows appear only while Show resolved is on. Styling uses VS Code theme variables exclusively; the Dark+ palette in the mockups is a rendering of those variables, not literals to copy.</p>
+
+<h2 id="reuse">Reuse vs new</h2>
+<div class="cols">
+<div class="card">
+<h3 style="margin-top:0">Existing to leverage</h3>
+<p class="tag">The repo contains <b>no source code</b> — <code>package.json</code>, <code>tsconfig.json</code>, <code>src/</code>, <code>test/</code>, <code>.vscode/</code>, <code>.gitignore</code> all absent. Reuse is external and intra-project.</p>
+<ul>
+<li><b>Maister's <code>dashboard.html</code></b> — hosted verbatim in Task mode; its <code>loadData</code>, 5 s polling and <code>aLink</code> behaviour relied on unchanged</li>
+<li><b><code>HERO_MAP</code></b> (dashboard.html 249–276) — transcribed into <code>model/workflows.ts</code></li>
+<li><b>The two real task folders</b> in this repo — committed fixture snapshots; this one is the N9 list fixture, the product-design one the object-literal <code>dashboard-data.js</code> fixture</li>
+<li><b>Webview CSP + nonce patterns</b> from installed <code>42crunch.vscode-openapi</code> and <code>anthropic.claude-code</code> — read as patterns, no code copied</li>
+<li><b>Shared webview primitives</b> (tile, chip, row, summary card) in <code>src/webview/components.ts</code> + <code>media/</code> CSS — imported by all five bundles, never duplicated</li>
+<li><b>VS Code theme variables</b> as the only design tokens</li>
+<li><b><code>yaml</code>, <code>markdown-it</code></b> — replace hand-rolling YAML flow mappings and CommonMark+GFM</li>
+</ul>
+</div>
+<div class="card">
+<h3 style="margin-top:0">New — and why</h3>
+<ul>
+<li><code>model/</code> — no parser exists for Maister state; N1–N15 + A8 drift are specific to this data</li>
+<li><code>index/</code> — the two-tier + persistence design is specific to the performance targets</li>
+<li><code>views/</code> — VS Code providers must be authored per extension</li>
+<li><code>panel/</code> — hosting and message validation are the security core</li>
+<li><code>webview/</code> five bundles + shim — the shim's nonce/appendChild patch has no equivalent</li>
+<li><code>launch/launch.ts</code> — the four-target chain and shell quoting are extension-specific</li>
+<li><code>strings.ts</code> — A6 needs one scannable location; cheaper than a whole-tree lint rule</li>
+</ul>
+<p><b>Deliberately not built</b> (over-engineering guard): no chart library or wrapper, no HTML sanitizer, no syntax highlighter, no abstraction layer over the VS Code API, no plugin architecture for workflow types beyond the static table, no status-bar item, no Quick Pick navigator, no write path. Every module above has an immediate caller.</p>
+</div>
+</div>
+
+<h2 id="approach">Technical approach</h2>
+<details class="amend" open><summary>Layering, data flow, security and error handling</summary>
+<div class="body">
+<p><b>Layering (bottom-up).</b> <code>model/</code> → <code>index/</code> → <code>views/</code> → <code>panel/</code> → <code>launch/</code>, with <code>strings.ts</code> and <code>webview/components.ts</code> as leaf modules. Pure logic (parsers, derivation, query, risks, <code>recognize</code>, insertion, link rewrite, quoting, target order, message validation) stays free of the <code>vscode</code> module so it is unit-testable without a host; classes appear only where the API demands providers or the panel singleton. Everything disposable is registered in <code>context.subscriptions</code>.</p>
+<p><b>Data flow.</b> <code>findFiles</code> per folder → <code>parseState</code> → tier-1 <code>Task</code> keyed by <code>folderUri</code> → persisted + published snapshot → Now and Overview render from the snapshot only (views never read files). Opening a task builds tier-2 <code>TaskDetail</code>; a recognized <code>dashboard.html</code> is hosted, otherwise the fallback view renders. The shim routes clicks and <code>window.open</code> into <code>navigate</code>; the host validates every message against A2, then opens Artifact mode, another task, a file or an external URL. Watcher changes update the index and post <code>refresh</code> or re-render the open artifact.</p>
+<p><b>Security posture.</b> Model-authored JavaScript executes only inside a webview under a per-render 32-byte nonce CSP with <code>default-src 'none'</code>, with the shim acquiring <code>acquireVsCodeApi()</code> first so no later script gets a messaging handle; the host never parses or evaluates it. Markdown renders with <code>html:false</code> as the sanitization strategy. Every resolved path is containment-checked. <code>execFile</code> without a shell. Untrusted workspaces run no hosted HTML and expose no launch commands.</p>
+<p><b>Error handling.</b> The parser never throws; every parse, stat and summary extraction is individually wrapped so one bad task cannot affect another; a single "Maister Lens" output channel is the sink; notifications only for the three actionable cases (watcher exclude, Copilot caveat, index persistence failing twice).</p>
+<p><b>Risk handled first.</b> The first task group scaffolds the project and proves, before any feature code: esbuild bundling, one mocha test and one <code>@vscode/test-electron</code> launch on Node v26.7.0 — <b>and</b> the A18 resource-resolution check, hosting the real fixture <code>dashboard.html</code> in a webview and confirming <code>window.MAISTER_DATA</code> is populated with the <code>?t=</code> cache-buster intact. A18 is the higher-value of the two: the toolchain risk costs a dependency swap, the resolution risk costs two panel modes.</p>
+</div></details>
+
+<details class="amend"><summary>Testing approach &amp; standards compliance</summary>
+<div class="body">
+<p><b>2–8 focused tests per implementation task group</b>; verification runs only that group's new tests, not the whole suite. Group focus: scaffold → build+test smoke; model → parser hazard fixtures, summary extraction; index → persistence, invalidation, watcher debounce; views → tree contents, Overview payload shape; panel → message validation, <code>recognize()</code>, the three insertions, link rewriting; launch → target order with mocked availability, next-action derivation, shell quoting; risks → dedup; strings → the A6 scan. Integration runs on pinned stable (<code>test:integration</code>) with an optional 1.90.0 <code>test:min</code>; AC7/AC9 are a benchmark, not a gate. The DOM suite carries the DOM half of AC4, AC5, AC6, AC8, AC14, AC17 and AC18 per A16, with structural assertions; criteria A16 marks <b>Manual</b> are signed-off checklist items, not automation debt.</p>
+<table><thead><tr><th>Standard</th><th>How this spec complies</th></tr></thead><tbody>
+<tr><td><code>global/minimal-implementation</code></td><td>Large spec, but every module has an immediate caller; the "Deliberately not built" list is the explicit guard; no future stubs or speculative abstractions</td></tr>
+<tr><td><code>global/conventions</code></td><td>Predictable <code>src/&lt;domain&gt;/</code> layout, two documented runtime dependencies, README + CHANGELOG (A11), testing standards defined before merge (A10)</td></tr>
+<tr><td><code>global/error-handling</code></td><td>Clear messages, fail-safe parsing, centralized output channel, degraded-mode table, resource cleanup via subscriptions</td></tr>
+<tr><td><code>global/validation</code></td><td>Host-side validation of every webview message (A2); allowlists over blocklists for message types, link schemes and path containment</td></tr>
+<tr><td><code>global/coding-style</code> · <code>commenting</code></td><td>camelCase modules by domain, descriptive names, no dead code, comments only where intent is non-obvious (shim patch, undocumented Claude command)</td></tr>
+<tr><td><code>frontend/components</code></td><td>Shared tile/chip/row/summary-card primitives with minimal props, composed across five bundles</td></tr>
+<tr><td><code>frontend/css</code></td><td>VS Code theme variables as the only design tokens; minimal custom CSS</td></tr>
+<tr><td><code>frontend/accessibility</code></td><td>Semantic HTML, full keyboard operability, <code>aria-pressed</code>/<code>aria-sort</code>/<code>role="status"</code>, visible focus, never colour alone, spoken tree labels. Hosted dashboard/companions are the recorded exception</td></tr>
+<tr><td><code>frontend/responsive</code></td><td>Overview fluid across 250–400 px sidebar widths; panel surfaces reflow at full width</td></tr>
+</tbody></table>
+<p class="tag">No testing or backend standards exist for this project; § 8.6 / A10 proposes the testing ones at finalization.</p>
+</div></details>
+
+<h2 id="trace">Acceptance criteria traceability</h2>
+<p class="tag"><b>Verified by</b> is authoritative per A16; it supersedes § 8.7's column wherever they differ. "Manual" means a signed checklist item, never an implied automation.</p>
+<table>
+<thead><tr><th>AC</th><th>Spec section</th><th>Module(s)</th><th>Verified by</th></tr></thead>
+<tbody>
+<tr><td>AC1</td><td>R12, R15</td><td><code>index/watcher.ts</code>, <code>index/taskIndex.ts</code>, <code>views/nowTree.ts</code></td><td>Integration</td></tr>
+<tr><td>AC2</td><td>R5, R6, A8, A14, A17</td><td><code>model/parseState.ts</code></td><td>Unit</td></tr>
+<tr><td>AC3</td><td>R18, A18</td><td><code>panel/hostDashboard.ts</code>, <code>webview/shim.ts</code>, <code>index/watcher.ts</code></td><td>Integration (insertions, nonce, <code>refresh</code> ≤ 1.5 s) + <b>Manual</b> (renders with data, no CSP violations)</td></tr>
+<tr><td>AC4</td><td>R18, A2 + A2.1</td><td><code>webview/shim.ts</code>, <code>panel/messages.ts</code>, <code>panel/panel.ts</code></td><td>Integration (panel location; no tab, no browser) + DOM (click → <code>navigate</code>) + <b>Manual</b> (one live click)</td></tr>
+<tr><td>AC5</td><td>R22</td><td><code>panel/render.ts</code>, <code>webview/reader.ts</code></td><td>Integration (<code>vscode.open</code> only via <code>openSource</code>) + DOM (summary card)</td></tr>
+<tr><td>AC6</td><td>R19, A8</td><td><code>webview/fallbackTask.ts</code>, <code>model/parseState.ts</code></td><td>Integration (payload) + DOM (four sections in order)</td></tr>
+<tr><td>AC7</td><td>R13, A10</td><td><code>index/taskIndex.ts</code> (query), benchmark</td><td>Unit + benchmark (non-gating)</td></tr>
+<tr><td>AC8</td><td>R16, R20, A2</td><td><code>views/overviewView.ts</code>, <code>webview/overview.ts</code>, <code>webview/dashboardMode.ts</code></td><td>Integration (filter round-trip, shared query) + DOM (bar → <code>setFilter</code>, Table parity)</td></tr>
+<tr><td>AC9</td><td>R10, R11, A10</td><td><code>index/taskIndex.ts</code>, benchmark</td><td>Benchmark (non-gating)</td></tr>
+<tr><td>AC10</td><td>R5, A8</td><td><code>model/parseState.ts</code>, <code>index/taskIndex.ts</code></td><td>Unit + Integration</td></tr>
+<tr><td>AC11</td><td>R24, A7</td><td><code>launch/launch.ts</code></td><td>Unit (mocked <code>executeCommand</code>) + <b>Manual</b> (pre-fill)</td></tr>
+<tr><td>AC12</td><td>R24, A7</td><td><code>launch/launch.ts</code>, <code>model/workflows.ts</code></td><td>Unit</td></tr>
+<tr><td>AC13</td><td>A6</td><td><code>src/strings.ts</code> + string-scan test</td><td>Unit</td></tr>
+<tr><td>AC14</td><td>R15, R16, R25</td><td>all view and webview modules</td><td>Integration (tree labels) + DOM (accessible names, tab order) + <b>Manual</b> (screen reader)</td></tr>
+<tr><td>AC15</td><td>R25, A2.2</td><td><code>package.json</code> <code>when</code> clauses, <code>panel/panel.ts</code>, <code>launch/launch.ts</code></td><td>Integration</td></tr>
+<tr><td>AC16</td><td>R14, R16</td><td><code>index/attribution.ts</code>, <code>views/overviewView.ts</code></td><td>Integration (generated two-author repo)</td></tr>
+<tr><td>AC17</td><td>R15, R16, R19, R20, A4</td><td><code>views/nowTree.ts</code>, <code>webview/overview.ts</code>, <code>webview/fallbackTask.ts</code>, <code>webview/dashboardMode.ts</code></td><td>Integration (dispatch from four surfaces) + DOM (one distinct control per row)</td></tr>
+<tr><td>AC18</td><td>R21, A5</td><td><code>model/risks.ts</code>, <code>webview/risksMode.ts</code></td><td>Integration (payload: dedup, order, no severity/age) + DOM (Show resolved → struck through)</td></tr>
+</tbody>
+</table>
+
+<h2 id="success">Success criteria</h2>
+<div class="card">
+<ol>
+<li>All eighteen acceptance criteria in § 8.7, <b>as amended by A6</b>, pass by the method the traceability table's <b>Verified by</b> column names (A16) — unit, integration, DOM, benchmark, or a signed manual checklist item. No criterion is claimed automated where A16 marks it manual.</li>
+<li><code>npm run build</code>, <code>npm run lint</code>, <code>npm test</code> and <code>npm run test:integration</code> succeed on Node v26.7.0; <code>npm run test:min</code> succeeds on VS Code 1.90.0.</li>
+<li>Benchmark records cold index of 300 generated tasks &lt; 5 s, warm cached snapshot &lt; 300 ms, decision-text query &lt; 100 ms over 300 tasks.</li>
+<li>Every message the five bundles send appears in the A2 table; a test sends unlisted, malformed, out-of-index, path-escaping and trust-gated-while-untrusted messages and asserts all are dropped and logged.</li>
+<li>The A14 fixture assertion holds: this task's own <code>phase_summaries.clarifications</code> yields exactly four decisions with no parse issues.</li>
+<li><code>openRiskCount(task)</code> equals the number of rows Risks mode shows for that task, on every fixture (AC18).</li>
+<li>Runtime dependency count is exactly two — <code>npm ls --prod --depth=0</code> confirms it.</li>
+<li><code>vsce package</code> produces a <code>.vsix</code>; <code>git status</code> is clean of build output and the <code>.playwright-mcp</code> log.</li>
+<li>README, CHANGELOG, <code>tech-stack.md</code> and <code>vision.md</code> describe the shipped extension with no contradictions.</li>
+</ol>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E2E Verification Report — Maister Lens VS Code extension</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { border-left:4px solid var(--warn); background:var(--warn-soft); }
+.verdict b { font-size:18px; }
+.scn { border-left:4px solid var(--ok); }
+.scn.warn { border-left-color:var(--warn); }
+.toc { font-size:13px; color:var(--dim); margin:10px 0 4px; }
+.meta { color:var(--dim); font-size:12.5px; }
+.grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+ul.tight { margin:6px 0; padding-left:20px; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../implementation/spec.html">Spec</a>
+  <a href="../implementation/implementation-plan.html">Plan</a>
+  <a href="implementation-verification.html">Verification</a>
+  <span class="here">E2E</span>
+  <a href="visual-fidelity.html">Visual Fidelity</a>
+  <a href="e2e-verification-report.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>E2E Verification Report <span class="badge">runtime</span></h1>
+  <p class="meta">Maister Lens VS Code extension · 2026-09-23 · git <code>ad976ab</code> on <code>main</code> · e2e-test-verifier (maister)</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>10</b><span>scenarios run</span></div>
+  <div class="tile"><b class="pass">10</b><span>passed</span></div>
+  <div class="tile"><b class="fail">0</b><span>failed</span></div>
+  <div class="tile"><b>0 / 0</b><span>critical / major</span></div>
+  <div class="tile"><b>2 / 4</b><span>minor / cosmetic</span></div>
+  <div class="tile"><b>⚠️</b><span>go with caveats</span></div>
+</div>
+
+<section class="card verdict">
+  <p><b>Verdict: GO WITH CAVEATS</b></p>
+  <p>All five webview surfaces render live from their real built bundles with zero implementation console errors, and every structural claim held. Two Minor defects, both in one function of <code>src/webview/fallbackTask.ts</code>: the status glyph the payload carries is never rendered, and the status word is duplicated into an <code>sr-only</code> span a screen reader reads twice. Four Cosmetic findings, none user-blocking. No merge blockers.</p>
+</section>
+
+<section class="card">
+  <h2 style="margin-top:0">Key Decisions</h2>
+  <ul class="tight">
+    <li><b>No server, no URL.</b> Runtime verification loaded each built bundle's generated HTML over <code>http://localhost</code> with <code>acquireVsCodeApi</code> stubbed and one payload posted — the technique <code>test/dom/harness.ts</code> establishes (A10/A16).</li>
+    <li><b>HTTP instead of <code>file://</code></b> because the Playwright MCP browser blocks the <code>file:</code> protocol; the shell document is otherwise byte-equivalent to the harness's.</li>
+    <li><b>Colour and theme declared not assessable.</b> Outside the VS Code host every <code>--vscode-*</code> variable falls back, so all captures render near-monochrome. A harness property, not a defect.</li>
+    <li><b>AC14 confirmed, not re-derived</b> — the DOM suite was re-run (7/7) plus one live spot-probe, per the task brief.</li>
+  </ul>
+  <h2>Open Questions / Risks</h2>
+  <ul class="tight">
+    <li>The fallback view's missing status glyph is also an unused <code>FallbackPayload.statusGlyph</code> field — it reads as a dropped <code>glyph()</code> call, not a design choice. Confirm intent before shipping.</li>
+    <li>Nothing here touches the seven unsigned items in <a href="manual-checklist.md" target="_blank" rel="noopener">manual-checklist.md</a>. The manual halves of AC3, AC4, AC11 and AC14 remain unverified by any agent.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents:
+  <a href="#env">Environment</a> ·
+  <a href="#scenarios">Scenarios</a> ·
+  <a href="#findings">Discrepancies</a> ·
+  <a href="#console">Console</a> ·
+  <a href="#align">Spec Alignment</a> ·
+  <a href="#variances">Variances</a> ·
+  <a href="#exit">Exit Criteria</a> ·
+  <a href="#recs">Recommendations</a>
+</p>
+
+<main>
+
+<h2 id="env">Test Environment</h2>
+<div class="card">
+<table>
+<tr><th>Base URL</th><td><code>http://localhost:8777/</code> — a static server over a scratch dir holding the five generated shell documents, <code>dist/webview/*.js</code> and <code>media/webview.css</code>. No app server exists.</td></tr>
+<tr><th>Browser</th><td>Chromium via Playwright MCP</td></tr>
+<tr><th>Viewport</th><td>250×900 and 400×900 (sidebar), 1100×900 (panel)</td></tr>
+<tr><th>Auth context</th><td>n/a — bundles render from one posted payload; no auth surface</td></tr>
+<tr><th>Test data</th><td>Fixtures exported by <code>test/dom/harness.ts</code>, plus two payload variants posted at runtime</td></tr>
+</table>
+</div>
+
+<h2 id="scenarios">Verification Scenarios</h2>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.1 Overview renders at sidebar width with no console errors — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 4.2 Overview webview · AC8, AC14 · viewport 400×900</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Navigate to <code>overview.html</code></td><td>Bundle boots, posts <code>ready</code>, renders</td><td>Rendered; <code>__posted</code> held <code>ready</code></td><td>✅</td></tr>
+<tr><td>2</td><td>Read console</td><td>No implementation errors</td><td>1 entry — <code>favicon.ico</code> 404 from the static server only</td><td>✅</td></tr>
+<tr><td>3</td><td>Read accessibility snapshot</td><td>Search → Scope → Status → Type → Attention → Tasks → groups → Show all in Dashboard</td><td>Exactly that order</td><td>✅</td></tr>
+<tr><td>4</td><td>Inspect row anatomy</td><td>One ▶ per actionable row, none on completed research</td><td>Confirmed</td><td>✅</td></tr>
+</table>
+<img class="shot" src="screenshots/01-overview-400px.png" alt="Overview surface rendered at 400 px sidebar width">
+</div>
+
+<div class="card scn warn">
+<h3 style="margin-top:0">4.2 Overview at 250 px — no visible horizontal overflow — ⚠️ Passed with issues</h3>
+<p class="meta">standards/frontend/responsive.md · group 5's "0 horizontal overflow at 250 px and 400 px" claim</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Resize to 250 px</td><td>Layout reflows, content legible</td><td>Reflowed; description truncates with ellipsis</td><td>✅</td></tr>
+<tr><td>2</td><td>Measure <code>scrollWidth</code></td><td>== 250</td><td>344</td><td>❌</td></tr>
+<tr><td>3</td><td>Identify the overflowing box</td><td>none</td><td>one 1×1 <code>.sr-only</code> span at x≈344</td><td>❌</td></tr>
+<tr><td>4</td><td>Check for a user-visible scrollbar</td><td>none</td><td>none — <code>body</code> is <code>overflow-x:hidden</code></td><td>✅</td></tr>
+</table>
+<p>Issue: <a href="#cos1">COS-1</a>. The full-page capture below is 344 px wide; everything past 250 px is empty.</p>
+<img class="shot" src="screenshots/02-overview-250px.png" alt="Overview surface rendered at 250 px sidebar width">
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.3 Overview filtered state and row markers — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 4.2 list header and row markers · payload amended at runtime</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Post filtered payload</td><td><code>Tasks 5 of 230 · 2 filters</code></td><td>Matches the mockup's copy exactly</td><td>✅</td></tr>
+<tr><td>2</td><td>Inspect row 1</td><td>Markers render with their hidden words</td><td><code>!failed verification</code>, <code>⏸quiet 5 days</code></td><td>✅</td></tr>
+</table>
+<img class="shot" src="screenshots/09-overview-filtered-markers.png" alt="Overview with filtered counts and row markers">
+</div>
+
+<div class="card scn warn">
+<h3 style="margin-top:0">4.4 Task fallback view — all § 5.4 sections in order — ⚠️ Passed with issues</h3>
+<p class="meta">§ 5.4 · AC6 · viewport 1100×900</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Read heading order</td><td>Phases → Key artifacts → Decisions → Risks → All artifacts → Raw state</td><td>Exactly that, after banner and header</td><td>✅</td></tr>
+<tr><td>2</td><td>Read the meta line</td><td>type · status <i>with glyph</i> · author · verification · dates · parse issues</td><td>Glyph absent; every other field exact</td><td>❌</td></tr>
+<tr><td>3</td><td>Inspect the status span</td><td>glyph (aria-hidden) + word</td><td><code>&lt;span&gt;Status: In progress&lt;span class="sr-only"&gt;In progress&lt;/span&gt;&lt;/span&gt;</code></td><td>❌</td></tr>
+<tr><td>4</td><td>Inspect phases</td><td>glyph + <code>{n} · {name}</code> + status word</td><td>Correct glyph+word pattern</td><td>✅</td></tr>
+<tr><td>5</td><td>Inspect risks</td><td>open first, resolved struck through and labelled</td><td>Confirmed</td><td>✅</td></tr>
+<tr><td>6</td><td>Inspect the Risks heading</td><td>entry point into Risks mode</td><td><code>&lt;h2&gt;&lt;button&gt;</code> named "Show the risks of … in the Risks view"</td><td>✅</td></tr>
+</table>
+<p>Issues: <a href="#min1">MIN-1</a>, <a href="#min2">MIN-2</a>.</p>
+<img class="shot" src="screenshots/03-fallback-task-view.png" alt="Task fallback view rendered">
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.5 Artifact reader — summary card, skip link, hero chips — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 6.3 · AC5</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Read document order</td><td>skip link → breadcrumb → hero chips → summary aside → <code>main#doc</code></td><td>Exactly that; skip link first in tab order</td><td>✅</td></tr>
+<tr><td>2</td><td>Inspect hero chips</td><td>current chip <code>aria-pressed</code></td><td>Implementation Plan pressed</td><td>✅</td></tr>
+<tr><td>3</td><td>Inspect the summary card</td><td>TL;DR → Key decisions → Open questions &amp; risks → checklist</td><td>Exact; checklist is the card's last child</td><td>✅</td></tr>
+<tr><td>4</td><td>Inspect the resolved risk</td><td>struck through with a visible label</td><td><code>&lt;s&gt;</code> + <code>Resolved</code> chip</td><td>✅</td></tr>
+</table>
+<img class="shot" src="screenshots/04-artifact-reader.png" alt="Artifact reader rendered">
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.6 Dashboard mode — KPIs, charts, table — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 5.5 · AC8, AC17</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Read the KPI row</td><td>glyph + value + label + context, never colour alone</td><td>Confirmed; the Open-risks tile is a named button</td><td>✅</td></tr>
+<tr><td>2</td><td>Read the filter bar</td><td>chips with remove · Clear all · charts note</td><td>Exact</td><td>✅</td></tr>
+<tr><td>3</td><td>Read the table header</td><td>Title · Type · Status/current phase · Verdict · Author · Created · Last activity · Next</td><td>Exact match, in order; sortable headers are buttons</td><td>✅</td></tr>
+<tr><td>4</td><td>Read the table body</td><td>charts count all tasks; only rows filtered</td><td>Bars sum to 6; 2 rows; "Tasks 2 of 6 match the filters"</td><td>✅</td></tr>
+<tr><td>5</td><td>Inspect row 1's Next cell</td><td>one next-action control, distinct from the title</td><td>Confirmed</td><td>✅</td></tr>
+</table>
+<p>Issue: <a href="#cos3">COS-3</a>. KPI order, glyphs and tones verified against <code>src/panel/panel.ts:730-767</code> — ◈ blue, ✕ red, ⏸ orange, ⚠ purple, identical to the § 5.5 table.</p>
+<img class="shot" src="screenshots/05-dashboard-mode.png" alt="Dashboard mode rendered">
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.7 Dashboard chart → data-table toggle — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 5.5 Table control · accessibility: colour never the only encoding</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Activate the Status card's <b>Table</b> control</td><td>real table with scoped headers</td><td><code>Completed 2</code>, <code>In progress 4</code></td><td>✅</td></tr>
+<tr><td>2</td><td>Compare numbers to the bars</td><td>identical</td><td>Identical</td><td>✅</td></tr>
+<tr><td>3</td><td>Read the control after toggling</td><td>offers <b>Chart</b></td><td>Label flipped</td><td>✅</td></tr>
+</table>
+<img class="shot" src="screenshots/08-dashboard-chart-as-table.png" alt="Dashboard chart rendered as a data table">
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.8 Twelve-week chart geometry — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 5.5 "Tasks created per week"</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Post 12 weeks</td><td>wider than tall, fits the card</td><td><code>viewBox="0 0 480 130"</code>, rendered 505×137 px</td><td>✅</td></tr>
+<tr><td>2</td><td>Read the accessible name</td><td>enumerates all twelve counts</td><td>"…last 12 weeks: W26 3, W27 7, …"</td><td>✅</td></tr>
+<tr><td>3</td><td>Read the footnote</td><td>current week in progress</td><td>"The current week is in progress (dashed)"</td><td>✅</td></tr>
+</table>
+<p>The ~810 px tall chart in scenario 4.6's capture is a <b>fixture artifact</b> — <code>viewBox</code> width is <code>weeks.length × 40</code>, and production always publishes twelve weeks. Not a defect.</p>
+<img class="shot" src="screenshots/10-dashboard-12-week-chart.png" alt="Dashboard with a full twelve-week column chart">
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.9 Risks mode — default state and Show resolved — <span class="pass">✅ Passed</span></h3>
+<p class="meta">§ 5.7 · AC18</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td>Read the default heading</td><td><code>{open} open across {k} tasks</code>, no resolved clause</td><td><code>1 open across 1 tasks</code> — clause absent, per the ruled mockup defect</td><td>✅</td></tr>
+<tr><td>2</td><td>Read the filter bar</td><td>search · Type · Task status · Show resolved · Group by</td><td>Exactly that order</td><td>✅</td></tr>
+<tr><td>3</td><td>Count rendered rows</td><td>resolved hidden</td><td>0</td><td>✅</td></tr>
+<tr><td>4</td><td>Check <b>Show resolved</b></td><td>one struck, labelled row; heading gains the clause</td><td>Both confirmed</td><td>✅</td></tr>
+<tr><td>5</td><td>Read the group header</td><td>title · type · status/activity/author · <code>{n} open</code> · next action</td><td>Exact; disclosure and title are separate controls</td><td>✅</td></tr>
+<tr><td>6</td><td>Read a risk's source line</td><td><code>from {path}</code> opening the reader</td><td>Button named "Open implementation/spec.md"</td><td>✅</td></tr>
+</table>
+<p>Issues: <a href="#cos2">COS-2</a>, <a href="#cos4">COS-4</a>.</p>
+<div class="grid2">
+  <img class="shot" src="screenshots/06-risks-mode.png" alt="Risks mode, Show resolved off">
+  <img class="shot" src="screenshots/07-risks-show-resolved.png" alt="Risks mode, Show resolved on">
+</div>
+</div>
+
+<div class="card scn">
+<h3 style="margin-top:0">4.10 Accessibility and regression confirmation — <span class="pass">✅ Passed</span></h3>
+<p class="meta">AC14 (DOM half) · standards/frontend/accessibility.md</p>
+<table>
+<tr><th>#</th><th>Action</th><th>Expected</th><th>Actual</th><th>Status</th></tr>
+<tr><td>1</td><td><code>npm run test:dom</code></td><td>green on freshly built bundles</td><td>7 passed in 1.4 s</td><td>✅</td></tr>
+<tr><td>2</td><td>Live focusable probe (Dashboard)</td><td>only button/a/input, all named, no positive tabindex</td><td>15 controls, 0 unnamed, 0 disallowed, 0 positive</td><td>✅</td></tr>
+<tr><td>3</td><td>Overview accessibility snapshot</td><td>named facet groups, <code>aria-pressed</code> toggles</td><td>Scope / Status / Type / Attention groups; Mine pressed</td><td>✅</td></tr>
+</table>
+<p>Issue: <a href="#min2">MIN-2</a> — one redundant <code>sr-only</code> duplicate on the fallback surface, outside what the DOM suite asserts.</p>
+</div>
+
+<h2 id="findings">Discrepancies</h2>
+<p class="meta">Critical: none. Major: none.</p>
+
+<div class="card" id="min1">
+<h3 style="margin-top:0"><span class="sev warning">Minor</span> MIN-1 — the fallback header never renders the status glyph the payload carries</h3>
+<table>
+<tr><th>Spec requirement</th><td><code>screen:task-fallback-view</code> mockup header: <code>Status: ◯ In progress</code>. <code>FallbackPayload.statusGlyph</code> is declared at <code>src/webview/fallbackTask.ts:54</code> and populated at <code>src/panel/panel.ts:1246</code>.</td></tr>
+<tr><th>Expected</th><td>An aria-hidden glyph span before the status word, as <code>dashboardMode.ts:451</code> and <code>risksMode.ts:360</code> draw the same value.</td></tr>
+<tr><th>Actual</th><td><code>fallbackTask.ts:129-134</code> emits the formatted string plus <code>hidden(payload.statusText)</code> and nothing else. <code>statusGlyph</code> has no reader anywhere in the bundle.</td></tr>
+<tr><th>Evidence</th><td><code>screenshots/03-fallback-task-view.png</code>; live DOM read of <code>p.fb-meta</code></td></tr>
+<tr><th>Root cause hypothesis</th><td>A dropped <code>glyph(payload.statusGlyph)</code> call — the phase rows in the same file use the glyph+word pattern correctly, and the payload field is otherwise dead.</td></tr>
+<tr><th>User impact</th><td>The fallback view is the one surface where status is not scannable by glyph, so it reads differently from Overview, Dashboard and Risks. Also leaves an unused payload field, which <code>minimal-implementation.md</code> calls debt.</td></tr>
+<tr><th>Recommended fix</th><td>Prepend <code>glyph(payload.statusGlyph)</code> to the status span; or delete <code>statusGlyph</code> and its producer if the omission is deliberate.</td></tr>
+<tr><th>Workaround</th><td>None needed — the status word is present, so no information is lost.</td></tr>
+</table>
+</div>
+
+<div class="card" id="min2">
+<h3 style="margin-top:0"><span class="sev warning">Minor</span> MIN-2 — the fallback header duplicates the visible status word into an <code>sr-only</code> span</h3>
+<table>
+<tr><th>Spec requirement</th><td><code>standards/frontend/accessibility.md</code> — hidden text supplements a glyph that carries meaning; it does not repeat visible text.</td></tr>
+<tr><th>Expected</th><td>A screen reader announces "Status: In progress" once.</td></tr>
+<tr><th>Actual</th><td>Computed accessible text is "Status: In progress In progress".</td></tr>
+<tr><th>Evidence</th><td>Live DOM read of <code>p.fb-meta</code></td></tr>
+<tr><th>Root cause hypothesis</th><td>The same dropped <code>glyph()</code> call as MIN-1 — <code>hidden()</code> is the correct partner for an aria-hidden glyph and became redundant once the glyph was not drawn.</td></tr>
+<tr><th>User impact</th><td>Screen-reader users hear the status stuttered on every task fallback view.</td></tr>
+<tr><th>Recommended fix</th><td>Fixing MIN-1 makes <code>hidden()</code> correct again; otherwise drop the call.</td></tr>
+<tr><th>Workaround</th><td>None needed — content is correct, only repeated.</td></tr>
+</table>
+</div>
+
+<div class="card" id="cos1">
+<h3 style="margin-top:0"><span class="sev info">Cosmetic</span> COS-1 — a visually-hidden span escapes its clipping ancestor and extends the document box by 94 px at 250 px</h3>
+<table>
+<tr><th>Spec requirement</th><td><code>standards/frontend/responsive.md</code>; group 5's "0 horizontal overflow at 250 px and 400 px" claim.</td></tr>
+<tr><th>Expected</th><td><code>documentElement.scrollWidth === clientWidth</code> at 250 px.</td></tr>
+<tr><th>Actual</th><td>344 vs 250. The offender is the status <code>.sr-only</code> span inside <code>.trow-description</code>; that ancestor is <code>overflow:hidden</code> but <code>position:static</code>, so it is not the containing block for an absolutely-positioned child and does not clip it.</td></tr>
+<tr><th>Evidence</th><td><code>screenshots/02-overview-250px.png</code> — the capture is 344 px wide with 94 px of empty space.</td></tr>
+<tr><th>Root cause hypothesis</th><td>The <code>.sr-only</code> rule uses <code>position:absolute</code> with no offsets, so the span sits at its static position past the truncated text.</td></tr>
+<tr><th>User impact</th><td>None observed. <code>body</code> is <code>overflow-x:hidden</code>, so no scrollbar appears and the user cannot scroll; only programmatic <code>scrollLeft</code> moves.</td></tr>
+<tr><th>Recommended fix</th><td>Add <code>left:0; top:0;</code> to <code>.sr-only</code> in <code>media/webview.css</code>, or give <code>.trow-description</code> <code>position:relative</code>.</td></tr>
+<tr><th>Workaround</th><td>n/a — nothing is user-visible today; the risk is a future layout change turning this into a real scrollbar.</td></tr>
+</table>
+</div>
+
+<div class="card" id="cos2">
+<h3 style="margin-top:0"><span class="sev info">Cosmetic</span> COS-2 — the Risks heading has no singular form: "1 open across 1 tasks"</h3>
+<table>
+<tr><th>Spec requirement</th><td>§ 5.7 item 1 specifies <code>{open} open across {k} tasks</code> verbatim; <code>RISKS.summary</code> (<code>src/strings.ts:331</code>) implements it exactly.</td></tr>
+<tr><th>Expected</th><td>Grammatical output for k = 1.</td></tr>
+<tr><th>Actual</th><td><code>1 open across 1 tasks</code></td></tr>
+<tr><th>Evidence</th><td><code>screenshots/06-risks-mode.png</code></td></tr>
+<tr><th>Root cause hypothesis</th><td>Faithful implementation of a spec string written for the plural case. The singular pattern exists elsewhere: <code>RISKS.openCountOne</code>, <code>FALLBACK.parseIssuesOne</code>, <code>OVERVIEW.filterCountOne</code>.</td></tr>
+<tr><th>User impact</th><td>A small copy blemish on a headline line, in a workspace with one affected task.</td></tr>
+<tr><th>Recommended fix</th><td>Add <code>RISKS.summaryOne</code> following the existing <code>…One</code> convention — a spec copy change, not a behaviour change.</td></tr>
+<tr><th>Workaround</th><td>None needed.</td></tr>
+</table>
+</div>
+
+<div class="card" id="cos3">
+<h3 style="margin-top:0"><span class="sev info">Cosmetic</span> COS-3 — the Dashboard scope line drops the mockup's workspace-name prefix</h3>
+<table>
+<tr><th>Spec requirement</th><td>The mockup shows <code>payments-platform · 230 tasks · counts only, no durations</code>. <code>feature-spec.md</code> § 5.5 does not specify the prefix.</td></tr>
+<tr><th>Expected</th><td>Per mockup: the working-copy name leads the scope line.</td></tr>
+<tr><th>Actual</th><td><code>6 tasks · counts only, no durations</code></td></tr>
+<tr><th>Evidence</th><td><code>screenshots/05-dashboard-mode.png</code> vs <code>screenshots/m4-mockup-dashboard-mode.png</code></td></tr>
+<tr><th>Root cause hypothesis</th><td>The spec text won over the mockup, which is the documented precedence rule.</td></tr>
+<tr><th>User impact</th><td>Negligible in a single-root workspace; in a multi-root workspace the panel gives no hint which root it summarises.</td></tr>
+<tr><th>Recommended fix</th><td>Optional — decide whether the spec should adopt the mockup's prefix.</td></tr>
+<tr><th>Workaround</th><td>The panel title (<code>Maister · Dashboard</code>) and the window title still name the working copy.</td></tr>
+</table>
+</div>
+
+<div class="card" id="cos4">
+<h3 style="margin-top:0"><span class="sev info">Cosmetic</span> COS-4 — the Risks order note paraphrases the spec's honesty-constraint wording</h3>
+<table>
+<tr><th>Spec requirement</th><td><code>feature-spec.md</code> § 5.7: "no severity and no date"; the mockup renders "no severity or date".</td></tr>
+<tr><th>Expected</th><td>One of the two source wordings.</td></tr>
+<tr><th>Actual</th><td>"Maister records risks as text only — no severity, no date — so groups are ordered by the task's last activity."</td></tr>
+<tr><th>Evidence</th><td><code>screenshots/06-risks-mode.png</code> vs <code>screenshots/m5-mockup-open-risks.png</code></td></tr>
+<tr><th>Root cause hypothesis</th><td>Paraphrase during implementation; meaning unchanged.</td></tr>
+<tr><th>User impact</th><td>None — the constraint is communicated correctly.</td></tr>
+<tr><th>Recommended fix</th><td>Align <code>RISKS.orderNote</code> to the mockup wording, or leave as is.</td></tr>
+<tr><th>Workaround</th><td>None needed.</td></tr>
+</table>
+</div>
+
+<h2 id="console">Console &amp; Network Errors</h2>
+<div class="card">
+<table>
+<tr><th>Source</th><th>Message</th><th>Frequency</th><th>Severity</th><th>Impact</th></tr>
+<tr><td><code>/favicon.ico</code></td><td>Failed to load resource: 404 (File not found)</td><td>1 per fresh browsing context</td><td>Cosmetic</td><td>Harness-only. A VS Code webview never requests a favicon; no bundle emitted a single console message across all five surfaces.</td></tr>
+</table>
+</div>
+
+<h2 id="align">Spec Alignment</h2>
+<div class="card">
+<p><b>Fully implemented</b> (as observed at runtime): § 4.2 Overview layout, facets, grouping header and row anatomy; § 5.4 fallback section order and content including the Risks-mode entry point; § 5.5 KPI tiles, filter bar, chart cards with Table views and the exact eight-column table; § 5.7 breadcrumb, heading, filter bar, group cards, risk rows, source lines and Show-resolved semantics; § 6.3 reader skip link, breadcrumb, hero chips, summary card and checklist placement; AC14's DOM half on all five bundles; AC17 on Overview, Dashboard, Risks and the fallback header; AC18 on both the reader and Risks.</p>
+<p><b>Partially implemented</b>: § 5.4's header meta line — every field renders except the status glyph (MIN-1).</p>
+<p><b>Not implemented</b>: none observed.</p>
+<p><b>Extra (unspecified) behavior</b>: none. Both apparent additions are spec-mandated — the fallback's <b>All artifacts</b> section is one of § 5.4's six (the mockup draws five), and Risks mode's risk-text search is § 5.7 filter-bar item 1 (the mockup omits it).</p>
+</div>
+
+<h2 id="variances">Variances from Plan</h2>
+<div class="card">
+<ul class="tight">
+<li>Surfaces served over <code>http://localhost:8777</code> instead of <code>file://</code> — the Playwright MCP browser blocks <code>file:</code>. The shell document is otherwise identical to the harness's.</li>
+<li>Two payloads amended at runtime (Overview filtered counts + markers; Dashboard full 12-week series) to reach states the committed fixtures do not cover.</li>
+<li>Colour, contrast, theme and high-contrast behaviour <b>not</b> verified — every <code>--vscode-*</code> property is undefined outside the host. That is the four-theme manual-checklist item.</li>
+<li>Native surfaces — Now tree, Start Workflow QuickPick, hosted dashboard in a real webview — not driven; none is a browser-loadable bundle.</li>
+</ul>
+</div>
+
+<h2 id="exit">Evaluation Against Exit Criteria</h2>
+<div class="card">
+<table>
+<tr><th>Criterion (from spec)</th><th>Status</th><th>Evidence</th></tr>
+<tr><td>1. All eighteen AC pass by the method A16 names</td><td>❌</td><td>Not closable here: manual halves of AC3, AC4, AC11, AC14 unsigned. DOM halves of AC5, AC6, AC8, AC14, AC17, AC18 re-confirmed live.</td></tr>
+<tr><td>2. build / lint / test / test:integration succeed</td><td>✅</td><td><code>npm run build</code> rebuilt all seven bundles cleanly; <code>test:dom</code> 7/7. Unit/integration not re-run here — 37 + 28 + 1 recorded in implementation-verification.md.</td></tr>
+<tr><td>3. Benchmark targets</td><td>✅</td><td>Not re-measured; group 10 recorded 229.3 / 14.1 / 1.3 ms against 5 s / 300 ms / 100 ms.</td></tr>
+<tr><td>4. Every webview message appears in the A2 table</td><td>✅</td><td>Observed posts across all five surfaces were exactly <code>ready</code> and <code>setFilter</code>; no unlisted type.</td></tr>
+<tr><td>5. A14 fixture assertion</td><td>✅</td><td>Out of scope for a browser harness; covered by <code>test/unit/parseSummary.test.ts</code>.</td></tr>
+<tr><td>6. <code>openRiskCount(task)</code> equals rendered rows</td><td>✅</td><td>Group header read <code>1 open</code> and rendered exactly 1 open row; +1 resolved with the toggle on.</td></tr>
+<tr><td>7. Runtime dependency count is exactly two</td><td>✅</td><td>Not re-checked here; recorded green in the work log.</td></tr>
+<tr><td>8. <code>vsce package</code> produces a .vsix; git clean</td><td>✅</td><td>Out of scope for this pass.</td></tr>
+<tr><td>9. Docs have no contradictions</td><td>✅</td><td>Out of scope for this pass.</td></tr>
+</table>
+</div>
+
+<h2 id="recs">Recommendations</h2>
+<div class="card">
+<p><b>Must fix before merge:</b> none.</p>
+<p><b>Should fix soon:</b> <a href="#min1">MIN-1</a> and <a href="#min2">MIN-2</a> — one edit to the status span in <code>src/webview/fallbackTask.ts</code> closes both. <a href="#cos1">COS-1</a> — two CSS properties in <code>media/webview.css</code>.</p>
+<p><b>Nice-to-have:</b> <a href="#cos2">COS-2</a>, <a href="#cos3">COS-3</a>, <a href="#cos4">COS-4</a> — copy decisions the spec owner should rule on rather than the implementer.</p>
+</div>
+
+<h2>Conclusion</h2>
+<div class="card verdict">
+<p><b>GO WITH CAVEATS.</b> Every surface rendered correctly from its real built bundle with no implementation console errors, every section and field order matched the spec and <code>src/strings.ts</code>, and the accessibility contract held on all five bundles; the only defects are two Minor ones in a single function of <code>src/webview/fallbackTask.ts</code> and four Cosmetic copy/CSS items. Nothing found here changes behaviour users depend on, and nothing is a merge blocker — but the missing status glyph should be ruled on before release, because it leaves a payload field with no reader.</p>
+<p><b>Recommendation: fix MIN-1/MIN-2 and COS-1, then merge.</b> The seven unsigned manual-checklist items remain the real outstanding gate, and no browser harness can close them.</p>
+</div>
+
+</main>
+</body>
+</html>

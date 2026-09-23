@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — Maister Lens VS Code Extension</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.step.todo::before  { content:"\2610 "; color:var(--dim); }
+.step.done::before  { content:"\2611 "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.group.todo .g-badge::after { content:"pending"; }
+.group.done .g-badge::after { content:"\2713 completed"; color:var(--ok); }
+.g-badge { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; padding:2px 9px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.group > h3 { margin:0 0 6px; font-size:15px; }
+.ghead { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.meta { font-size:12px; color:var(--dim); margin:6px 0 10px; }
+.meta b { color:var(--text); font-weight:600; }
+ul.steps { list-style:none; padding-left:2px; margin:10px 0; }
+ul.steps li { margin:3px 0; font-size:13px; }
+ul.steps li.sub { padding-left:20px; }
+.chips code { margin-right:5px; display:inline-block; margin-bottom:3px; }
+.vref { background:var(--info-soft); border-left:3px solid var(--info); border-radius:6px;
+  padding:9px 12px; margin:10px 0; font-size:12.5px; }
+.vref b { display:block; margin-bottom:2px; }
+.ac { display:inline-block; font-size:10.5px; font-weight:700; padding:1.5px 7px; border-radius:99px;
+  background:var(--ok-soft); color:var(--ok); margin-right:5px; }
+.dep { font-size:12px; color:var(--dim); }
+.flow { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; line-height:1.8;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; overflow-x:auto; }
+.risk { border-left:3px solid var(--warn); padding-left:11px; margin:9px 0; font-size:13px; }
+.toc { font-size:12.5px; color:var(--dim); margin:12px 0 4px; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">&larr; Dashboard</a>
+  <a href="spec.html">Spec</a>
+  <span class="here">Plan</span>
+  <a href="visual-coverage.md" target="_blank" rel="noopener">Visual Coverage</a>
+  <a href="../verification/spec-audit.md" target="_blank" rel="noopener">Spec Audit</a>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin &#8599;</a>
+</nav>
+
+<header>
+  <h1>Implementation Plan &mdash; Maister Lens VS Code Extension</h1>
+  <p class="dep"><span class="badge">implementation plan</span> &nbsp;Generated 2026-09-22 &nbsp;&middot;&nbsp;
+  source of truth: <a href="implementation-plan.md" target="_blank" rel="noopener">implementation-plan.md</a></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>12</b><span>task groups</span></div>
+  <div class="tile"><b>101</b><span>total steps</span></div>
+  <div class="tile"><b>63&ndash;73</b><span>expected tests</span></div>
+  <div class="tile"><b>8</b><span>execution waves</span></div>
+  <div class="tile"><b>7/7</b><span>screens covered</span></div>
+</div>
+
+<section class="tldr card">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Twelve task groups, greenfield, bottom-up: de-risk (A18 resource resolution + Node 26 toolchain) &rarr; manifest/hygiene &rarr; model &rarr; index &rarr; views &rarr; panel core &rarr; the four panel modes &rarr; launch &rarr; harnesses &rarr; docs &amp; signed manual checklist &rarr; gap review.</p>
+  <p>Groups 2 and 3 run in parallel after group 1; groups 5, 6 and 9 run in parallel after group 4; groups 7 and 8 fan out from group 6.</p>
+  <p>Every group carries 2&ndash;8 named tests mapped to the ACs the spec's authoritative <b>Verified by</b> column assigns to a harness that can actually run them; AC3/AC4/AC11/AC14 manual remainders are signed checklist items in group 11, never automation.</p>
+  <p>Six approved mockups plus <code>component:hosted-dashboard</code> are bound to groups 5&ndash;9 through <b>Visual References</b>; <a href="visual-coverage.md" target="_blank" rel="noopener">visual-coverage.md</a> proves 100&nbsp;% coverage.</p>
+
+  <h2>Key Decisions</h2>
+  <table>
+    <tr><th>Decision</th><th>Rationale</th></tr>
+    <tr><td>Group 1 carries only the scaffold the two probes need</td><td>The A18 <code>?t=</code> cache-buster check must run before any feature code, per spec &sect; "Risk handled first"</td></tr>
+    <tr><td><code>package.json</code> ownership split &mdash; group 1 deps/scripts, group 2 <code>contributes</code></td><td>No other group edits it, so nothing serializes on it later</td></tr>
+    <tr><td>Manifest work is testable without implementations</td><td>Its five tests are JSON-shape assertions over <code>contributes</code>, plus <code>npm ls --prod --depth=0</code> and the git-hygiene check</td></tr>
+    <tr><td>Views, panel core and launch all depend only on the index and the manifest</td><td>Three groups run concurrently; their file sets are otherwise disjoint</td></tr>
+    <tr><td>Audit I8 (forcing an untrusted workspace) resolved in group 6</td><td>That is where AC15 is first asserted; group 10 reuses the helper instead of re-inventing it</td></tr>
+    <tr><td>Audit I5 (CSP meta <b>after</b> the existing <code>&lt;meta charset&gt;</code>) folded into group 6's insertion pass</td><td>Same effect, no charset-position hazard against longer workspace paths</td></tr>
+    <tr><td>Group 11 declares <b>zero automated tests</b></td><td>Its deliverable is a signed checklist; inventing tests would contradict A16 and <code>global/minimal-implementation.md</code></td></tr>
+    <tr><td>The DOM (Playwright) harness is one group, not a slice per UI group</td><td>It needs all five generated bundles present before a single <code>acquireVsCodeApi</code> stub can serve them all</td></tr>
+  </table>
+
+  <h2>Open Questions / Risks</h2>
+  <div class="risk"><span class="sev warning">warning</span><b>Shared-file contention.</b> <code>src/strings.ts</code> is written in group 3 and appended to by groups 5&ndash;9. It is declared in all six groups so the executor serializes them; groups 5, 6 and 9 are otherwise parallel and will be ordered on that file alone.</div>
+  <div class="risk"><span class="sev critical">critical</span><b>A18 may fail.</b> If the webview resource resolver rejects the <code>?t=</code> query, group 1 applies the pre-authorised contingency (shim strips the query; else <code>recognize()</code> returns <code>'unrecognized'</code> for every vintage) and group 6's hosted-dashboard scope shrinks to the fallback path. Group 1 must report the branch taken before group 6 starts.</div>
+  <div class="risk"><span class="sev info">info</span><b><code>test:min</code> can never exercise the <code>claudeCode</code> target.</b> Claude Code 2.1.278 declares <code>engines.vscode: ^1.94.0</code>, above the 1.90.0 floor (audit I6). Group 9 must not chase it.</div>
+  <div class="risk"><span class="sev warning">warning</span><b>AC11's pre-fill path is unverifiable in automation.</b> The Claude Code command signature is undocumented and ignores the prompt when a session is already open. Group 9 gets a mocked-<code>executeCommand</code> unit test only; the real check is a group 11 checklist item.</div>
+  <div class="risk"><span class="sev warning">warning</span><b><code>setGroupBy</code> has no in-webview sender</b> (audit I2). Group 5 must name the control that sends it or drop it from the A2 allowlist &mdash; an allowlist entry with no caller is attack surface.</div>
+  <div class="risk"><span class="sev info">info</span><b>Test volume (&asymp;63) exceeds the generic 16&ndash;34 guideline.</b> The spec's own per-group limit of 2&ndash;8 governs; the extension has 18 acceptance criteria across ten layers.</div>
+</section>
+
+<p class="toc">Contents:
+<a href="#flow">Execution Order</a> &middot;
+<a href="#groups">Task Groups</a> &middot;
+<a href="#coverage">Visual Coverage</a> &middot;
+<a href="#acmap">AC &rarr; Group Map</a> &middot;
+<a href="#standards">Standards</a></p>
+
+<main>
+
+<h2 id="flow">Execution Order</h2>
+<div class="flow">
+wave 1 &nbsp;&rarr;&nbsp; <b>G1</b> De-risking scaffold &amp; A18 probe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 2 &nbsp;&rarr;&nbsp; <b>G2</b> Manifest &amp; hygiene &nbsp;&#8741;&nbsp; <b>G3</b> Model layer<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 3 &nbsp;&rarr;&nbsp; <b>G4</b> Index layer &nbsp;<span class="dep">(&larr; G3)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 4 &nbsp;&rarr;&nbsp; <b>G5</b> Sidebar views &nbsp;&#8741;&nbsp; <b>G6</b> Panel core &nbsp;&#8741;&nbsp; <b>G9</b> Launch layer &nbsp;<span class="dep">(&larr; G4, G2 &mdash; serialized on src/strings.ts, src/extension.ts)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 5 &nbsp;&rarr;&nbsp; <b>G7</b> Fallback view &amp; reader &nbsp;<span class="dep">(&larr; G6)</span> &nbsp;&#8741;&nbsp; <b>G8</b> Dashboard &amp; Risks &nbsp;<span class="dep">(&larr; G6, G5)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 6 &nbsp;&rarr;&nbsp; <b>G10</b> DOM harness, benchmark &amp; generators &nbsp;<span class="dep">(&larr; G5, G7, G8, G9)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 7 &nbsp;&rarr;&nbsp; <b>G11</b> Docs, manual checklist &amp; finalization<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+wave 8 &nbsp;&rarr;&nbsp; <b>G12</b> Test Review &amp; Gap Analysis
+</div>
+<p><span class="sev critical">critical</span><b>Hard gate:</b> group 1 must report its A18 outcome before group 6 begins. If contingency (2) is taken, group 6's hosted-dashboard scope collapses to the fallback path and group 11's AC3/AC4 checklist items change accordingly.</p>
+
+<h2 id="groups">Task Groups</h2>
+
+<section data-group="1" class="group done">
+  <div class="ghead"><h3>Group 1 &mdash; De-risking scaffold &amp; A18 resource-resolution probe</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> None &nbsp;&middot;&nbsp; <b>Steps:</b> 8 &nbsp;&middot;&nbsp; <b>Tests:</b> 3 &nbsp;&middot;&nbsp; <b>Implements:</b> R1 (partial), A18</p>
+  <p class="chips"><code>package.json</code><code>tsconfig.json</code><code>esbuild.mjs</code><code>.mocharc.json</code><code>.vscode-test.mjs</code><code>src/extension.ts</code><code>src/webview/shim.ts</code><code>test/fixtures/tasks/pd-real/*</code><code>test/unit/smoke.test.ts</code><code>test/integration/a18-resolution.test.ts</code><code>test/runIntegration.ts</code></p>
+  <ul class="steps">
+    <li data-step="1.0" class="step done">Prove the toolchain and the hosted-dashboard resource dependency before any feature code</li>
+    <li data-step="1.1" class="step done sub">Write 3 tests: mocha on Node v26.7.0 &middot; test-electron launch + activation &middot; A18 &mdash; <code>window.MAISTER_DATA</code> populated with the <code>?t=</code> cache-buster intact</li>
+    <li data-step="1.2" class="step done sub">Create <code>package.json</code> &mdash; two runtime deps, dev deps of &sect;&nbsp;1.1, engine <code>^1.90.0</code>, <code>@types/vscode ~1.90.0</code>, the seven scripts. No <code>contributes</code></li>
+    <li data-step="1.3" class="step done sub">Create <code>tsconfig.json</code> (strict) and <code>esbuild.mjs</code> with the two &sect;&nbsp;1.1 targets</li>
+    <li data-step="1.4" class="step done sub">Commit the real product-design task fixture snapshot under <code>test/fixtures/tasks/pd-real/</code></li>
+    <li data-step="1.5" class="step done sub">Minimal <code>extension.ts</code> + <code>shim.ts</code> for the probe: three insertions (CSP meta <b>after</b> <code>&lt;meta charset&gt;</code> per I5), <code>&lt;base href&gt;</code>, nonce patch</li>
+    <li data-step="1.6" class="step done sub">Configure <code>.vscode-test.mjs</code> (pinned stable, cached in <code>.vscode-test/</code>) and <code>.mocharc.json</code></li>
+    <li data-step="1.7" class="step done sub">Run the probe and <b>record the outcome</b>: works &middot; contingency (1) query-strip &middot; contingency (2) always-unrecognized. Apply it here</li>
+    <li data-step="1.8" class="step done sub">Ensure the 3 tests pass &mdash; run ONLY those 3</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 3 tests pass on Node v26.7.0 &middot; <code>npm run build</code> emits both bundles &middot; A18 outcome recorded with the branch taken &middot; <code>npm ls --prod --depth=0</code> lists exactly <code>yaml</code> and <code>markdown-it</code>.</p>
+</section>
+
+<section data-group="2" class="group done">
+  <div class="ghead"><h3>Group 2 &mdash; Manifest, packaging &amp; repo hygiene</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 1 &nbsp;&middot;&nbsp; <b>Steps:</b> 8 &nbsp;&middot;&nbsp; <b>Tests:</b> 5 &nbsp;&middot;&nbsp; <b>Implements:</b> R1, R2, R27, A3, A4, A11, A12, A15</p>
+  <p class="chips"><code>package.json</code><code>LICENSE</code><code>.gitignore</code><code>.vscodeignore</code><code>media/maister.svg</code><code>test/unit/manifest.test.ts</code></p>
+  <ul class="steps">
+    <li data-step="2.0" class="step done">Complete the manifest and repository hygiene</li>
+    <li data-step="2.1" class="step done sub">Write 5 tests over the parsed manifest: A4 <code>commandPalette when:"false"</code> set &middot; the nine palette-visible commands &middot; A15 + A3 <code>view/title</code> rows &middot; capabilities / <code>extensionKind</code> / activation events &middot; the five settings and exactly two runtime deps</li>
+    <li data-step="2.2" class="step done sub">Add <code>viewsContainers</code>, <code>views</code> (<code>maister.now</code> tree, <code>maister.overview</code> webview) and <code>viewsWelcome</code></li>
+    <li data-step="2.3" class="step done sub">Add every &sect;&nbsp;1.3 + &sect;&nbsp;1.6 command and the four <code>menus</code> blocks</li>
+    <li data-step="2.4" class="step done sub">Add <code>capabilities</code>, <code>extensionKind</code>, activation events and the five <code>maisterLens.*</code> settings</li>
+    <li data-step="2.5" class="step done sub">Set <code>publisher: "maister"</code> and <code>license: "MIT"</code>; add <code>LICENSE</code></li>
+    <li data-step="2.6" class="step done sub">Add <code>.gitignore</code>, untrack <code>.playwright-mcp/console-*.log</code>, add <code>.vscodeignore</code></li>
+    <li data-step="2.7" class="step done sub">Add <code>media/maister.svg</code> &mdash; single-colour, no external references</li>
+    <li data-step="2.8" class="step done sub">Ensure manifest tests pass &mdash; run ONLY those 5</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 5 tests pass &middot; no status-bar contribution anywhere (A12) &middot; <code>git status</code> clean of build output and the stray log &middot; <code>vsce package</code> produces a <code>.vsix</code>.</p>
+</section>
+
+<section data-group="3" class="group done">
+  <div class="ghead"><h3>Group 3 &mdash; Model layer: types, registry, tolerant parsing, risks, strings</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 1 &nbsp;&middot;&nbsp; <b>Steps:</b> 10 &nbsp;&middot;&nbsp; <b>Tests:</b> 8 &nbsp;&middot;&nbsp; <b>Implements:</b> R3&ndash;R7, A5, A6, A8, A13, A14, A17
+    &nbsp;&middot;&nbsp; <span class="ac">AC2</span><span class="ac">AC10 unit</span><span class="ac">AC13</span></p>
+  <p class="chips"><code>src/model/types.ts</code><code>src/model/workflows.ts</code><code>src/model/parseState.ts</code><code>src/model/parseSummary.ts</code><code>src/model/risks.ts</code><code>src/strings.ts</code><code>test/fixtures/tasks/**</code><code>test/unit/parseState.test.ts</code><code>test/unit/parseSummary.test.ts</code><code>test/unit/phases.test.ts</code><code>test/unit/risks.test.ts</code><code>test/unit/strings.test.ts</code></p>
+  <ul class="steps">
+    <li data-step="3.0" class="step done">Complete the model layer</li>
+    <li data-step="3.1" class="step done sub">Write 8 tests: the A14 four-decision fixture assertion &middot; mixed unclassifiable list item &middot; the A8 drift matrix (N7, N8, N9, N1, N5, unknown segment) &middot; corrupt/truncated/empty never throw &middot; A17 <code>failed_phases</code> / <code>auto_fix_attempts</code> / <code>started_phase</code> warnings &middot; &sect;&nbsp;2.4 derivation &middot; <code>parseSummary</code> leading-region and the three risk-heading spellings &middot; the AC13 string scan</li>
+    <li data-step="3.2" class="step done sub"><code>types.ts</code> per &sect;&nbsp;2.1 with <code>folderUri</code> as identity (A1)</li>
+    <li data-step="3.3" class="step done sub"><code>workflows.ts</code> &mdash; five defs pinned to 2.2.3, all phase tables verbatim, <code>HERO_MAP</code> heroes transcribed</li>
+    <li data-step="3.4" class="step done sub"><code>parseState.ts</code> &mdash; partial-tree recovery, N1&ndash;N15 applied independently, A14's three entry shapes, A17 issues. <b>Never throws</b></li>
+    <li data-step="3.5" class="step done sub"><code>parseSummary.ts</code> per &sect;&nbsp;2.5 &mdash; 8&nbsp;KB, leading region, rationale split order, N11 resolved rule</li>
+    <li data-step="3.6" class="step done sub"><code>risks.ts</code> &mdash; <code>collectRisks</code> / <code>openRiskCount</code> exactly as A5 defines them</li>
+    <li data-step="3.7" class="step done sub"><code>strings.ts</code> &mdash; the single home for Maister Lens-authored copy (A6)</li>
+    <li data-step="3.8" class="step done sub">Build the fixture corpus: two real snapshots + one hand-written folder per A8 hazard row</li>
+    <li data-step="3.9" class="step done sub">Verify <code>openRiskCount</code> equals the unresolved count of <code>collectRisks</code> on every fixture</li>
+    <li data-step="3.10" class="step done sub">Ensure model tests pass &mdash; run ONLY those 8</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 8 tests pass; AC2, AC10 (unit half) and AC13 satisfied &middot; no fixture makes the parser throw &middot; nothing guessed or skipped is absent from <code>parseIssues</code>.</p>
+</section>
+
+<section data-group="4" class="group done">
+  <div class="ghead"><h3>Group 4 &mdash; Index layer: two-tier index, persistence, watcher, attribution</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 3 &nbsp;&middot;&nbsp; <b>Steps:</b> 10 &nbsp;&middot;&nbsp; <b>Tests:</b> 7 &nbsp;&middot;&nbsp; <b>Implements:</b> R8&ndash;R14, A1
+    &nbsp;&middot;&nbsp; <span class="ac">AC7 unit</span><span class="ac">AC10 integ</span><span class="ac">AC16</span></p>
+  <p class="chips"><code>src/index/taskIndex.ts</code><code>src/index/watcher.ts</code><code>src/index/attribution.ts</code><code>src/extension.ts</code><code>src/strings.ts</code><code>test/unit/query.test.ts</code><code>test/integration/index.test.ts</code><code>test/integration/attribution.test.ts</code><code>test/helpers/gitRepo.ts</code></p>
+  <ul class="steps">
+    <li data-step="4.0" class="step done">Complete the index layer</li>
+    <li data-step="4.1" class="step done sub">Write 7 tests: AND-ed text tokens with 3/2/1 ranking and <code>matchedIn</code> &middot; facet AND + staleness scope &middot; discovery keyed on <code>folderUri</code> with a null exclude &middot; persistence round-trip and invalidation &middot; unresolvable <code>folderUri</code> entries dropped on load &middot; corrupt file &rarr; Unreadable, others index &middot; two-author repo attribution and its three degraded cases</li>
+    <li data-step="4.2" class="step done sub"><code>taskIndex.ts</code> &mdash; tier 1 keyed on <code>folderUri</code>, tier 2 <code>TaskDetail</code> LRU(20), the &sect;&nbsp;3.6 API (A1)</li>
+    <li data-step="4.3" class="step done sub">&sect;&nbsp;3.3 persistence &mdash; version gate, mtime/size invalidation, atomic debounced write, flush on deactivate, retry-then-notify</li>
+    <li data-step="4.4" class="step done sub">&sect;&nbsp;3.4 load algorithm &mdash; cached paint, discover, stat(16), reconcile(8), publish fresh, under <code>withProgress</code></li>
+    <li data-step="4.5" class="step done sub">&sect;&nbsp;3.7 query engine over tier 1 only</li>
+    <li data-step="4.6" class="step done sub"><code>watcher.ts</code> &mdash; &sect;&nbsp;3.5 routing, 250&nbsp;ms per-task debounce, &le;&nbsp;1 snapshot / 500&nbsp;ms, 60&nbsp;s relative-time refresh, watcher-exclude notice</li>
+    <li data-step="4.7" class="step done sub"><code>attribution.ts</code> &mdash; one <code>execFile</code> per repo (no shell), &sect;&nbsp;3.8 parsing, <code>isMe</code>, degraded cases, setting gate</li>
+    <li data-step="4.8" class="step done sub">Compute <code>nextAction</code> at index time per &sect;&nbsp;7.2 and store it on each <code>Task</code></li>
+    <li data-step="4.9" class="step done sub"><code>test/helpers/gitRepo.ts</code> &mdash; two-author repo generated into a temp dir at run time, never committed</li>
+    <li data-step="4.10" class="step done sub">Ensure index tests pass &mdash; run ONLY those 7</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 7 tests pass; AC7 (unit half), AC10 (integration half) and AC16 satisfied &middot; the index never reads an artifact body beyond the first 8&nbsp;KB &middot; every disposable registered in <code>context.subscriptions</code>.</p>
+</section>
+
+<section data-group="5" class="group done">
+  <div class="ghead"><h3>Group 5 &mdash; Sidebar views: Now tree &amp; Overview webview</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 4, 2 &nbsp;&middot;&nbsp; <b>Steps:</b> 9 &nbsp;&middot;&nbsp; <b>Tests:</b> 6 &nbsp;&middot;&nbsp; <b>Implements:</b> R15, R16, A2, A5, A9
+    &nbsp;&middot;&nbsp; <span class="ac">AC1</span><span class="ac">AC8 integ</span><span class="ac">AC14 integ</span></p>
+  <p class="chips"><code>src/views/nowTree.ts</code><code>src/views/overviewView.ts</code><code>src/webview/overview.ts</code><code>src/webview/components.ts</code><code>media/webview.css</code><code>src/strings.ts</code><code>src/extension.ts</code><code>test/integration/nowTree.test.ts</code><code>test/integration/overview.test.ts</code></p>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:sidebar-now-overview</code> (Now)</b>
+    <a href="../analysis/design-context/mockups/sidebar-now-overview.html">mockups/sidebar-now-overview.html</a>, lines 318&ndash;331.
+    Task node <code>label</code> = title, <code>description</code> = <code>{Type} &middot; {activeForm or status} &middot; {activity}</code>; children in exactly this order &mdash; Progress, Last recorded decision, <b>Recent artifacts</b> (A9 group node, &le;&nbsp;5 by mtime desc), Open risks; inline &#9654; next-action button trailing, absent when there is none; title bar <code>&#65291;</code> then <code>&#8635;</code> (A15). The mockup's <code>&#9672; Maister: 2 unfinished</code> status-bar element is <b>not</b> implemented (A12).</div>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:sidebar-now-overview</code> (Overview)</b>
+    same file, lines 332&ndash;360.
+    Field order: search &rarr; Mine/Everyone &rarr; STATUS &rarr; TYPE &rarr; ATTENTION &rarr; <code>TASKS {n} of {m} &middot; {k} filters</code> &rarr; group sections. Every tile is a <code>&lt;button aria-pressed&gt;</code> with a &#10003; when pressed; group headers are <code>&lt;button aria-expanded&gt;</code> labelled <code>{Group} ({count})</code>; each row carries status glyph + status word + title button + description + markers + a separate trailing next-action button; the title control never launches anything. Stale "Browse" wording and the non-navigable <code>/screen/*</code> links are not reproduced.</div>
+  <ul class="steps">
+    <li data-step="5.0" class="step done">Complete the sidebar views</li>
+    <li data-step="5.1" class="step done sub">Write 6 tests: new state file in Now within 1.5&nbsp;s and description update within 1.5&nbsp;s &middot; membership, badge and <code>now:{folderUri}</code> ids &middot; the four children in order with the A5 risk count &middot; complete <code>accessibilityInformation.label</code>s &middot; <code>setFilter</code>/<code>clearFilter</code>/<code>openDashboard</code> round-trip on one shared <code>TaskQuery</code> &middot; the <code>overview</code> payload carries row fields only, &le;&nbsp;50 per group</li>
+    <li data-step="5.2" class="step done sub"><code>nowTree.ts</code> per &sect;&nbsp;4.1 with the A9 group node, badge, <code>contextValue</code> and &sect;&nbsp;4.3 labels</li>
+    <li data-step="5.3" class="step done sub"><code>components.ts</code> + <code>media/webview.css</code> &mdash; shared tile/chip/row/summary-card primitives, <code>--vscode-*</code> only</li>
+    <li data-step="5.4" class="step done sub"><code>overviewView.ts</code> &mdash; provider, the extension-owned shared <code>TaskQuery</code>, tile aggregates, grouping with <code>workspaceState</code>, CSP/nonce hygiene</li>
+    <li data-step="5.5" class="step done sub"><code>webview/overview.ts</code> &mdash; the &sect;&nbsp;4.2 layout in mockup field order, 200&nbsp;ms search with Escape-clear, row anatomy, hero expander, two empty states</li>
+    <li data-step="5.6" class="step done sub">Persist webview-local state via <code>getState()/setState()</code> &mdash; no message, per A2</li>
+    <li data-step="5.7" class="step done sub"><b>Resolve audit I2</b> &mdash; name the <code>setGroupBy</code> sender or drop it from the allowlist; record the choice</li>
+    <li data-step="5.8" class="step done sub">Add every Overview and Now string to <code>strings.ts</code></li>
+    <li data-step="5.9" class="step done sub">Ensure view tests pass &mdash; run ONLY those 6</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 6 tests pass; AC1, AC8 (integration half) and AC14 (integration half) satisfied &middot; every Visual Reference acceptance criterion met &middot; neither view reads a file &middot; Overview reflows without horizontal scrolling at 250&nbsp;px and 400&nbsp;px.</p>
+</section>
+
+<section data-group="6" class="group done">
+  <div class="ghead"><h3>Group 6 &mdash; Panel core: lifecycle, message validation &amp; hosted dashboard</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 4, 2 &nbsp;&middot;&nbsp; <b>Steps:</b> 10 &nbsp;&middot;&nbsp; <b>Tests:</b> 8 &nbsp;&middot;&nbsp; <b>Implements:</b> R17, R18, R23, R25, A1, A2, A2.1, A2.2, A18
+    &nbsp;&middot;&nbsp; <span class="ac">AC3 integ</span><span class="ac">AC4 integ</span><span class="ac">AC15</span></p>
+  <p class="chips"><code>src/panel/panel.ts</code><code>src/panel/messages.ts</code><code>src/panel/hostDashboard.ts</code><code>src/webview/shim.ts</code><code>src/strings.ts</code><code>src/extension.ts</code><code>test/unit/messages.test.ts</code><code>test/unit/hostDashboard.test.ts</code><code>test/integration/panel.test.ts</code><code>test/integration/trust.test.ts</code><code>test/helpers/untrustedHost.ts</code></p>
+  <div class="vref"><b>Visual Reference &mdash; <code>component:hosted-dashboard</code></b> (not mocked)
+    &mdash; <code>test/fixtures/tasks/pd-real/dashboard.html</code>, the committed vintage snapshot.
+    Markup, styles and script logic untouched apart from exactly three insertions (CSP meta placed <b>after</b> the existing <code>&lt;meta charset&gt;</code> per audit I5, <code>&lt;base href&gt;</code>, nonce'd shim script), a <code>nonce</code> on every inline <code>&lt;script&gt;</code>, and removal of any pre-existing CSP meta. No restyling, no injected UI, no theme override.</div>
+  <ul class="steps">
+    <li data-step="6.0" class="step done">Complete the panel core</li>
+    <li data-step="6.1" class="step done sub">Write 8 tests: A2 positive/negative validation &middot; path containment, index membership, anchor regex, scheme allowlist &middot; A2.1 cross-task <code>navigate</code> ignored &middot; three insertions with a fresh nonce and the I5 placement &middot; <code>recognize()</code> four conditions and its <code>(mtime,size)</code> cache &middot; <code>dashboard-data.js</code> change posts <code>refresh</code> within 1.5&nbsp;s &middot; in-task <code>.md</code> <code>navigate</code> opens no tab and no browser &middot; untrusted workspace drops the three gated messages and omits the browser button entirely</li>
+    <li data-step="6.2" class="step done sub"><code>messages.ts</code> &mdash; one <code>validate(raw)</code> implementing the A2 table as the security allowlist, used by the panel <b>and</b> <code>overviewView.ts</code></li>
+    <li data-step="6.3" class="step done sub"><code>panel.ts</code> &mdash; the singleton, four <code>PanelLocation</code> shapes keyed on <code>folderUri</code>, history (max 50), &sect;&nbsp;1.6 context keys, editor-title actions, serializer restore</li>
+    <li data-step="6.4" class="step done sub"><code>hostDashboard.ts</code> &mdash; <code>recognize()</code> and the three insertions with the audit-I5 placement, fresh 32-byte nonce per render</li>
+    <li data-step="6.5" class="step done sub">Complete <code>shim.ts</code> &mdash; nonce patch, <code>refresh</code> bridge, capturing link interception, <code>window.open</code> override, <code>acquireVsCodeApi()</code> claimed first</li>
+    <li data-step="6.6" class="step done sub">Implement the &sect;&nbsp;5.3 <code>navigate</code> routing <b>as narrowed by A2.1</b></li>
+    <li data-step="6.7" class="step done sub">Apply the group&nbsp;1 A18 outcome; if a contingency was taken, record the loss in the README limitations</li>
+    <li data-step="6.8" class="step done sub"><b>Resolve audit I8</b> &mdash; <code>test/helpers/untrustedHost.ts</code>: fresh <code>--user-data-dir</code> with trust unset + host-side <code>when</code>-clause context assertions. Group 10 reuses it</li>
+    <li data-step="6.9" class="step done sub">Add every panel and banner string to <code>strings.ts</code></li>
+    <li data-step="6.10" class="step done sub">Ensure panel-core tests pass &mdash; run ONLY those 8</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 8 tests pass; AC3 (integration half), AC4 (integration half) and AC15 satisfied &middot; the Visual Reference acceptance criterion met &middot; the host never parses or evaluates <code>dashboard-data.js</code> &middot; every message outside the A2 table is dropped and logged.</p>
+</section>
+
+<section data-group="7" class="group done">
+  <div class="ghead"><h3>Group 7 &mdash; Panel modes: Task fallback view &amp; Artifact reader</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 6 &nbsp;&middot;&nbsp; <b>Steps:</b> 9 &nbsp;&middot;&nbsp; <b>Tests:</b> 7 &nbsp;&middot;&nbsp; <b>Implements:</b> R19, R22, R23, A2
+    &nbsp;&middot;&nbsp; <span class="ac">AC5 integ</span><span class="ac">AC6 integ</span></p>
+  <p class="chips"><code>src/webview/fallbackTask.ts</code><code>src/panel/render.ts</code><code>src/webview/reader.ts</code><code>src/strings.ts</code><code>media/webview.css</code><code>test/unit/render.test.ts</code><code>test/integration/fallbackTask.test.ts</code><code>test/integration/reader.test.ts</code></p>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:task-fallback-view</code></b>
+    <a href="../analysis/design-context/mockups/task-fallback-view.html">mockups/task-fallback-view.html</a>, lines 296&ndash;332.
+    The eight &sect;&nbsp;5.4 sections in exactly this order: banner, header (title, type badge, status, created/updated, author, verdict, parse-issues link, trailing primary next-action button), Phases, Hero artifacts, Decisions grouped by <code>source</code>, Risks (open first, resolved struck through with a visible "Resolved" label), All artifacts, Raw state in a collapsed <code>&lt;details&gt;</code> with an <b>Open state file</b> button. Phase glyphs are text-bearing: <code>&#10003; Completed</code>, <code>&#9679; Current &mdash; {activeForm}</code>, <code>&#9676; Not recorded</code>, <code>&#9675; Upcoming</code>. The next-action button is hidden in untrusted workspaces, and "Open dashboard in browser" is not rendered there at all (A2.2).</div>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:artifact-reader</code></b>
+    <a href="../analysis/design-context/mockups/artifact-reader-implementation-plan.html">mockups/artifact-reader-implementation-plan.html</a>, lines 286&ndash;320.
+    Order: breadcrumb (task link) &rarr; hero chips (current pressed) &rarr; summary <code>&lt;aside aria-label="Summary"&gt;</code> &rarr; <code>&lt;main&gt;</code> body. The card holds TL;DR, Key decisions with <code>&nbsp;&mdash;&nbsp;rationale</code>, Open questions &amp; risks, and the <code>Checklist: {done} of {total} done &middot; {skipped} skipped</code> line when the document has checklist items; omitted entirely when <code>summary</code> is null; a "Skip to document" link is first in tab order.</div>
+  <ul class="steps">
+    <li data-step="7.0" class="step done">Complete the fallback view and the artifact reader</li>
+    <li data-step="7.1" class="step done sub">Write 7 tests: <code>html:false</code> escaping + GFM tables, no sanitizer &middot; the six link-rewriting rows &middot; checklist glyphs, aria-labels and counts &middot; leading-region removal, image rules, 2&nbsp;MB refusal &middot; all artifact navigation routes through <code>render.ts</code> and <code>vscode.open</code> only via <code>openSource</code> &middot; the <code>html_output:false</code> payload &middot; live re-render with <code>scrollY</code> restore</li>
+    <li data-step="7.2" class="step done sub"><code>render.ts</code> &mdash; the full &sect;&nbsp;6.2 pipeline with the LRU(30) cache and the <code>render</code> payload</li>
+    <li data-step="7.3" class="step done sub">&sect;&nbsp;6.4 companion re-hosting via the same three insertions, <code>&lt;base href&gt;</code> at the artifact's directory; refuse <code>&lt;iframe&gt;</code> or &gt;&nbsp;2&nbsp;MB</li>
+    <li data-step="7.4" class="step done sub"><code>fallbackTask.ts</code> per &sect;&nbsp;5.4 in mockup section order, with <code>collectRisks</code> as the risk source</li>
+    <li data-step="7.5" class="step done sub"><code>reader.ts</code> per &sect;&nbsp;6.3 with the delegated click handler and <code>setState</code> scroll persistence</li>
+    <li data-step="7.6" class="step done sub">&sect;&nbsp;6.1 variants and defaults + <code>toggleVariant</code> action and the <code>variantAvailable</code> context key</li>
+    <li data-step="7.7" class="step done sub">&sect;&nbsp;6.6 accessibility &mdash; skip link, focus to the artifact heading, link-purpose suffixes</li>
+    <li data-step="7.8" class="step done sub">Add every fallback and reader string to <code>strings.ts</code></li>
+    <li data-step="7.9" class="step done sub">Ensure fallback and reader tests pass &mdash; run ONLY those 7</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 7 tests pass; AC5 and AC6 (integration halves) satisfied &middot; both Visual Reference acceptance criteria met &middot; no artifact is ever shown as source except via <b>Open source file</b> &middot; runtime dependency count still exactly two.</p>
+</section>
+
+<section data-group="8" class="group done">
+  <div class="ghead"><h3>Group 8 &mdash; Panel modes: Dashboard &amp; Risks</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 6, 5 &nbsp;&middot;&nbsp; <b>Steps:</b> 9 &nbsp;&middot;&nbsp; <b>Tests:</b> 7 &nbsp;&middot;&nbsp; <b>Implements:</b> R20, R21, A2, A3, A5
+    &nbsp;&middot;&nbsp; <span class="ac">AC17 integ</span><span class="ac">AC18 integ</span><span class="ac">AC8 integ</span></p>
+  <p class="chips"><code>src/webview/dashboardMode.ts</code><code>src/webview/risksMode.ts</code><code>src/panel/panel.ts</code><code>src/strings.ts</code><code>media/webview.css</code><code>test/integration/dashboardMode.test.ts</code><code>test/integration/risksMode.test.ts</code></p>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:dashboard-mode</code></b>
+    <a href="../analysis/design-context/mockups/dashboard-mode.html">mockups/dashboard-mode.html</a>, lines 322&ndash;340.
+    Four KPI tiles in order Tasks &middot; Failed verification &middot; Quiet &ge; {quietDays} days &middot; Open risks, each with icon disc, value, label and a one-line context &mdash; never colour alone. The 2&times;2 chart grid keeps its order (Status, Verification, Workflow type, Tasks created per week), each card with a title, a scope line and a <b>Table</b> link. Bars are <code>&lt;button aria-pressed&gt;</code> rows filtering only the table while charts keep all-task counts; week columns are not filters; neutral values hatched. Table columns in exactly this order: Title &middot; Type &middot; Status / current phase &middot; Verdict &middot; Author &middot; Created &middot; Last activity &middot; <b>Next</b>. Colours from <code>--vscode-charts-*</code>; the mockup's Dark+ hex literals are a rendering, not values to copy. Charts are hand-written SVG.</div>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:open-risks</code></b>
+    <a href="../analysis/design-context/mockups/open-risks.html">mockups/open-risks.html</a>, lines 323&ndash;365.
+    Order: breadcrumb <code>&larr; Dashboard</code> &rarr; heading <code>Open risks</code> &rarr; four KPI tiles &rarr; filter bar (risk-text search, shared type chips, Unfinished/Completed toggles, <b>Show resolved</b> off by default, Group by Task/Workflow type/Source) &rarr; group cards ordered by the task's <code>activityMtime</code>, first 10 expanded. Group header fields in order: task title &middot; type badge &middot; status/current phase/verdict &middot; relative activity &middot; author &middot; <code>{n} open</code> &middot; next-action button. Rows are &#9888; text + a source line. <b>No severity and no age anywhere.</b> The mockup defect is not reproduced: the default heading is <code>{open} open across {k} tasks</code>, and resolved rows plus the <code>&middot; {n} resolved</code> clause appear only while Show resolved is on.</div>
+  <ul class="steps">
+    <li data-step="8.0" class="step done">Complete Dashboard and Risks modes</li>
+    <li data-step="8.1" class="step done sub">Write 7 tests: pre-aggregated charts + rows capped at 1,000, charts unfiltered &middot; the Open risks KPI equals the <code>openRiskCount</code> sum and names the same k tasks &middot; Next-cell dispatch launches, the row title does not &middot; the <code>risks</code> payload: once per task, ordered by <code>activityMtime</code>, no severity/age &middot; the full resolved+unresolved set travels so local filtering needs no round-trip &middot; <code>openRisks</code> with a <code>folderUri</code> scopes the mode and its rows equal <code>openRiskCount</code> &middot; <code>runNextAction</code> from all four surfaces</li>
+    <li data-step="8.2" class="step done sub"><code>dashboardMode.ts</code> &mdash; four KPI tiles, filter chip bar with <b>Clear all</b> and the charts-show-all note</li>
+    <li data-step="8.3" class="step done sub">Hand-write the four SVG charts &mdash; three labelled horizontal bar charts and the 12-week column chart with the dashed current week and the missing-<code>created</code> footnote</li>
+    <li data-step="8.4" class="step done sub">Bars as <code>&lt;button aria-pressed&gt;</code> facet toggles; week columns non-interactive; each card's <b>Table</b> link swaps in an accessible table whose numbers equal the chart's</li>
+    <li data-step="8.5" class="step done sub">Task table with <code>aria-sort</code> header buttons, persisted sort, <code>quiet {n}d</code> as text, and the Next cell</li>
+    <li data-step="8.6" class="step done sub"><code>risksMode.ts</code> per &sect;&nbsp;5.7 with <code>collectRisks</code> as its only data source and local filtering over the full payload</li>
+    <li data-step="8.7" class="step done sub">Wire the <code>{ mode:'risks'; folderUri? }</code> location and every A3 <code>maister.openRisks</code> entry point</li>
+    <li data-step="8.8" class="step done sub">Add every Dashboard and Risks string to <code>strings.ts</code></li>
+    <li data-step="8.9" class="step done sub">Ensure Dashboard and Risks tests pass &mdash; run ONLY those 7</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 7 tests pass; AC17 and AC18 (integration halves) satisfied &middot; both Visual Reference acceptance criteria met &middot; no severity, age, duration or throughput displayed &middot; runtime dependency count still exactly two.</p>
+</section>
+
+<section data-group="9" class="group done">
+  <div class="ghead"><h3>Group 9 &mdash; Launch layer: target chain, next actions, Start Workflow</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 4, 2 &nbsp;&middot;&nbsp; <b>Steps:</b> 8 &nbsp;&middot;&nbsp; <b>Tests:</b> 6 &nbsp;&middot;&nbsp; <b>Implements:</b> R24, A4, A7
+    &nbsp;&middot;&nbsp; <span class="ac">AC11 unit</span><span class="ac">AC12</span></p>
+  <p class="chips"><code>src/launch/launch.ts</code><code>src/extension.ts</code><code>src/strings.ts</code><code>test/unit/nextAction.test.ts</code><code>test/unit/targetOrder.test.ts</code><code>test/unit/quote.test.ts</code></p>
+  <div class="vref"><b>Visual Reference &mdash; <code>screen:start-workflow-flow</code></b>
+    <a href="../analysis/design-context/mockups/start-workflow-flow.html">mockups/start-workflow-flow.html</a>, lines 321&ndash;345.
+    Exactly three steps in order: a single-pick type prompt with <code>Let Maister decide</code> &rarr; <code>work</code> first, then Development, Product design, Research, Migration, Performance, each with a one-sentence description; a description input box <i>"What should this workflow do?"</i> accepting 1&ndash;2,000 non-whitespace characters with line breaks collapsed to spaces; dispatch to the first available target with a 5&nbsp;s status-bar outcome message naming the destination. The mockup's "from the Now or Browse title bar" wording is stale &mdash; the spec's wording wins.</div>
+  <ul class="steps">
+    <li data-step="9.0" class="step done">Complete the launch layer</li>
+    <li data-step="9.1" class="step done sub">Write 6 tests: the &sect;&nbsp;7.2 next-action table for every state &middot; Resume composes <code>/maister:work {relPath}</code> for all five types including <code>migrations/</code> &middot; chain walking, throwing target advances, clipboard always succeeds, invalid array &rarr; default &middot; the A7 claudeCode three-step chain with the URI fallback treated as success &middot; copilotChat dispatch + one-time caveat in <code>globalState</code> &middot; the three shell-quoting dialects</li>
+    <li data-step="9.2" class="step done sub"><code>launch.ts</code> &mdash; &sect;&nbsp;7.1 composition and &sect;&nbsp;7.2 dispatch that <b>recomputes the action from the index</b>; the webview never supplies command text</li>
+    <li data-step="9.3" class="step done sub">A7 claudeCode chain: installed check &rarr; <code>activate()</code> &rarr; <code>claude-vscode.editor.open(undefined, prompt)</code> &rarr; <code>env.uriScheme</code> URI fallback as success &rarr; advance only when absent</li>
+    <li data-step="9.4" class="step done sub">copilotChat with its weak availability check and one-time caveat; README says the URI fallback reaches the <b>primary editor</b> (audit I4)</li>
+    <li data-step="9.5" class="step done sub">&sect;&nbsp;7.5 terminal target (three-step selection, <code>workspaceState</code> memory, quoting) and the clipboard target</li>
+    <li data-step="9.6" class="step done sub">&sect;&nbsp;7.3 Start Workflow flow and the 5&nbsp;s status-bar outcome message</li>
+    <li data-step="9.7" class="step done sub">Register launch commands with <code>isWorkspaceTrusted</code> gating; add launch strings. Do <b>not</b> chase the claudeCode branch under <code>test:min</code> (audit I6)</li>
+    <li data-step="9.8" class="step done sub">Ensure launch tests pass &mdash; run ONLY those 6</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 6 tests pass; AC11 (unit half) and AC12 satisfied &middot; the Visual Reference acceptance criterion met &middot; the extension writes no Maister file and adds no flags &middot; every target wrapped in try/catch; a launch never fails silently.</p>
+</section>
+
+<section data-group="10" class="group done">
+  <div class="ghead"><h3>Group 10 &mdash; DOM harness, benchmark &amp; fixture generators</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 5, 7, 8, 9 &nbsp;&middot;&nbsp; <b>Steps:</b> 8 &nbsp;&middot;&nbsp; <b>Tests:</b> 6 &nbsp;&middot;&nbsp; <b>Implements:</b> R26, A10, A16 (DOM column)
+    &nbsp;&middot;&nbsp; <span class="ac">AC4/5/6/8/14/17/18 DOM</span><span class="ac">AC7/AC9 bench</span></p>
+  <p class="chips"><code>test/dom/harness.ts</code><code>test/dom/surfaces.spec.ts</code><code>test/helpers/generateTasks.ts</code><code>scripts/bench.mjs</code><code>playwright.config.ts</code><code>package.json</code></p>
+  <div class="vref"><b>Visual Reference &mdash; all five rendered screens</b>
+    (<code>screen:sidebar-now-overview</code>, <code>screen:task-fallback-view</code>, <code>screen:artifact-reader</code>, <code>screen:dashboard-mode</code>, <code>screen:open-risks</code>) &mdash; the same regions cited in groups 5, 7 and 8; this group asserts them rather than implementing them.
+    Assertions are <b>structural only, never pixel comparison</b>: named selectors exist, section and field order match, exact copy matches <code>src/strings.ts</code>, every interactive element is a <code>&lt;button&gt;</code>/<code>&lt;a&gt;</code> with an accessible name in a tab-reachable order, and a simulated activation posts the expected payload through the stubbed <code>acquireVsCodeApi</code>. Visual comparison belongs to group 11.</div>
+  <ul class="steps">
+    <li data-step="10.0" class="step done">Build the DOM harness, the benchmark and the run-time fixture generators</li>
+    <li data-step="10.1" class="step done sub">Write 6 tests: shim click &rarr; <code>navigate</code> post (AC4) &middot; reader summary card present/omitted (AC5) &middot; fallback's four sections in order (AC6) &middot; bar activation &rarr; <code>setFilter</code>, charts unfiltered, Table parity (AC8) &middot; accessible names + tab order + one distinct next-action control per row + Show-resolved struck-through rows (AC14, AC17, AC18) &middot; benchmark thresholds (AC7, AC9 &mdash; reported, <b>non-gating</b>)</li>
+    <li data-step="10.2" class="step done sub"><code>harness.ts</code> &mdash; loads each bundle's generated HTML with fixture data, <code>acquireVsCodeApi</code> stubbed to capture posts</li>
+    <li data-step="10.3" class="step done sub"><code>surfaces.spec.ts</code> covering all five bundles with the structural vocabulary above</li>
+    <li data-step="10.4" class="step done sub"><code>generateTasks.ts</code> &mdash; 300 realistic task folders into a temp dir at run time, never committed</li>
+    <li data-step="10.5" class="step done sub"><code>scripts/bench.mjs</code> reporting cold index, warm snapshot and query timings; wire <code>npm run bench</code>. It reports, it does not gate</li>
+    <li data-step="10.6" class="step done sub">Wire <code>npm run test:dom</code>; confirm <code>test:min</code> validates the engine claim only</li>
+    <li data-step="10.7" class="step done sub">Reuse <code>untrustedHost.ts</code> (group 6) and <code>gitRepo.ts</code> (group 4) rather than duplicating them</li>
+    <li data-step="10.8" class="step done sub">Ensure DOM and benchmark tests pass &mdash; run ONLY those 6</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> 6 tests pass; the DOM halves of AC4, AC5, AC6, AC8, AC14, AC17 and AC18 satisfied, AC7/AC9 have reported numbers &middot; Playwright is a dev dependency only &middot; the 300-task set and two-author repo exist only in temp dirs.</p>
+</section>
+
+<section data-group="11" class="group done">
+  <div class="ghead"><h3>Group 11 &mdash; Documentation, manual verification checklist &amp; finalization</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> 10 &nbsp;&middot;&nbsp; <b>Steps:</b> 7 &nbsp;&middot;&nbsp; <b>Tests:</b> none &mdash; the deliverable is a signed checklist &nbsp;&middot;&nbsp; <b>Implements:</b> R27, A7, A10, A11, A16 (Manual column)
+    &nbsp;&middot;&nbsp; <span class="ac">AC3 manual</span><span class="ac">AC4 manual</span><span class="ac">AC11 manual</span><span class="ac">AC14 manual</span></p>
+  <p class="chips"><code>README.md</code><code>CHANGELOG.md</code><code>.maister/docs/project/tech-stack.md</code><code>.maister/docs/project/vision.md</code><code>verification/manual-checklist.md</code></p>
+  <p class="meta"><span class="sev info">info</span>A16 assigns these criteria to a human. Writing tests for them would claim automation the spec explicitly refuses.</p>
+  <ul class="steps">
+    <li data-step="11.0" class="step done">Ship the documentation and sign off the manual criteria</li>
+    <li data-step="11.1" class="step done sub">Write <code>verification/manual-checklist.md</code> with 7 signed items: AC3 renders with data and no CSP violations, re-renders &le;&nbsp;1.5&nbsp;s &middot; AC4 one real click in the live hosted dashboard &middot; AC11 Claude pre-fill, terminal-only order, clipboard fallback &middot; AC14 screen-reader pass &middot; the four themes &middot; mockup comparison with the three defects confirmed absent &middot; hosted-dashboard fidelity (unrestyled)</li>
+    <li data-step="11.2" class="step done sub">Rewrite <code>README.md</code> &mdash; views, four panel modes, five settings, launch targets and caveats, why each runtime dependency exists, &sect;&nbsp;8.5 limitations, the A7 URI caveat worded as <b>primary editor</b> (I4), and the A18 outcome if a contingency was taken</li>
+    <li data-step="11.3" class="step done sub">Create <code>CHANGELOG.md</code> with a <code>0.1.0</code> entry</li>
+    <li data-step="11.4" class="step done sub">Correct <code>tech-stack.md</code> &mdash; webviews, workspace-storage persistence, <code>yaml</code> + <code>markdown-it</code>, esbuild, mocha / test-electron, Playwright for the DOM suite</li>
+    <li data-step="11.5" class="step done sub">Amend <code>vision.md</code>'s "and repository changes" line &mdash; git is used for attribution only</li>
+    <li data-step="11.6" class="step todo sub">Propose the &sect;&nbsp;8.6 / A10 testing standards via <code>/maister:standards-update</code></li>
+    <li data-step="11.7" class="step todo sub">Execute the checklist against a real host and record each signature. A failed item is a defect, not a waiver</li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> all 7 checklist items executed and signed &middot; README, CHANGELOG, tech-stack and vision describe the shipped extension with no contradictions &middot; no criterion A16 marks <b>Manual</b> is claimed anywhere as automated.</p>
+</section>
+
+<section data-group="12" class="group done">
+  <div class="ghead"><h3>Group 12 &mdash; Test Review &amp; Gap Analysis</h3><span class="g-badge"></span></div>
+  <p class="meta"><b>Dependencies:</b> all previous groups &nbsp;&middot;&nbsp; <b>Steps:</b> 5 &nbsp;&middot;&nbsp; <b>Tests:</b> up to 10 additional</p>
+  <p class="chips"><code>test/unit/**</code><code>test/integration/**</code><code>test/dom/**</code></p>
+  <ul class="steps">
+    <li data-step="12.0" class="step done">Review and fill critical gaps</li>
+    <li data-step="12.1" class="step done sub">Review the 63 tests of groups 1&ndash;10; confirm every AC half is claimed by the assigned harness and only by that harness</li>
+    <li data-step="12.2" class="step done sub">Analyze gaps: the A2 negative-path sweep &middot; <code>openRiskCount</code> &harr; Risks-row equality on every fixture &middot; any A8 drift row without a passing assertion</li>
+    <li data-step="12.3" class="step done sub">Write up to 10 additional strategic tests</li>
+    <li data-step="12.4" class="step done sub">Run feature-specific tests only &mdash; expect 63&ndash;73 total</li>
+    <li data-step="12.5" class="step done sub">Confirm the nine success criteria, including exactly two prod dependencies and a clean <code>git status</code></li>
+  </ul>
+  <p class="meta"><b>Acceptance:</b> all feature tests pass (~63&ndash;73) &middot; no more than 10 additional tests &middot; every AC has a passing assertion or a signed checklist item, and none has both claimed as automation.</p>
+</section>
+
+<h2 id="coverage">Visual Coverage</h2>
+<p>Full matrix in <a href="visual-coverage.md" target="_blank" rel="noopener">visual-coverage.md</a>. All seven INDEX entries are covered; none is uncovered.</p>
+<table>
+  <tr><th>Screen / Component</th><th>Implements</th><th>Structural (DOM)</th><th>Manual</th><th>Status</th></tr>
+  <tr><td><code>screen:sidebar-now-overview</code></td><td>Group 5</td><td>Group 10</td><td>Group 11</td><td class="pass">covered</td></tr>
+  <tr><td><code>screen:task-fallback-view</code></td><td>Group 7</td><td>Group 10</td><td>Group 11</td><td class="pass">covered</td></tr>
+  <tr><td><code>screen:artifact-reader</code></td><td>Group 7</td><td>Group 10</td><td>Group 11</td><td class="pass">covered</td></tr>
+  <tr><td><code>screen:dashboard-mode</code></td><td>Group 8</td><td>Group 10</td><td>Group 11</td><td class="pass">covered</td></tr>
+  <tr><td><code>screen:open-risks</code></td><td>Group 8</td><td>Group 10</td><td>Group 11</td><td class="pass">covered</td></tr>
+  <tr><td><code>screen:start-workflow-flow</code></td><td>Group 9</td><td>&mdash; <span class="dep">(flow reference, no webview)</span></td><td>Group 11</td><td class="pass">covered</td></tr>
+  <tr><td><code>component:hosted-dashboard</code></td><td>Group 6 <span class="dep">(verbatim hosting)</span></td><td>Group 10 <span class="dep">(shim only)</span></td><td>Group 11</td><td class="pass">covered</td></tr>
+</table>
+
+<h2 id="acmap">AC &rarr; Group Map</h2>
+<p class="dep">Harness assignment follows the spec's authoritative <b>Verified by</b> column (A16). No AC is assigned to a harness the spec says cannot run it.</p>
+<table>
+  <tr><th>AC</th><th>Unit</th><th>Integration</th><th>DOM</th><th>Manual / Bench</th></tr>
+  <tr><td>AC1</td><td>&mdash;</td><td>G5</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC2</td><td>G3</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC3</td><td>G6 <span class="dep">(insertions)</span></td><td>G6</td><td>&mdash;</td><td>G11</td></tr>
+  <tr><td>AC4</td><td>&mdash;</td><td>G6</td><td>G10</td><td>G11</td></tr>
+  <tr><td>AC5</td><td>G7 <span class="dep">(pipeline)</span></td><td>G7</td><td>G10</td><td>&mdash;</td></tr>
+  <tr><td>AC6</td><td>&mdash;</td><td>G7</td><td>G10</td><td>&mdash;</td></tr>
+  <tr><td>AC7</td><td>G4</td><td>&mdash;</td><td>&mdash;</td><td>G10 bench</td></tr>
+  <tr><td>AC8</td><td>&mdash;</td><td>G5, G8</td><td>G10</td><td>&mdash;</td></tr>
+  <tr><td>AC9</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>G10 bench</td></tr>
+  <tr><td>AC10</td><td>G3</td><td>G4</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC11</td><td>G9 <span class="dep">(mocked)</span></td><td>&mdash;</td><td>&mdash;</td><td>G11</td></tr>
+  <tr><td>AC12</td><td>G9</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC13</td><td>G3</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC14</td><td>&mdash;</td><td>G5</td><td>G10</td><td>G11</td></tr>
+  <tr><td>AC15</td><td>&mdash;</td><td>G6</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC16</td><td>&mdash;</td><td>G4</td><td>&mdash;</td><td>&mdash;</td></tr>
+  <tr><td>AC17</td><td>&mdash;</td><td>G8</td><td>G10</td><td>&mdash;</td></tr>
+  <tr><td>AC18</td><td>&mdash;</td><td>G8</td><td>G10</td><td>&mdash;</td></tr>
+</table>
+
+<h2 id="standards">Standards Compliance</h2>
+<table>
+  <tr><th>Standard</th><th>How this plan honours it</th></tr>
+  <tr><td><code>global/minimal-implementation.md</code></td><td>Every module has an immediate caller; the spec's "Deliberately not built" list is the guard &mdash; no chart library, no sanitizer, no status-bar item, no Quick Pick, no write path, no VS Code API abstraction layer</td></tr>
+  <tr><td><code>global/coding-style.md</code>, <code>commenting.md</code></td><td>camelCase modules grouped by domain, no dead code, comments only for the shim's patch and the undocumented Claude command</td></tr>
+  <tr><td><code>global/conventions.md</code></td><td>Predictable <code>src/&lt;domain&gt;/</code> layout, exactly two documented runtime dependencies, README and CHANGELOG, testing standards proposed at finalization</td></tr>
+  <tr><td><code>global/error-handling.md</code></td><td>Parser never throws, per-task isolation, one output-channel sink, notifications only for the three actionable cases, disposal via <code>context.subscriptions</code></td></tr>
+  <tr><td><code>global/validation.md</code></td><td>Host-side validation of every webview message (A2) as the "server-side always" analogue; allowlists over blocklists for message types, link schemes and path containment</td></tr>
+  <tr><td><code>frontend/components.md</code></td><td>Shared tile/chip/row/summary-card primitives in <code>webview/components.ts</code>, minimal props, composed across the five bundles</td></tr>
+  <tr><td><code>frontend/css.md</code></td><td>VS Code theme variables as the only design tokens, minimal custom CSS</td></tr>
+  <tr><td><code>frontend/accessibility.md</code></td><td>Semantic HTML, keyboard operability, <code>aria-pressed</code>/<code>aria-sort</code>/<code>role="status"</code>, focus via <code>--vscode-focusBorder</code>, never colour alone, full spoken tree labels. Hosted dashboard and companions are the recorded exception</td></tr>
+  <tr><td><code>frontend/responsive.md</code></td><td>Overview fluid across 250&ndash;400&nbsp;px sidebar widths; panel surfaces reflow at full width</td></tr>
+</table>
+<p class="dep">No backend or testing standards exist for this project; group 11 proposes the testing ones.</p>
+
+</main>
+</body>
+</html>

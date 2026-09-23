@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Fidelity — Maister Lens VS Code extension</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { border-left:4px solid var(--ok); background:var(--ok-soft); }
+.scr { border-left:4px solid var(--ok); }
+.scr.warn { border-left-color:var(--warn); }
+.scr.na { border-left-color:var(--dim); }
+.pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:12px; margin-top:10px; }
+.pair figure { margin:0; }
+.pair figcaption { font-size:11.5px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; }
+.meta { color:var(--dim); font-size:12.5px; }
+ul.tight { margin:6px 0; padding-left:20px; }
+.note { background:var(--info-soft); border:1px solid var(--border); border-radius:var(--radius); padding:10px 14px; font-size:13px; }
+</style>
+</head>
+<body>
+
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../implementation/spec.html">Spec</a>
+  <a href="../implementation/implementation-plan.html">Plan</a>
+  <a href="implementation-verification.html">Verification</a>
+  <a href="e2e-verification-report.html">E2E</a>
+  <span class="here">Visual Fidelity</span>
+  <a href="visual-fidelity.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <h1>Visual Fidelity Report <span class="badge">report-only</span></h1>
+  <p class="meta">LLM-judged structural match — not pixel diffing · source <code>analysis/design-context/INDEX.md</code> · captured <code>verification/screenshots/</code> · 2026-09-23</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>7</b><span>index entries</span></div>
+  <div class="tile"><b class="pass">3</b><span>match ✓</span></div>
+  <div class="tile"><b style="color:var(--warn)">2</b><span>minor ⚠</span></div>
+  <div class="tile"><b class="pass">0</b><span>drift ✗</span></div>
+  <div class="tile"><b>2</b><span>not comparable</span></div>
+</div>
+
+<section class="card verdict">
+  <p><b>No substantive drift.</b> Five of the seven INDEX entries are comparable; two are not comparable by design and were not forced. Three match, two carry minor deviation. The one genuine implementation defect surfaced here is the fallback header's missing status glyph, filed as MIN-1 in the E2E report.</p>
+  <p class="meta"><b>This report does not gate completion.</b></p>
+</section>
+
+<section class="card">
+  <h2 style="margin-top:0">Key Decisions</h2>
+  <ul class="tight">
+    <li>Each screen was judged against the <b>panel/sidebar body</b> of its mockup only — all six mockups render full VS Code window chrome, which has no counterpart in a bundle's DOM.</li>
+    <li>The four documented mockup defects (<code>/screen/*</code> links, stale "Browse" wording, resolved rows shown while Show resolved is off, the <code>◈ Maister: 2 unfinished</code> status-bar element) were treated as mockup errors and never counted against the implementation.</li>
+    <li>The four deviations already adjudicated in <a href="../implementation/work-log.md" target="_blank" rel="noopener">work-log.md</a> (Dashboard's Table <code>&lt;button&gt;</code>, per-row title button, Overview's hero-expander placement, the visually-hidden status word on in-progress rows) are recorded as <b>intentional</b> and excluded from the deviation counts.</li>
+    <li><b>Colour and typography were not judged</b> — outside the VS Code host every <code>--vscode-*</code> variable falls back, so the captures are near-monochrome. Palette fidelity remains the unsigned four-theme manual-checklist item.</li>
+  </ul>
+  <h2>Open Questions / Risks</h2>
+  <ul class="tight">
+    <li><code>screen:task-fallback-view</code>'s missing status glyph is the one deviation that looks unintentional rather than ruled — see <a href="e2e-verification-report.html#min1">E2E MIN-1</a> before accepting it as a design choice.</li>
+    <li><code>screen:dashboard-mode</code>'s scope line drops the mockup's working-copy prefix. The feature spec is silent, so this is a copy decision nobody has explicitly made; it matters only in multi-root workspaces.</li>
+    <li>Two INDEX rows can never be closed by this method. Their fidelity rests on the unsigned manual checklist and on <code>test/unit/hostDashboard.test.ts</code>'s byte-level hosting assertion.</li>
+  </ul>
+</section>
+
+<main>
+
+<h2>Per-Screen Comparison</h2>
+
+<div class="card scr">
+<h3 style="margin-top:0"><span class="pass">✓ Match</span> — <code>screen:sidebar-now-overview</code> (Overview half only)</h3>
+<p class="note"><b>Scope:</b> only the Overview half is comparable. The <b>Now</b> half is a native VS Code <code>TreeView</code> (<code>src/views/nowTree.ts</code>) — no browser-loadable DOM; asserted instead by <code>test/integration/nowTree.test.ts</code>. The mockup's <code>◈ Maister: 2 unfinished</code> status-bar element is a known mockup defect (A12 drops the status bar).</p>
+<ul class="tight">
+<li><b>Layout:</b> single-column sidebar; Search → Mine/Everyone → Status → Type → Attention → Tasks → grouped list → "Show all in Dashboard" — matches exactly.</li>
+<li><b>Field order:</b> facet tiles <code>glyph · label · count</code>; group headers <code>{group} ({count})</code>; rows <code>glyph · title · description · ▶</code> — matches.</li>
+<li><b>Copy:</b> <code>Tasks 5 of 230 · 2 filters</code> reproduces the mockup verbatim (verified by posting a filtered payload). Stale "Browse" wording correctly absent.</li>
+<li><b>Primary actions:</b> per-row <code>▶</code> only where the task has a next action; completed research row renders none — matches the mockup's annotation.</li>
+<li><b>States covered:</b> unfiltered, filtered, row markers, 250 px and 400 px.</li>
+<li><b>Intentional deviations:</b> hero expander <code>▸</code> between glyph and title (§ 4.2 requires an expander the mockup does not draw); status word visually hidden on in-progress rows where the mockup shows the phase activeForm — the word stays in the accessible name.</li>
+</ul>
+<div class="pair">
+  <figure><figcaption>Mockup — sidebar-now-overview.html</figcaption><img class="shot" src="screenshots/m1-mockup-sidebar-now-overview.png" alt="Sidebar Now + Overview mockup"></figure>
+  <figure><figcaption>Implementation — Overview at 400 px</figcaption><img class="shot" src="screenshots/01-overview-400px.png" alt="Overview surface rendered at 400 px"></figure>
+</div>
+</div>
+
+<div class="card scr warn">
+<h3 style="margin-top:0"><span style="color:var(--warn);font-weight:600">⚠ Minor Deviation</span> — <code>screen:task-fallback-view</code></h3>
+<ul class="tight">
+<li><b>Layout:</b> banner → title + next action → meta line → Phases → Key artifacts → Decisions → Risks → <b>All artifacts</b> → Raw state. Matches for every section the mockup draws.</li>
+<li><b>Deviation 1 (minor, and a defect):</b> the mockup's meta line reads <code>Status: ◯ In progress</code>; the implementation renders <code>Status: In progress</code> with no glyph, although <code>FallbackPayload.statusGlyph</code> is populated by the host and unread by the bundle. Dashboard and Risks both draw the same value. Filed as <a href="e2e-verification-report.html#min1">MIN-1</a> (with <a href="e2e-verification-report.html#min2">MIN-2</a>).</li>
+<li><b>Deviation 2 (minor, and correct):</b> the implementation adds <b>All artifacts</b> between Risks and Raw state. § 5.4 specifies six sections; the mockup draws five. Group 12's adjudication #2 confirms the six-section reading — spec wins over mockup.</li>
+<li><b>Field order:</b> type badge → Status → Author → Verification → Created · updated → parse-issue anchor — exact, including the anchor into Raw state.</li>
+<li><b>Copy:</b> banner text, <code>Verification: none yet</code>, <code>Created … · updated …</code>, <code>orchestrator-state.yml and 1 parse issue</code> all match.</li>
+<li><b>Control anatomy:</b> <code>▶ Resume</code> in the header beside the title, as drawn; the Risks <code>&lt;h2&gt;</code> is additionally a button into Risks mode (§ 5.7 entry point, step 8.7) — an addition the mockup does not show.</li>
+<li><b>States covered:</b> next action + parse issue; phase rows Completed and Current; risks open-first with a resolved row struck through and labelled.</li>
+</ul>
+<div class="pair">
+  <figure><figcaption>Mockup — task-fallback-view.html</figcaption><img class="shot" src="screenshots/m2-mockup-task-fallback-view.png" alt="Task fallback view mockup"></figure>
+  <figure><figcaption>Implementation — fallback view</figcaption><img class="shot" src="screenshots/03-fallback-task-view.png" alt="Task fallback view rendered"></figure>
+</div>
+</div>
+
+<div class="card scr">
+<h3 style="margin-top:0"><span class="pass">✓ Match</span> — <code>screen:artifact-reader</code></h3>
+<ul class="tight">
+<li><b>Layout:</b> skip link → breadcrumb → hero chips → pinned summary card → document body — exact order match.</li>
+<li><b>Field order in the card:</b> TL;DR → Key decisions → Open questions &amp; risks → checklist line as the card's last child — matches, which is what settled group 7's flagged ambiguity.</li>
+<li><b>Copy:</b> <code>Skip to document</code>, <code>← {task} › {artifact}</code>, the three card headings and <code>Checklist: 2 of 5 done · 1 skipped</code> all match (the mockup's caps are a CSS transform, not different copy).</li>
+<li><b>Control anatomy:</b> hero chips are buttons with <code>aria-pressed</code> on the current artifact — matches the mockup's annotation.</li>
+<li><b>States covered:</b> summary present; summary <code>null</code> (card omitted, <code>main#doc</code> still rendered — asserted by the DOM suite); resolved risk struck through with a visible label.</li>
+</ul>
+<div class="pair">
+  <figure><figcaption>Mockup — artifact-reader-implementation-plan.html</figcaption><img class="shot" src="screenshots/m3-mockup-artifact-reader.png" alt="Artifact reader mockup"></figure>
+  <figure><figcaption>Implementation — artifact reader</figcaption><img class="shot" src="screenshots/04-artifact-reader.png" alt="Artifact reader rendered"></figure>
+</div>
+</div>
+
+<div class="card scr warn">
+<h3 style="margin-top:0"><span style="color:var(--warn);font-weight:600">⚠ Minor Deviation</span> — <code>screen:dashboard-mode</code></h3>
+<ul class="tight">
+<li><b>Layout:</b> heading + scope → KPI row → filter bar → chart grid → task table — matches.</li>
+<li><b>KPI order and anatomy:</b> Tasks (◈ blue) → Failed verification (✕ red) → Quiet ≥ {days} days (⏸ orange) → Open risks (⚠ purple), each a disc glyph + value + label + one-line context. Verified against <code>src/panel/panel.ts:730-767</code>; identical to the mockup and the § 5.5 table.</li>
+<li><b>Chart grid:</b> Status / Verification / Workflow type / Tasks created per week, each with a <b>Table</b> control — matches. The 12-week column chart fits its card (<code>viewBox 0 0 480 130</code>); the squashed two-week rendering in the capture below is a fixture artifact, not the shipped geometry.</li>
+<li><b>Table columns:</b> Title · Type · Status / current phase · Verdict · Author · Created · Last activity · Next — exact match, in order, with the sort indicator on Last activity as drawn.</li>
+<li><b>Copy:</b> <code>Tasks N of M match the filters</code>, <code>Charts show all tasks · click a bar to filter the table</code> and <code>Clear all</code> all match verbatim.</li>
+<li><b>Deviation 1 (minor):</b> the mockup prefixes the working-copy name in the scope line; the implementation renders <code>{total} tasks · counts only, no durations</code>. The feature spec does not specify the prefix. Filed as <a href="e2e-verification-report.html#cos3">COS-3</a>.</li>
+<li><b>Deviation 2 (minor):</b> the mockup appends <code>· view all →</code> to the Open-risks KPI context; the implementation makes the whole tile a button named <code>Show all {k} open risks in the Risks view</code>. Same affordance, one activation target, a better accessible name.</li>
+<li><b>Intentional deviations:</b> the <b>Table</b> control is a <code>&lt;button&gt;</code> rather than the mockup's no-op <code>&lt;a href="#"&gt;</code>; rows expose a title button instead of a whole-row click handler, which is what keeps AC17/AC14's "exactly one next-action control, distinct from the title control" true.</li>
+<li><b>States covered:</b> filtered (chip + Clear all), chart view and data-table view of the same card, rows with and without a next action.</li>
+</ul>
+<div class="pair">
+  <figure><figcaption>Mockup — dashboard-mode.html</figcaption><img class="shot" src="screenshots/m4-mockup-dashboard-mode.png" alt="Dashboard mode mockup"></figure>
+  <figure><figcaption>Implementation — Dashboard (12-week series)</figcaption><img class="shot" src="screenshots/10-dashboard-12-week-chart.png" alt="Dashboard mode rendered with a full twelve-week chart"></figure>
+</div>
+</div>
+
+<div class="card scr">
+<h3 style="margin-top:0"><span class="pass">✓ Match</span> — <code>screen:open-risks</code></h3>
+<ul class="tight">
+<li><b>Layout:</b> breadcrumb <code>← Dashboard</code> → heading + count line → KPI tiles → filter bar → order note → group cards — matches.</li>
+<li><b>KPI order:</b> Open risks · In unfinished tasks · In completed tasks · In failed-verification tasks, with the mockup's context lines preserved verbatim in <code>src/strings.ts</code>.</li>
+<li><b>Filter bar:</b> risk-text search → Type → Task status → Show resolved → Group by. The search box is § 5.7 filter-bar item 1; the mockup simply omits it. Everything else matches in order.</li>
+<li><b>Group card field order:</b> disclosure → title → type badge → status · activity · author → <code>{n} open</code> → next action — exact.</li>
+<li><b>Risk row anatomy:</b> ⚠ glyph → risk text → <code>from {artifact path}</code> (a button into the reader) or <code>recorded in {key}</code> — exact.</li>
+<li><b>States covered:</b> default (Show resolved off — resolved rows and the resolved clause both absent, per the ruled mockup defect); Show resolved on (heading gains <code>· 1 resolved shown struck through</code>; the resolved row appears struck through with a visible <code>Resolved</code> label).</li>
+<li><b>Copy nits:</b> <a href="e2e-verification-report.html#cos2">COS-2</a> (no singular form: "1 open across 1 tasks") and <a href="e2e-verification-report.html#cos4">COS-4</a> ("no severity, no date" vs the mockup's "no severity or date"). Neither changes meaning.</li>
+</ul>
+<div class="pair">
+  <figure><figcaption>Mockup — open-risks.html</figcaption><img class="shot" src="screenshots/m5-mockup-open-risks.png" alt="Open risks mockup"></figure>
+  <figure><figcaption>Implementation — Risks mode, Show resolved on</figcaption><img class="shot" src="screenshots/07-risks-show-resolved.png" alt="Risks mode rendered with Show resolved on"></figure>
+</div>
+</div>
+
+<div class="card scr na">
+<h3 style="margin-top:0"><span style="color:var(--dim);font-weight:600">— Not comparable</span> — <code>screen:start-workflow-flow</code></h3>
+<p>A native VS Code QuickPick sequence (<code>src/launch/launch.ts</code>), not a webview. No DOM, no bundle, no URL — nothing a browser can render or compare. <code>implementation/visual-coverage.md</code> binds it to prompt order and copy rather than markup, which is the only workable binding.</p>
+<p><b>Verified elsewhere:</b> group 9's unit tests assert the three steps, the picker's verbatim one-sentence details, the verbatim step-2 prompt and the 5 s status line. The one recorded addition is a placeholder carrying the 1–2,000-character constraint, which the mockup renders as a step header VS Code has no equivalent for.</p>
+<p class="meta"><b>Residual:</b> the live Claude Code pre-fill is manual-checklist item AC11, unsigned.</p>
+</div>
+
+<div class="card scr na">
+<h3 style="margin-top:0"><span style="color:var(--dim);font-weight:600">— Not comparable</span> — <code>component:hosted-dashboard</code></h3>
+<p>No mockup by design — this is Maister's own <code>dashboard.html</code>, hosted unmodified. Comparing it to a mockup would be meaningless: the contract is <b>verbatim hosting</b>, not a layout the team designed.</p>
+<p><b>Verified elsewhere:</b> <code>test/unit/hostDashboard.test.ts</code> asserts byte-level equality with the source apart from the five declared changes (CSP meta after <code>&lt;meta charset&gt;</code>, <code>&lt;base href&gt;</code>, nonced shim script, nonce on the one inline script, removal of the file's own CSP meta), plus a script count. <code>test/dom/surfaces.spec.ts</code> and <code>test/dom/security.spec.ts</code> load the real committed dashboard through the production <code>hostDashboardHtml()</code> and prove the shim, the nonce and the policy behave.</p>
+<p class="meta"><b>Residual:</b> render fidelity in a live VS Code webview, and the accepted <code>prefers-color-scheme</code> mismatch, are manual-checklist items AC3/AC4 — unsigned.</p>
+</div>
+
+<h2>Cross-Reference with <code>implementation/visual-coverage.md</code></h2>
+<div class="card">
+<table>
+<tr><th>INDEX ID</th><th>Coverage matrix claim</th><th>This pass</th></tr>
+<tr><td><code>screen:sidebar-now-overview</code></td><td>Group 5 implements; 10 structural; 11 manual</td><td>✓ confirmed for the Overview half; Now half out of reach by construction</td></tr>
+<tr><td><code>screen:task-fallback-view</code></td><td>Group 7 implements; 10 structural; 11 manual</td><td>⚠ confirmed with one defect (MIN-1) the structural suite does not assert</td></tr>
+<tr><td><code>screen:artifact-reader</code></td><td>Group 7 implements; 10 structural; 11 manual</td><td>✓ confirmed</td></tr>
+<tr><td><code>screen:dashboard-mode</code></td><td>Group 8 implements; 10 structural; 11 manual</td><td>⚠ confirmed with two minor copy/affordance deviations</td></tr>
+<tr><td><code>screen:open-risks</code></td><td>Group 8 implements; 10 structural; 11 manual</td><td>✓ confirmed, including the ruled mockup-defect behaviour</td></tr>
+<tr><td><code>screen:start-workflow-flow</code></td><td>Group 9 implements; 11 manual</td><td>— not comparable; the matrix's "flow reference" binding is the right one</td></tr>
+<tr><td><code>component:hosted-dashboard</code></td><td>Group 6 verbatim-hosting contract</td><td>— not comparable; hosting contract verified by test, not by eye</td></tr>
+</table>
+<p class="meta">The matrix's claim that no INDEX row is uncovered holds. Its stated limitation — that four of six mockups are approximate and all six carry window chrome, so pixel comparison is impossible by construction — is confirmed, and is why this report judges structure only.</p>
+</div>
+
+</main>
+</body>
+</html>

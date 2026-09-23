@@ -5,7 +5,7 @@
 ## Quick Reference
 
 ### Project Documentation
-Project-level documentation covering vision and technology choices for this early-stage VS Code extension. Roadmap and architecture docs were not selected for this init run.
+Project-level documentation covering vision and technology choices. Both were corrected at the finalization of the Maister Lens implementation. Roadmap and architecture docs were not selected for this init run.
 
 ### Technical Standards
 Coding standards, conventions, and best practices organized by domain. Global and Frontend standards are initialized; Backend and Testing are not yet initialized for this project.
@@ -17,10 +17,10 @@ Coding standards, conventions, and best practices organized by domain. Global an
 Located in `.maister/docs/project/`
 
 #### Vision (`project/vision.md`)
-Pitch, problem statement, and target users for VSC_Maister_plugin, a VS Code extension aimed at streamlining everyday developer workflows inside the editor. Key features, success criteria, and differentiators are marked to-be-defined as the project is early-stage/greenfield.
+Problem statement, target users and key features for VSC_Maister_plugin, whose first shipped extension is Maister Lens — a read-only view layer over Maister tasks and artifacts in VS Code. Carries the four success criteria (live answer in the editor, always rendered, recall in seconds, honest state) and records that repository/git-change browsing is out of scope — git is used only for attribution. Differentiators are still to be defined.
 
 #### Tech Stack (`project/tech-stack.md`)
-Technology choices and rationale for this early/greenfield VS Code extension: TypeScript as the target language, VS Code Extension API (Node.js extension host), npm/tsc for build tooling, ESLint + Prettier planned for linting/formatting, and Marketplace/Open VSX distribution via `vsce`. Most entries are recommended defaults pending confirmation as development starts — no code exists yet.
+Technology choices as shipped: TypeScript on the VS Code Extension API, webview-based UI bundles, esbuild + tsc build, workspace-storage persistence of the task index, exactly two runtime dependencies (`yaml`, `markdown-it`), the four test harnesses (mocha, `@vscode/test-electron`, Playwright DOM, benchmark), ESLint 9 + Prettier, and Marketplace/Open VSX distribution via `vsce`.
 
 *Not initialized for this project: roadmap.md, architecture.md. Add them later via the docs-manager skill or by re-running the relevant init step.*
 

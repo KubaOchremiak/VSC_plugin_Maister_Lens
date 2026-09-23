@@ -1,0 +1,7 @@
+orchestrator:
+  completed_phases: [phase-1, phase-2, phase-15, sprint-review]
+  created: 2026-08-01T09:00:00Z
+  updated: 2026-08-02T09:00:00Z
+task:
+  title: Phases beyond the pinned registry
+  status: in_progress

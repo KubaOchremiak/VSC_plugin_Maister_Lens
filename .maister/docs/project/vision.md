@@ -10,13 +10,19 @@ Modern era analythics-developers using Visual Studio Code who want a productivit
 ## Key Features
 - focus on visual access to all flows and artifacts created by Maister,
 - browser of completed tasks with ability to search and filter,
-- Top layer view over all maister and repository changes.
+- Top layer view over all Maister tasks.
+
+Repository and git-change browsing is deliberately **out of scope**: git is used only to
+attribute a task to whoever first committed its state file.
 
 ## Success Criteria
-- To be defined
+1. **Live answer without leaving the editor.** "What is my task doing?" is answered from the sidebar.
+2. **Rendered, always.** No artifact is ever shown as source through the extension's own navigation.
+3. **Recall in seconds.** A task or past decision is found among hundreds without the file explorer or grep.
+4. **Honest state.** Nothing is displayed that can't be justified from files on disk.
 
 ## Differentiators
 - To be defined as the feature set takes shape.
 
 ---
-*Status*: Early-stage / greenfield project. This vision will be refined as scope and features are decided.
+*Status*: First extension — Maister Lens — implemented. Key feature 3 and the success criteria were corrected at its finalization (spec amendment A11); this vision will be refined further as scope grows.

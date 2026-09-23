@@ -1,0 +1,4 @@
+orchestrator: [1, 2
+task:
+	- "mixed indentation and tabs
+  ::::

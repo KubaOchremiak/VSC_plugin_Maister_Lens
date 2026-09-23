@@ -1,0 +1,155 @@
+orchestrator:
+  started_phase: phase-14
+  completed_phases: [phase-1, phase-2, phase-5, phase-6, phase-7, phase-8, phase-10, phase-11, phase-12, phase-14]
+  failed_phases: []
+  auto_fix_attempts: {}
+  options:
+    html_output: true
+    mockup_format: html
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: true
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+    sequential: null
+  created: 2026-09-22T17:41:28Z
+  updated: 2026-09-23T12:38:27Z
+  task_path: .maister/tasks/development/2026-09-22-maister-lens-vscode-extension
+task:
+  title: Maister Lens — VS Code extension
+  description: Implement the Maister Lens VS Code extension as designed in product-design task 2026-09-22-maister-viewer-vscode-plugin (sidebar Now + Overview, reusable panel with Task/Artifact/Dashboard/Risks modes, next-action launching).
+  status: completed
+  tags: [vscode-extension, greenfield, ui]
+  priority: null
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: false
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: true
+  research_reference: {path: null, research_question: null, research_type: null, confidence_level: null}
+  design_reference:
+    source: product-design
+    product_design_path: .maister/tasks/product-design/2026-09-22-maister-viewer-vscode-plugin
+    mockup_count: 6
+    has_brief: true
+    index_path: analysis/design-context/INDEX.md
+  project_context:
+    project_doc_paths: [.maister/docs/project/vision.md, .maister/docs/project/tech-stack.md]
+  phase_summaries:
+    design:
+      summary: "Maister Lens brief + feature spec (AC1-AC18) + 6 approved HTML mockups ingested; see analysis/design-context/INDEX.md."
+      screen_count: 6
+      component_count: 1
+      index_path: analysis/design-context/INDEX.md
+      decisions: []
+      risks: []
+      artifacts: [{path: analysis/design-context/INDEX.md, label: Design context index, html: null}]
+    codebase_analysis:
+      summary: "Greenfield repo (no code); feature-spec.md is the sole blueprint. Risk sits in external contracts: drifting Maister state schemas, non-JSON dashboard-data.js, undocumented Claude Code/Copilot launch commands."
+      key_files: [analysis/design-context/feature-spec.md, analysis/design-context/brief.md]
+      primary_language: TypeScript
+      decisions: []
+      risks: ["10 spec gaps (message protocol mismatch, openRisks menus, palette task arg, charts conflict, README/CHANGELOG, undocumented Claude API, fixture tooling)", "esbuild/mocha/test-electron unverified on Node 26; code CLI not on PATH"]
+      artifacts: [{path: analysis/codebase-analysis.md, label: Codebase analysis, html: null}]
+    clarifications:
+      - {decision: "Scope: full spec AC1-AC18", rationale: user choice}
+      - {decision: "Tests: mocha unit + test-electron integration; perf as benchmark script", rationale: user choice}
+      - {decision: "Claude Code launch: editor.open then URI fallback then next target", rationale: user choice}
+      - {decision: "publisher placeholder maister, MIT", rationale: user choice}
+    gap_analysis:
+      summary: "Everything in feature-spec.md is missing (greenfield); the real gaps are where the spec is silent or contradicts itself, the mockups or the project docs. 2 critical + 11 important decisions raised, all resolved at the gate."
+      integration_points: [activitybar container maister, views maister.now/maister.overview, panel maister.panel + serializer, commands/menus/context keys, workspace storageUri, FileSystemWatcher, git execFile, claude-vscode.editor.open, workbench.action.chat.open, terminal, clipboard]
+      decisions:
+        - {decision: "Key tasks on folderUri everywhere", rationale: "matches spec 2.1; avoids multi-root relPath collisions"}
+        - {decision: "One consolidated webview message table; Risks filtering local to the webview", rationale: "protocol doubles as security allowlist; risk volume is small"}
+        - {decision: "Hide task-argument launch commands from the Command Palette", rationale: "no task context there; Quick Picks declined by design"}
+        - {decision: "Single shared open-risks definition (state + artifact risks, deduplicated)", rationale: "count must match what the click opens (AC18)"}
+        - {decision: "AC13 applies to Maister Lens strings only; Maister phase names shown verbatim", rationale: "Maister is a constant input - the plugin adapts to its naming"}
+        - {decision: "No status-bar item", rationale: "view badge carries the count; not in spec or ACs"}
+        - {decision: "Now tree groups artifacts under a Recent artifacts node", rationale: "mockups are binding for layout"}
+        - {decision: "Integration tests on downloaded pinned stable + optional 1.90.0 run", rationale: "reproducible; verifies the engine floor"}
+        - {decision: "skip_test_suite set to false", rationale: "verification must run the suites covering the ACs"}
+        - {decision: "Update tech-stack.md, vision.md, README, CHANGELOG at finalization; propose testing standards", rationale: "conventions standard requires current docs"}
+        - {decision: "Add .gitignore and untrack the stray playwright log", rationale: "tool noise"}
+        - {decision: "Claude URI fallback gated on extension presence, built from env.uriScheme", rationale: "openExternal reports success even for unhandled URIs"}
+        - {decision: "Generate perf and git fixtures at run time; commit real-task snapshots + hazard fixtures", rationale: "small repo, deterministic"}
+      risks: ["Copilot availability check is weak - chat.open is registered even when Copilot cannot answer", "claude-vscode.editor.open is undocumented and ignores the prompt when the session is already open", "Mockups still mention a Browse surface merged into Overview"]
+      artifacts: [{path: analysis/gap-analysis.md, label: Gap analysis, html: null}, {path: analysis/scope-clarifications.md, label: Scope clarifications, html: null}]
+    scope_clarifications:
+      scope_expanded: false
+      summary: "13 decisions resolved at the Phase 2 gate; scope stays the full spec with no additions."
+    specification:
+      summary: "spec.md records the delta over feature-spec.md: 13 amendments (A1-A13), 27 requirements, a 21-type consolidated webview message table doubling as the security allowlist, and AC1-AC18 traceability."
+      decisions:
+        - {decision: "feature-spec.md is referenced by section, not restated; the spec records only the delta", rationale: "implementation follows the amendment where the two disagree"}
+        - {decision: "folderUri is the task identity everywhere", rationale: "relPath collides across multi-root workspaces"}
+        - {decision: "One consolidated webview message table in both directions, doubling as the security allowlist", rationale: "4.2 and 5.6 disagreed and 9 messages were undefined"}
+        - {decision: "AC13 restated - Maister phase names are constant input shown verbatim; the rule covers src/strings.ts", rationale: "paraphrasing Maister phases would itself break the honesty rule"}
+        - {decision: "No chart library, sanitizer, status-bar item, Quick Picks, or writes to Maister files", rationale: "two-dependency rule + minimal-implementation standard"}
+      risks: ["claude-vscode.editor.open is undocumented and ignores the prompt when a session is already open - AC11 pre-fill stays manual plus a mocked unit test", "workbench.action.chat.open is registered even when Copilot cannot answer; a one-time caveat notice is the only mitigation", "Node v26.7.0 is very new - esbuild, mocha and test-electron must be smoke-tested before any feature code", "Workflow registry pinned to Maister 2.2.3; newer phases render by raw id with a warning"]
+      artifacts: [{path: implementation/spec.md, label: Implementation specification, html: implementation/spec.html}, {path: analysis/requirements.md, label: Requirements, html: null}]
+    spec_audit:
+      summary: "Verdict pass-with-concerns: 2 critical, 9 warning, 9 info. Live-API claims all verified; the criticals are list-shaped phase_summaries extraction and six ACs assigned to a harness that cannot reach the webview DOM."
+      decisions: []
+      risks: ["C1: A8 accepts list-shaped phase_summaries but never says what is extracted - the designated fixture would silently yield zero decisions", "C2: AC3/4/5/6/8/14/17/18 assigned to integration tests that cannot assert inside a webview DOM", "W1: navigate containment invalidates the cross-task dashboard row in 5.3", "W2: openInBrowser has no trust rule though the fallback banner is more reachable untrusted", "W4: failed_phases exists in real state files, contradicting the claim that phase failure is unobservable", "W5: the Playwright visual E2E is backed by no AC and has no definable pass criterion", "W9: the hosted dashboard depends on asWebviewUri tolerating the ?t= cache-buster - unverified"]
+      artifacts: [{path: verification/spec-audit.md, label: Specification audit, html: null}]
+      remediation: "Spec revised to A1-A18: C1 closed by A14 (list-shaped phase_summaries normalization + fixture assertions), C2 by A16 (four-harness model + authoritative Verified-by column). W1 (A2.1 same-task containment), W2 (A2.2 openInBrowser trust-gated, banner not rendered untrusted), W3 (single strings.ts scan), W4 (A17 failed_phases surfaced factually), W5 (A10/A16 structural Playwright DOM harness, never pixel diff), W6 (A15 maister.now title menu), W9 (A18 cache-buster smoke test first, two-step contingency), plus W7 and W8 closed opportunistically."
+
+    implementation_plan:
+      summary: "12 task groups, 101 steps, 63-73 tests. Group 1 de-risks the A18 resource-resolution probe before any feature code; all 7 screens/components covered by visual-coverage.md."
+      decisions:
+        - {decision: "Group 1 carries only the scaffold the A18 and toolchain probes need", rationale: "the cache-buster resolution check must run before any feature code"}
+        - {decision: "package.json split - group 1 deps/scripts, group 2 all contributes blocks", rationale: "nothing serializes on it later"}
+        - {decision: "Views, panel core and launch depend only on index + manifest", rationale: "three groups run concurrently with disjoint file sets"}
+        - {decision: "One DOM (Playwright) group rather than a slice per UI group", rationale: "needs all five generated bundles before one acquireVsCodeApi stub can serve them"}
+        - {decision: "Group 11 declares zero automated tests", rationale: "its deliverable is a signed manual checklist; inventing tests would contradict A16"}
+      risks: ["Hard gate: group 1 must report its A18 outcome before group 6 starts - contingency 2 collapses Task mode to the fallback path", "src/strings.ts is written by group 3 and appended by groups 5-9, serializing three otherwise-parallel groups", "test:min on VS Code 1.90 can never exercise the claudeCode target (Claude Code requires ^1.94.0)", "AC11 pre-fill is unverifiable in automation - mocked unit test plus a manual checklist item", "setGroupBy has no in-webview sender yet - group 5 must name it or drop it from the allowlist"]
+      artifacts: [{path: implementation/implementation-plan.md, label: Implementation plan, html: implementation/implementation-plan.html}, {path: implementation/visual-coverage.md, label: Visual coverage, html: null}]
+    implementation:
+      summary: "12 task groups executed; 99 of 101 steps done (2 deferred to a human). 71 automated tests passing across unit, trusted/untrusted integration and Playwright DOM, plus a non-gating benchmark meeting AC7/AC9 with wide margins."
+      decisions:
+        - {decision: "A18 resolution works - full hosted-dashboard scope kept", rationale: "the probe proved asWebviewUri preserves the ?t= cache-buster end to end"}
+        - {decision: "AC15 automated rather than downgraded", rationale: "test-electron force-adds --disable-workspace-trust, so a custom host spawn was built without it"}
+        - {decision: "setGroupBy dropped from the A2 allowlist (audit I2)", rationale: "no webview control sends it; grouping goes through the native QuickPick"}
+        - {decision: "month grouping kept", rationale: "feature-spec 4.2 row 4 specifies it and the native Group By command reaches it"}
+        - {decision: "AC13 scoped to Lens-authored strings; Maister phase names verbatim", rationale: "Maister is constant input"}
+      risks: ["All 7 manual checklist items are unsigned - AC3/AC4/AC11/AC14 manual halves, the four-theme pass, the mockup comparison and hosted-dashboard fidelity remain unverified", "No end-to-end launch path is exercised in the host; every AC17 integration test spies the command away", "taskOf() in src/launch/host.ts is unreachable by either harness", "AC3 insertion assertions live in unit rather than integration - deliberate, needs verification to confirm", "test:min's untrusted pass runs on 1.138.0 rather than the 1.90 floor", "Spec follow-up: A2's table should lose the setGroupBy row"]
+      artifacts: [{path: implementation/work-log.md, label: Work log, html: null}, {path: verification/manual-checklist.md, label: Manual verification checklist (unsigned), html: null}]
+verification_context:
+  last_status: passed_with_issues
+  reverify_count: 2
+  fixes_applied:
+    - {round: 1, issue: "C1 containment bypass", fix: "decode-then-normalize extracted to src/model/relPath.ts, shared with parseState", verified: "45-case battery incl. double encoding, overlong UTF-8, UNC - all refused"}
+    - {round: 1, issue: "C2 nonce to remote script src", fix: "tag-by-tag attribute parsing replaces regex lookahead", verified: "10 tag-syntax variants match Chromium classification"}
+    - {round: 1, issue: "C4 yaml alias guard disabled", fix: "library default restored; 2 MiB cap before readFile on both paths; YAML error reason surfaced", verified: "4 bomb shapes fail in 4-21 ms with the library message"}
+    - {round: 1, issue: "C5 revealInExplorer never registered", fix: "registered with a shared sourceUri() helper", verified: "getCommands(true) superset-of-contributed test, confirmed red first"}
+    - {round: 1, issue: "vsce package failed", fix: "repository/bugs/homepage added, CHANGELOG link absolutized, unread extensionVersion dropped", verified: "exit 0, 16-file .vsix"}
+    - {round: 1, issue: "openFile multi-root mismatch + raw path", fix: "message carries its validated folderUri; dispatch joins against it; path decoded and normalized", verified: "unit + multi-root integration test"}
+    - {round: 2, issue: "C3 hosted with no CSP (round 1 fix did NOT hold)", fix: "strict prefix grammar from byte 0 (doctype -> html -> head); RAWTEXT end aligned with Chromium", verified: "all 5 Chromium-proven vectors refused; 21/21 real HTML files still host"}
+    - {round: 2, issue: "N1 shim laundered the nonce to any remote dashboard-data.js (pre-existing, missed in pass 1)", fix: "isDataScript compares resolved origin AND exact path against the inserted base", verified: "Chromium test: cross-origin script not nonced, legitimate ?t= load still works"}
+  decisions_made: []
+  issues_found:
+    - {source: code_review, severity: critical, description: "resolveInside decodes after normalizing - percent-encoded .. escapes containment on 5 message types", location: "src/panel/messages.ts:102-124", fixable: true}
+    - {source: code_review, severity: critical, description: "CSP nonce granted to a remote script src whose attributes contain a quoted >", location: "src/panel/hostDashboard.ts:27", fixable: true}
+    - {source: code_review, severity: critical, description: "A dashboard with no <head> is hosted with no CSP at all - fails open", location: "src/panel/hostDashboard.ts:55-87", fixable: true}
+    - {source: code_review, severity: critical, description: "maxAliasCount -1 disables the yaml billion-laughs guard on every task state file, untrusted workspaces included", location: "src/model/parseState.ts:407", fixable: true}
+    - {source: pragmatic, severity: critical, description: "maister.revealInExplorer contributed with three menu rows and never registered - clicking it errors", location: "package.json:82,183,280,322", fixable: true}
+    - {source: production, severity: warning, description: "npx vsce package fails - missing repository field and a relative link in CHANGELOG; no installable artifact", location: "package.json, CHANGELOG.md:39", fixable: true}
+    - {source: production, severity: warning, description: "publisher placeholder maister, hardcoded again at taskIndex.ts:777 where a rename silently writes 0.0.0", location: "package.json:6", fixable: true}
+    - {source: reality, severity: warning, description: "linkify manufactures bogus external links - 133 measured across the two real tasks", location: "src/panel/render.ts:201", fixable: true}
+    - {source: code_review, severity: warning, description: "Multi-root attribution wipes itself - only the last folder keeps authors", location: "src/index/taskIndex.ts:658-676", fixable: true}
+    - {source: code_review, severity: warning, description: "Persisted index and panel location skip containment on artifactRelPath", location: "panel.ts:1481, taskIndex.ts:232-260", fixable: true}
+    - {source: code_review, severity: warning, description: "Existing-terminal launch branch skips shell quoting", location: "src/launch/launch.ts:294", fixable: true}
+    - {source: code_review, severity: warning, description: "Overview re-implements the trust gate; JSON.stringify(undefined) throws in its refusal log", location: "messages.ts:387,455", fixable: true}
+    - {source: code_review, severity: warning, description: "Workspace folders added after activation are never watched", location: "src/extension.ts:33", fixable: true}
+    - {source: completeness, severity: warning, description: "Spec A2 table still lists setGroupBy, which both validators refuse", location: "implementation/spec.md:118", fixable: true}
+    - {source: pragmatic, severity: warning, description: "No test asserts every contributed command is registered - the gap that let revealInExplorer ship", location: test/, fixable: true}

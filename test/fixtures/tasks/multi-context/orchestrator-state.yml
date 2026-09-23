@@ -1,0 +1,25 @@
+orchestrator:
+  completed_phases: [phase-1, phase-2]
+  created: 2026-04-01T08:00:00Z
+  updated: 2026-04-02T08:00:00Z
+task:
+  title: Multiple domain contexts
+  status: in_progress
+task_context:
+  task_characteristics:
+    ui_heavy: true
+    risk_level: medium
+    ignored_value: [not, a, scalar]
+  phase_summaries:
+    codebase_analysis:
+      summary: The first present context wins.
+      decisions: [{decision: First context wins, rationale: N8}]
+      risks: []
+      artifacts: []
+design_context:
+  design_characteristics:
+    is_greenfield: true
+  phase_summaries:
+    context_synthesis:
+      summary: This entry must be ignored because task_context came first.
+      decisions: [{decision: Never extracted, rationale: N8}]

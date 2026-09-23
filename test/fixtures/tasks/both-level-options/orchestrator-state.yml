@@ -1,0 +1,36 @@
+options:
+  html_output: true
+  sequential: true
+  mockup_format: ascii
+orchestrator:
+  started_phase: phase-8
+  completed_phases: [phase-1, "2", 3, Phase 5, "Phase 6: Audit specification"]
+  failed_phases: []
+  auto_fix_attempts: {}
+  options:
+    html_output: false
+    spec_audit_enabled: true
+  created: 2026-03-04T09:15:00Z
+  updated: 2026-03-05T11:02:30Z
+  task_path: .maister/tasks/development/2026-03-04-both-level-options
+task:
+  title: Both-level options
+  description: Exercises N7 option merging and N6 phase-id canonicalization.
+  status: in_progress
+  tags: parser
+  priority: urgent
+task_context:
+  phase_summaries:
+    phase-3:
+      summary: A positionally keyed summary entry.
+      decisions:
+        - {decision: Keep positional keys verbatim, rationale: N9 forbids mapping them to phases}
+        - Plain string decisions are accepted
+      risks:
+        - "resolved: the positional key question"
+        - "Merged options may disagree across levels (resolved in review)"
+        - An open risk with no marker
+      artifacts:
+        - {path: implementation/spec.md, label: Specification, html: implementation/spec.html}
+        - {path: ../outside/escape.md, label: Escapes the task folder, html: null}
+        - {path: implementation/spec.md, label: Duplicate path, html: null}
