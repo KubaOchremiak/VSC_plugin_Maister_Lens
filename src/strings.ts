@@ -56,7 +56,8 @@ export const PARSE = {
   unknownPriority: 'Priority "{value}" is not a recorded priority and was left out.',
   dateOnly: 'Timestamp "{value}" carries no time; read as midnight UTC.',
   unparsableDate: 'Timestamp "{value}" could not be read and was left out.',
-  rawPhaseId: 'Phase id "{value}" is outside the pinned Maister {version} registry; shown by its raw id.',
+  rawPhaseId:
+    'Phase id "{value}" is outside the pinned Maister {version} registry; shown by its raw id.',
   multipleContexts: 'Domain context "{chosen}" was used; "{other}" was left out.',
   noCurrentPhase: 'no current phase',
   artifactOutsideTask: 'Artifact path "{path}" points outside the task folder and was left out.',
@@ -112,7 +113,9 @@ export const TIME = {
 /** The navigation tree that opens the Dashboard. */
 export const NAV = {
   dashboard: 'Dashboard',
-  dashboardLabel: 'Open the Maister dashboard'
+  dashboardLabel: 'Open the Maister dashboard',
+  project: 'Project',
+  projectLabel: 'Open the project documentation'
 } as const;
 
 /** The Now tree (§ 4.1, § 4.3, A9). */
@@ -125,8 +128,6 @@ export const NOW = {
   progressCompletedAndNotRecorded: '{completed} completed, {notRecorded} not recorded',
   lastDecision: 'Last recorded decision: {text}',
   recentArtifacts: 'Recent artifacts',
-  openRisks: '{count} open risks',
-  openRisksOne: '1 open risk',
   /** § 4.1's task description — `{Type label} · {phase activeForm, or status} · {activity}`. */
   taskDescription: '{type} · {phase} · {activity}',
   tooltipPhase: 'Phase {current} of {total} — {name}',
@@ -196,11 +197,13 @@ export const PANEL = {
   titleTask: 'Maister · {title}',
   titleArtifact: 'Maister · {label}',
   titleDashboard: 'Maister · Dashboard',
-  titleRisks: 'Maister · Open risks',
+  titleFollowUps: 'Maister · Follow-ups',
+  titleProject: 'Maister · Project',
   /** § 5.4's banner, one line per reason the hosted dashboard is not shown. */
   bannerNoDashboard:
     "Native summary — this task was run without Maister's HTML dashboard (html_output: false).",
-  bannerUnrecognized: "Native summary — this task's dashboard version isn't supported for embedding.",
+  bannerUnrecognized:
+    "Native summary — this task's dashboard version isn't supported for embedding.",
   /** § 8.1 — an untrusted workspace never executes task-authored HTML (AC15). */
   bannerUntrusted:
     "Native summary — this workspace is not trusted, so Maister's HTML dashboard stays closed here.",
@@ -217,7 +220,31 @@ export const PANEL = {
   messageRefused: 'panel: refused a webview message ({reason})',
   taskGone: 'panel: task {folderUri} is no longer indexed; showing the dashboard instead',
   fallbackReason: 'panel: {folderUri} is shown as a native summary ({reason})',
-  commandFailed: 'panel: {command} did not run ({detail})'
+  commandFailed: 'panel: {command} did not run ({detail})',
+  docUnreadable: 'panel: project doc {docRelPath} could not be read ({detail})',
+  /** FR3 — shown to the user when a link in a hosted page is refused. */
+  navigateRefused: 'Maister Lens did not follow that link: {reason}.'
+} as const;
+
+/** The back button the shim injects into hosted pages; its own copy, so it reads as Lens UI. */
+export const SHIM = {
+  lensBack: '\u2190 Lens Dashboard'
+} as const;
+
+/** The Project page: the INDEX.md TL;DR and the grouped `.maister/docs` files. */
+export const PROJECT = {
+  heading: 'Project',
+  goalLabel: 'Goal',
+  techStackLabel: 'Tech stack',
+  missing: '{field} not found in .maister/docs/INDEX.md under "## Project Documentation".',
+  empty: 'This workspace has no .maister/docs documentation yet.',
+  initHint: 'Run /maister:init to generate it.',
+  back: '\u2190 Project',
+  breadcrumb: 'Project',
+  groupIndex: 'Index',
+  groupProject: 'Project',
+  groupStandards: 'Standards · {domain}',
+  groupOther: 'Other'
 } as const;
 
 /** Phase glyphs; the § 5.4 phase list always prints the status word beside them (A14). */
@@ -251,7 +278,7 @@ export const FALLBACK = {
   decisionsLabel: 'Decisions',
   noDecisions: 'No decisions were recorded.',
   risksLabel: 'Risks',
-  openRisksLabel: 'Show the risks of {title} in the Risks view',
+  openFollowUpsLabel: 'Show the follow-ups of {title} in the Follow-ups view',
   noRisks: 'No risks were recorded.',
   riskOpen: 'Open',
   riskResolved: 'Resolved',
@@ -262,7 +289,8 @@ export const FALLBACK = {
   rawStateSummaryOne: 'orchestrator-state.yml and 1 parse issue',
   rawStateSummaryNone: 'orchestrator-state.yml',
   openStateFile: 'Open state file',
-  stateUnreadable: 'The state file could not be read; the values above come from the last good read.'
+  stateUnreadable:
+    'The state file could not be read; the values above come from the last good read.'
 } as const;
 
 /** Dashboard mode (§ 5.5): KPI tiles, the four charts and the task table. */
@@ -275,9 +303,9 @@ export const DASHBOARD = {
   kpiFailedContext: 'of {completed} completed',
   kpiQuiet: 'Quiet ≥ {days} days',
   kpiQuietContext: 'unfinished tasks',
-  kpiOpenRisks: 'Open risks',
-  openRisksContext: 'across {k} tasks',
-  openRisksLabel: 'Show all {k} open risks in the Risks view',
+  kpiFollowUps: 'Follow-ups',
+  followUpsContext: 'across {k} tasks',
+  followUpsLabel: 'Show all {k} follow-ups in the Follow-ups view',
   filtersLabel: 'Filters',
   filtersGroup: 'Active filters',
   clearAll: 'Clear all',
@@ -331,49 +359,41 @@ export const DASHBOARD = {
   empty: 'No tasks match the current filters.'
 } as const;
 
-/** Risks mode (§ 5.7): every open risk across tasks, grouped by its owning task. */
-export const RISKS = {
-  heading: 'Open risks',
+/** Follow-ups view: what completed tasks left open, grouped by task. */
+export const FOLLOW_UPS = {
+  heading: 'Follow-ups',
   breadcrumb: '← Dashboard',
   breadcrumbLabel: 'Breadcrumb',
-  summary: '{open} open across {k} tasks',
-  resolvedClause: '{n} resolved shown struck through',
+  summary: '{n} across {k} tasks',
   scopedTo: 'Scoped to {title}',
-  kpiOpen: 'Open risks',
-  kpiOpenContext: 'across {k} tasks',
-  kpiUnfinished: 'In unfinished tasks',
-  kpiUnfinishedContext: 'still actionable in the workflow',
-  kpiCompleted: 'In completed tasks',
-  kpiCompletedContext: 'carried past the end of the workflow',
-  kpiFailed: 'In failed-verification tasks',
-  kpiFailedContext: 'across {k} tasks',
-  filtersLabel: 'Risk filters',
-  searchLabel: 'Search risk text',
-  searchPlaceholder: 'Search risk text…',
-  typeLabel: 'Type',
-  statusLabel: 'Task status',
-  statusUnfinished: 'Unfinished',
-  statusCompleted: 'Completed',
-  showResolved: 'Show resolved',
-  groupByLabel: 'Group by',
-  groupByTask: 'Task',
-  groupByType: 'Workflow type',
-  groupBySource: 'Source',
-  orderNote:
-    'Maister records risks as text only — no severity, no date — so groups are ordered by the task’s last activity.',
-  openCount: '{n} open',
-  openCountOne: '1 open',
-  resolvedBadge: 'Resolved',
-  fromArtifact: 'from {path}',
-  recordedIn: 'recorded in {source}',
-  groupLabel: 'Risks of {title}',
+  verdictsLabel: 'Verification verdicts of completed tasks',
+  verdictPassed: 'Passed',
+  verdictPassedWithIssues: 'Passed with issues',
+  verdictFailed: 'Failed',
+  verdictContext: 'completed tasks',
+  sourceIssue: 'Issue',
+  sourceRisk: 'Risk',
+  sourceDeferred: 'Deferred',
+  sourceE2e: 'E2E',
+  severity: {
+    critical: 'Critical',
+    warning: 'Warning',
+    info: 'Info'
+  },
+  groupLabel: 'Follow-ups of {title}',
   openTaskLabel: 'Open {title}',
-  openArtifactLabel: 'Open {path}',
-  nextActionLabel: '{action} {title}',
-  showMore: 'Show {n} more tasks',
-  empty: 'No risks match the current filters.',
-  emptyIndex: 'No risks are recorded in this working copy.'
+  count: '{n} follow-ups',
+  countOne: '1 follow-up',
+  notCompleted: 'Follow-ups appear once this task is completed.',
+  empty: 'No completed task has open follow-ups.',
+  unreadable: '{n} task data files could not be read',
+  unreadableOne: '1 task data file could not be read'
 } as const;
+
+/** The Follow-ups note on data files that could not be read; empty when there are none. */
+export function unreadableText(n: number): string {
+  return n === 0 ? '' : n === 1 ? FOLLOW_UPS.unreadableOne : format(FOLLOW_UPS.unreadable, { n });
+}
 
 /** The § 6.3 artifact reader. */
 export const READER = {
@@ -448,9 +468,12 @@ export const LAUNCH = {
   targetOrderInvalid:
     'launch: maisterLens.launch.targetOrder is empty or not a list of known targets; the default order was used.',
   /** Logged, never shown. */
-  logTargetFailed: 'launch: target {target} did not take the command ({detail}); trying the next one',
-  logClaudeCommandMissing: 'launch: Claude Code is installed but {command} is not registered; using the URI entry point',
-  logClaudeCommandFailed: 'launch: the Claude Code command failed ({detail}); using the URI entry point',
+  logTargetFailed:
+    'launch: target {target} did not take the command ({detail}); trying the next one',
+  logClaudeCommandMissing:
+    'launch: Claude Code is installed but {command} is not registered; using the URI entry point',
+  logClaudeCommandFailed:
+    'launch: the Claude Code command failed ({detail}); using the URI entry point',
   logNoticeFailed: 'launch: the Copilot Chat notice could not be shown ({detail})',
   logUntrusted: 'launch: refused in an untrusted workspace',
   logTaskGone: 'launch: task {folderUri} is no longer indexed'

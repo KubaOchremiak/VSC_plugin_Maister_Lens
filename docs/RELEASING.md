@@ -7,7 +7,7 @@ is performed by any npm script in this repository.
 ## Identity and release metadata
 
 - Extension name: `maister-lens`; display name: **Maister Lens**.
-- Candidate version: `0.1.0`. Local VSIX installation does not reserve a Marketplace version.
+- Candidate version: `0.1.1`. Local VSIX installation does not reserve a Marketplace version.
 - Publisher in `package.json`: `jakub-ochremiak`. **Unregistered placeholder; publication
   is blocked until you register and confirm the final ID.** Confirm this
   ID in [publisher management](https://marketplace.visualstudio.com/manage), or change
@@ -47,8 +47,8 @@ tests, development documentation, dependencies and source maps.
 Inspect the package before upload:
 
 ```sh
-unzip -l maister-lens-0.1.0.vsix
-code --install-extension ./maister-lens-0.1.0.vsix
+unzip -l maister-lens-0.1.1.vsix
+code --install-extension ./maister-lens-0.1.1.vsix
 ```
 
 Expected contents include `dist/`, `media/`, `package.json`, README, CHANGELOG,

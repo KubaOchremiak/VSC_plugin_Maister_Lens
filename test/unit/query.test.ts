@@ -82,7 +82,8 @@ function makeTask(shape: TaskShape): Task {
     activityMtime: shape.activityMtime ?? NOW,
     author: shape.author ?? null,
     nextAction: { id: 'none', label: NEXT_ACTION_LABELS.none },
-    parseIssues: []
+    parseIssues: [],
+    e2eFollowUp: []
   };
 }
 

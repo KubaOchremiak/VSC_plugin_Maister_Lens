@@ -56,12 +56,13 @@ const TASK_ARGUMENT_COMMANDS = [
   'maister.startDevelopmentFromDesign',
   'maister.designFromResearch',
   'maister.developFromResearch',
+  'maister.openProject',
 ];
 
 /** A4: the exact set that stays visible in the Command Palette. */
 const PALETTE_VISIBLE_COMMANDS = [
   'maister.openDashboard',
-  'maister.openRisks',
+  'maister.openFollowUps',
   'maister.refresh',
   'maister.startWorkflow',
   'maister.overview.groupBy',
@@ -119,16 +120,16 @@ describe('manifest', () => {
     assert.equal(refresh?.group, 'navigation@2');
     assert.equal(commandIcon('maister.refresh'), 'refresh');
 
-    const openRisks = viewTitleEntry('maister.openRisks', 'maister.overview');
-    assert.equal(openRisks?.group, 'navigation@2');
-    assert.equal(commandIcon('maister.openRisks'), 'warning');
+    const openFollowUps = viewTitleEntry('maister.openFollowUps', 'maister.overview');
+    assert.equal(openFollowUps?.group, 'navigation@2');
+    assert.equal(commandIcon('maister.openFollowUps'), 'checklist');
     assert.ok(
       manifest.contributes.menus['editor/title'].some(
         (entry) =>
-          entry.command === 'maister.openRisks' &&
+          entry.command === 'maister.openFollowUps' &&
           entry.when === "activeWebviewPanelId == 'maister.panel'"
       ),
-      'maister.openRisks is missing from the panel editor title'
+      'maister.openFollowUps is missing from the panel editor title'
     );
   });
 
@@ -151,7 +152,7 @@ describe('manifest', () => {
     assert.equal(overview.name, OVERVIEW.title);
   });
 
-  it('adds the nav view without declaring a new command (FR1 AC6)', () => {
+  it('adds the nav rows without a new palette-visible command (FR1 AC6, R1)', () => {
     const declared = manifest.contributes.commands.map((entry) => entry.command);
     const hidden = manifest.contributes.menus.commandPalette
       .filter((entry) => entry.when === 'false')
@@ -159,7 +160,21 @@ describe('manifest', () => {
 
     assert.equal(declared.filter((command) => !hidden.includes(command)).length, 9);
     assert.ok(declared.includes('maister.openDashboard'), 'the reused command is missing');
+    assert.ok(declared.includes('maister.openProject'), 'the Project command is not declared');
+    assert.equal(commandPaletteEntry('maister.openProject')?.when, 'false');
     assert.ok(!declared.some((command) => command.startsWith('maister.nav')));
+  });
+
+  it('shows no source-side title-bar button in project or doc mode (M6)', () => {
+    const titleWhen = (command: string): string =>
+      manifest.contributes.menus['editor/title'].find((entry) => entry.command === command)
+        ?.when ?? '';
+
+    const reveal = titleWhen('maister.revealInExplorer');
+    for (const mode of ['dashboard', 'project', 'doc']) {
+      assert.ok(reveal.includes(`maister.panel.mode != '${mode}'`), `reveal shows in ${mode}`);
+    }
+    assert.ok(titleWhen('maister.openArtifactSource').includes("maister.panel.mode == 'artifact'"));
   });
 
   it('declares trust, virtual-workspace, extension-kind and activation contracts', () => {

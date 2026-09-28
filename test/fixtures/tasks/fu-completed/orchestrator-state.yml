@@ -1,0 +1,20 @@
+orchestrator:
+  completed_phases: [phase-1, phase-2, phase-3]
+  created: 2026-09-20T08:00:00Z
+  updated: 2026-09-21T18:00:00Z
+task:
+  title: Completed task with follow-ups
+  status: completed
+task_context:
+  phase_summaries:
+    implementation:
+      summary: Shipped.
+      decisions:
+        - {decision: Deferred the retry logic to a follow-up task, rationale: out of scope}
+        - {decision: Use the existing yaml parser, rationale: no new dependency}
+      risks:
+        - "Watcher may miss rapid renames"
+        - "Stale cache on reload (resolved in phase 3)"
+verification_context:
+  last_status: passed_with_issues
+  e2e_followup: Run the E2E suite against a real workspace

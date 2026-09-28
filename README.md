@@ -2,7 +2,7 @@
 
 <img src="media/icon.png" alt="Maister Lens — AI development lifecycle through a lens" width="128" height="128">
 
-Explore Maister AI development workflows, tasks, artifacts and risks inside VS Code.
+Explore Maister AI development workflows, tasks, artifacts and follow-ups inside VS Code.
 
 Maister writes its work into `.maister/tasks/<type>/<date>-<slug>/` — a state file, markdown
 artifacts, an HTML dashboard. Maister Lens reads those folders and answers "what is my task
@@ -34,7 +34,7 @@ With Node.js 22.18 or newer and npm available, run from this repository:
 ```sh
 npm ci
 npm run package
-code --install-extension ./maister-lens-0.1.0.vsix
+code --install-extension ./maister-lens-0.1.1.vsix
 ```
 
 Alternatively, run **Extensions: Install from VSIX…** in VS Code and select the package.
@@ -44,7 +44,7 @@ Run **Developer: Reload Window** after updating an existing installation.
 ### Light, dark and high-contrast themes
 
 The Activity Bar uses a monochrome SVG that VS Code colors for the active theme.
-Built-in Tasks, Dashboard, Risks, fallback Task and Markdown views use VS Code theme
+Built-in Tasks, Dashboard, Follow-ups, fallback Task and Markdown views use VS Code theme
 colors. Native controls follow the light/dark theme; focus outlines remain visible.
 The Marketplace icon intentionally keeps its black tile, white lens and turquoise
 AI accent in both themes; it is separate from the Activity Bar icon.
@@ -58,7 +58,7 @@ for the theme-aware reader. See [release checks](docs/RELEASING.md) for the visu
 | View | What it shows |
 |---|---|
 | **Overview** (tree) | A single row that opens the cross-task **Dashboard** panel. |
-| **Now** (tree) | Every unfinished task (`in_progress`, `pending`, `blocked`), newest write first. Each task expands to its progress line, its last recorded decision, up to five recently modified artifacts and its open-risk count. The view badge carries the unfinished count. An inline ▶ runs the task's next action. |
+| **Now** (tree) | Every unfinished task (`in_progress`, `pending`, `blocked`), newest write first. Each task expands to its progress line, its last recorded decision and up to five recently modified artifacts. The view badge carries the unfinished count. An inline ▶ runs the task's next action. |
 | **Tasks** (webview) | Orientation and the full portfolio in one column: a search box over task titles, descriptions, tags, recorded decisions, risks and artifact TL;DRs; Mine / Everyone; STATUS, TYPE and ATTENTION filter tiles; and the filtered task list grouped by type, status, author or month. |
 
 **Now** and **Tasks** render from an in-memory index of the workspace — they never read files
@@ -68,7 +68,7 @@ themselves.
 arrangement, so after an update the view is added where your profile has room rather than at the
 top. To restore the intended order, run **Views: Reset View Locations** from the Command Palette.
 
-## The four panel modes
+## The panel modes
 
 One panel (`Maister · …`) is reused for everything, with its own back/forward history in the
 editor title bar.
@@ -78,7 +78,8 @@ editor title bar.
 | **Task** | Maister's own `dashboard.html` for that task, hosted verbatim in a sandboxed webview. When the file is missing or of an unrecognised vintage, a built-in fallback view renders the same facts from the state file: banner, phases, decisions, risks, artifacts and the raw state. |
 | **Artifact** | A markdown artifact rendered as a document — breadcrumb, key-artifact chips, a pinned summary card and the body. An artifact with an `.html` companion can be toggled between the two with **Toggle Styled / Markdown View**. |
 | **Dashboard** | A cross-task dashboard: four KPI tiles, the active filter chips, four charts and a task table. It shares one filter with Tasks, so a tile pressed in the sidebar is reflected here. |
-| **Risks** | Open risks across all tasks, or scoped to one task, grouped by task. Resolved risks appear only while **Show resolved** is on. |
+| **Follow-ups** | What completed tasks left open, across all tasks or scoped to one, in collapsible per-task groups under a passed / passed-with-issues / failed verdict breakdown. Each row is an unfixed verification issue (with severity), an unresolved risk, a deferred follow-up decision or an E2E follow-up. Issue and E2E rows open the task dashboard; Risk and Deferred rows open the task. |
+| **Project** | Opened from the **Project** sidebar item: a TL;DR (goal from `project/vision.md`, tech stack from `INDEX.md`) and every `.maister/docs` file grouped by folder. A doc opens rendered with a **← Project** link, and the page refreshes live as the docs change. |
 
 Artifacts are always shown rendered through the extension's own navigation. **Open Source File**
 is the one, explicit way to reach the underlying text in a normal editor.
@@ -137,7 +138,7 @@ In an **untrusted** workspace Maister Lens keeps working, with two capabilities 
 - **No launching.** Every launch command is hidden, and the commands themselves refuse if
   invoked another way.
 
-Indexing, all sidebar views, Dashboard mode, Risks mode and markdown reading are unaffected.
+Indexing, all sidebar views, Dashboard mode, Follow-ups mode and markdown reading are unaffected.
 
 Maister Lens declares `"extensionKind": ["workspace"]`, so under Remote-SSH, WSL or Dev
 Containers it runs where the files live. Virtual workspaces are not supported: attribution

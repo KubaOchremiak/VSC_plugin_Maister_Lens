@@ -1,11 +1,19 @@
-import type { RenderPayload, ReaderLocation } from '../panel/render.ts';
-import { READER, format } from '../strings.ts';
+import type {
+  DocLocation,
+  DocRenderPayload,
+  ReaderLocation,
+  ReaderPayload,
+  RenderPayload
+} from '../panel/render.ts';
+import { PROJECT, READER, format } from '../strings.ts';
 import { el } from './components.ts';
 
 /**
  * § 6.3 — the artifact reader. `bodyHtml` arrives finished from `panel/render.ts`; this
  * bundle adds the breadcrumb, the hero chips, the pinned summary card and the one delegated
- * click handler that turns the rewritten links into A2 messages.
+ * click handler that turns the rewritten links into A2 messages. A `kind: 'doc'` payload
+ * shows a `.maister/docs` document instead: a back control to the Project page, no hero
+ * chips and no Source button.
  */
 
 declare function acquireVsCodeApi(): {
@@ -22,14 +30,16 @@ interface ScrollState {
 const DOC_ID = 'doc';
 
 const api = acquireVsCodeApi();
-let current: ReaderLocation | null = null;
+let current: ReaderLocation | DocLocation | null = null;
 
 function post(message: unknown): void {
   api.postMessage(message);
 }
 
-function locationKey(location: ReaderLocation): string {
-  return `${location.folderUri}\u0000${location.artifactRelPath}\u0000${location.variant}`;
+function locationKey(location: ReaderLocation | DocLocation): string {
+  return location.mode === 'doc'
+    ? `${location.docsFolderUri}\u0000${location.docRelPath}`
+    : `${location.folderUri}\u0000${location.artifactRelPath}\u0000${location.variant}`;
 }
 
 function storedScroll(): ScrollState | null {
@@ -55,6 +65,22 @@ function breadcrumb(payload: RenderPayload): HTMLElement {
   );
   nav.append(back, el('span', { class: 'dim' }, [' › ']), el('span', {}, [payload.artifactLabel]));
   return nav;
+}
+
+function projectButton(label: string): HTMLButtonElement {
+  const button = el('button', { class: 'link', type: 'button' }, [label]);
+  button.addEventListener('click', () => post({ type: 'openProject' }));
+  return button;
+}
+
+function docHeader(payload: DocRenderPayload): HTMLElement[] {
+  const back = el('nav', { 'aria-label': READER.breadcrumbLabel }, [projectButton(PROJECT.back)]);
+  const crumbs = el(
+    'nav',
+    { class: 'rd-crumbs', 'aria-label': `${PROJECT.breadcrumb} › ${payload.location.docRelPath}` },
+    [projectButton(PROJECT.breadcrumb), el('span', { class: 'dim' }, [' › ']), payload.location.docRelPath]
+  );
+  return [back, crumbs];
 }
 
 function heroChips(payload: RenderPayload): HTMLElement | null {
@@ -86,7 +112,7 @@ function bulletList(items: readonly Node[]): HTMLUListElement {
   return list;
 }
 
-function summaryCard(payload: RenderPayload): HTMLElement | null {
+function summaryCard(payload: ReaderPayload): HTMLElement | null {
   const summary = payload.summary;
   // § 6.3 — the card exists only for a document that carries a § 7 block; the checklist
   // line is part of that card, not a card of its own (AC5's DOM half asserts exactly this).
@@ -156,11 +182,13 @@ function sourceButton(payload: RenderPayload): HTMLButtonElement {
   return button;
 }
 
-function document_(payload: RenderPayload): HTMLElement {
+function document_(payload: ReaderPayload): HTMLElement {
   const main = el('main', { id: DOC_ID, tabindex: '-1' });
   if (payload.refused) {
     main.append(el('p', { class: 'empty' }, [payload.notice ?? READER.unreadable]));
-    main.append(sourceButton(payload));
+    if (payload.kind !== 'doc') {
+      main.append(sourceButton(payload));
+    }
     return main;
   }
   // Safe by construction: `bodyHtml` holds only markdown-it output (`html: false`) and the
@@ -169,16 +197,20 @@ function document_(payload: RenderPayload): HTMLElement {
   return main;
 }
 
-function render(payload: RenderPayload, root: HTMLElement): void {
+function render(payload: ReaderPayload, root: HTMLElement): void {
   const continuing = current !== null && locationKey(current) === locationKey(payload.location);
   const stored = storedScroll();
 
   const fragment = document.createDocumentFragment();
   fragment.append(skipLink());
-  fragment.append(breadcrumb(payload));
-  const chips = heroChips(payload);
-  if (chips !== null) {
-    fragment.append(chips);
+  if (payload.kind === 'doc') {
+    fragment.append(...docHeader(payload));
+  } else {
+    fragment.append(breadcrumb(payload));
+    const chips = heroChips(payload);
+    if (chips !== null) {
+      fragment.append(chips);
+    }
   }
   if (payload.notice !== null && !payload.refused) {
     fragment.append(el('p', { class: 'banner', role: 'note' }, [payload.notice]));
@@ -224,6 +256,34 @@ window.addEventListener('scroll', () => {
   }
 });
 
+function splitAnchor(value: string): { relPath: string; anchor?: string } {
+  const hash = value.indexOf('#');
+  return hash < 0
+    ? { relPath: value }
+    : { relPath: value.slice(0, hash), anchor: value.slice(hash + 1) };
+}
+
+function openLinkedArtifact(value: string, location: ReaderLocation | DocLocation): void {
+  const { relPath, anchor } = splitAnchor(value);
+  const withAnchor = anchor === undefined ? {} : { anchor };
+  if (location.mode === 'doc') {
+    post({
+      type: 'openDoc',
+      docsFolderUri: location.docsFolderUri,
+      docRelPath: relPath,
+      ...withAnchor
+    });
+    return;
+  }
+  post({
+    type: 'openArtifact',
+    folderUri: location.folderUri,
+    artifactRelPath: relPath,
+    variant: /\.html?$/i.test(relPath) ? 'html' : 'md',
+    ...withAnchor
+  });
+}
+
 /** § 6.2's rewritten links, routed to their A2 messages by one delegated handler. */
 document.addEventListener('click', (event: MouseEvent) => {
   const target = event.target;
@@ -238,15 +298,7 @@ document.addEventListener('click', (event: MouseEvent) => {
 
   const artifact = anchor.getAttribute('data-artifact');
   if (artifact !== null) {
-    const hash = artifact.indexOf('#');
-    const relPath = hash < 0 ? artifact : artifact.slice(0, hash);
-    post({
-      type: 'openArtifact',
-      folderUri: current.folderUri,
-      artifactRelPath: relPath,
-      variant: /\.html?$/i.test(relPath) ? 'html' : 'md',
-      ...(hash < 0 ? {} : { anchor: artifact.slice(hash + 1) })
-    });
+    openLinkedArtifact(artifact, current);
     return;
   }
   const file = anchor.getAttribute('data-file');
@@ -269,7 +321,7 @@ window.addEventListener('message', (event: MessageEvent<unknown>) => {
   ) {
     const root = document.getElementById('root');
     if (root !== null) {
-      render(message as RenderPayload, root);
+      render(message as ReaderPayload, root);
     }
   }
 });

@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Implementation Plan — Lens nav fixes + Follow-ups</title><style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+img.shot { max-width:100%; border:1px solid var(--border); border-radius:var(--radius); }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs{display:flex;gap:14px;font-size:13px;margin-bottom:18px;flex-wrap:wrap}.crumbs a.md{margin-left:auto;color:var(--dim)}.crumbs .here{font-weight:650}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px}.tile b{display:block;font-size:20px}.tile span{font-size:10.5px;text-transform:uppercase;color:var(--dim)}
+.step.todo::before{content:"☐ ";color:var(--dim)}.step.done::before{content:"☑ ";color:var(--ok)}.step.done{color:var(--dim)}
+.group.todo .g-badge::after{content:"pending"}.group.done .g-badge::after{content:"✓ completed";color:var(--ok)}
+.steps{list-style:none;padding-left:0}.steps li{margin:4px 0}.dim{color:var(--dim)}.flow{font-size:15px;font-weight:600}code{display:inline-block;margin:2px 0}</style></head><body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><a href="spec.html">Spec</a><span class="here">Plan</span><a href="../verification/implementation-verification.html">Verification</a><a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a></nav>
+<header><span class="badge">Implementation Plan</span><h1>Lens nav fixes + Follow-ups view</h1><p class="dim">Generated 2026-09-28</p></header>
+<div class="tiles"><div class="tile"><b>4</b><span>task groups</span></div><div class="tile"><b>30</b><span>total steps</span></div><div class="tile"><b>22-34</b><span>expected tests</span></div><div class="tile"><b>3</b><span>waves</span></div></div>
+<section class="tldr card"><h2>TL;DR</h2><p>There are 4 task groups and 30 steps, with about 22-34 tests expected. Group 1 (navigation and label fixes) and Group 2 (Follow-ups model) can run in parallel. Group 3 (Follow-ups view, entry points, removing Risks, and the CSS expander fix) depends on both. Group 4 (docs, the checklist grep and test review) runs last. The three red-gate tests must go green, and the bug-4 expander test moves to the Follow-ups view in Group 3.</p><h2>Key Decisions</h2><ul><li>The CSS [hidden] fix goes in Group 3, not Group 1. The bug-4 red test is rewritten against the Follow-ups view, so the fix and its test land together.</li><li>Group 1 owns the shared files for the navigation changes (messages.ts, panel.ts, strings.ts). Group 3 touches the same files again, so Group 3 depends on Group 1, and the executor runs them one after the other.</li><li>Group 2 is kept pure model: followUps.ts, the dashboard-data.js reader, parseState e2eFollowUp, and fixtures. It has no UI or panel wiring, so it can run in parallel with Group 1.</li><li>risks.ts and risksMode.ts are deleted in the same group that introduces their replacements (2 and 3). No Risks and Follow-ups code exists side by side after a group is finished.</li></ul><h2>Open Questions / Risks</h2><ul><li>The working tree has uncommitted project-docs changes in panel.ts, messages.ts, render.ts, strings.ts, reader.ts, navTree.ts and several tests. Edit on top of them, and never checkout or reset.</li><li>panel.ts is edited by two groups (1 and 3). The line numbers in the spec will drift, so locate code by symbol, not by line number.</li><li>Navigate containment is security-relevant. The full FR2 accept/refuse matrix must pass before Group 3 starts.</li><li>dashboard-data.js in the real repo tasks is often non-JSON. Those files are skipped by design, so real tasks may show fewer Issue rows than a user expects.</li></ul></section>
+<section class="card"><h2>Execution order</h2><p class="flow">[G1 Nav fixes ∥ G2 Follow-ups model] → G3 Follow-ups view &amp; Risks removal → G4 Docs + test review</p></section>
+<main><section data-group="1" class="group done card"><h2>Group 1: Companion navigation fixes (bugs 1, 2 + FR3) <span class="badge g-badge"></span></h2>
+<p class="dim">Depends on: None</p><p><code>src/webview/shim.ts</code> <code>src/strings.ts</code> <code>src/panel/messages.ts</code> <code>src/panel/panel.ts</code> <code>test/dom/shim.spec.ts</code> <code>test/unit/messages.test.ts</code> <code>test/unit/strings.test.ts</code> <code>test/integration/panel.test.ts</code></p><ul class="steps"><li data-step="1.1" class="step done"><b>1.1</b> Write or confirm 4-8 focused tests</li>
+<li data-step="1.2" class="step done"><b>1.2</b> Add the SHIM.lensBack string (&quot;← Lens Dashboard&quot;). In shim.ts backLink(), use it for both the text and the aria-label. The link still posts openDashboard. Leave FALLBACK.breadcrumb untouched.</li>
+<li data-step="1.3" class="step done"><b>1.3</b> Add hostBaseRelDir?: string to MessageContext in messages.ts. It is set by the panel only and never read from the message.</li>
+<li data-step="1.4" class="step done"><b>1.4</b> Extend validateNavigate/resolveInside to follow the FR2 order: strip #/?, decode, refuse a scheme, absolute path or backslash (checked on the decoded href), join with hostBaseRelDir, normalize, then apply containedRelPath against the task root. Refusals return a reason string.</li>
+<li data-step="1.5" class="step done"><b>1.5</b> In panel.ts, set hostBaseRelDir = dirname(artifactRelPath) when building the artifact context (buildArtifact/hostCompanion). In task mode, set it to &#x27;&#x27;. Accepted paths go through the existing route(), so dashboard.html routes to mode task.</li>
+<li data-step="1.6" class="step done"><b>1.6</b> On refusal, call vscode.window.showWarningMessage(reason) in addition to the existing output-channel log. The user-facing text lives in strings.ts.</li>
+<li data-step="1.7" class="step done"><b>1.7</b> Ensure the Group 1 tests pass</li>
+</ul><details><summary>Acceptance criteria</summary><ul><li>The red tests for bugs 1 and 2 are green, and the FR2 matrix passes.</li><li>A refused navigate shows a warning, and ../dashboard.html from a companion opens the task dashboard.</li><li>npm run typecheck and npm run lint are clean for the touched files.</li></ul></details></section>
+<section data-group="2" class="group done card"><h2>Group 2: Follow-ups model + dashboard-data.js reader <span class="badge g-badge"></span></h2>
+<p class="dim">Depends on: None</p><p><code>src/model/followUps.ts (new)</code> <code>src/model/risks.ts (delete)</code> <code>src/model/parseState.ts</code> <code>src/model/types.ts</code> <code>src/index/taskIndex.ts (comment only)</code> <code>test/unit/followUps.test.ts (new)</code> <code>test/unit/risks.test.ts (delete)</code> <code>test/unit/parseState.test.ts</code> <code>test/fixtures/tasks/fu-completed/**</code> <code>test/fixtures/tasks/fu-unquoted/**</code> <code>test/fixtures/tasks/fu-expr/**</code> <code>test/fixtures/tasks/fu-inprogress/**</code></p><ul class="steps"><li data-step="2.1" class="step done"><b>2.1</b> Write 6-8 focused unit tests in test/unit/followUps.test.ts:</li>
+<li data-step="2.2" class="step done"><b>2.2</b> Create the fixtures:</li>
+<li data-step="2.3" class="step done"><b>2.3</b> In parseState.ts, read verification_context.e2e_followup defensively (string or string[]) into Task.e2eFollowUp: string[]. Update types.ts. Keep the tolerant style.</li>
+<li data-step="2.4" class="step done"><b>2.4</b> Implement readDashboardData(text): strip window.MAISTER_DATA = and the trailing ;, try JSON.parse, fall back to yaml. Then apply the shape check: verification must be an object and issues an array, and every issue needs a string description, a severity in critical|warning|info and a boolean fixed. Any failure skips the whole file. Never eval.</li>
+<li data-step="2.5" class="step done"><b>2.5</b> Implement collectFollowUps(tasks, dataByFolder, scope?). It returns groups per completed task with rows {text, source: &#x27;issue&#x27;|&#x27;risk&#x27;|&#x27;deferred&#x27;|&#x27;e2e&#x27;, severity?} plus verdict counts (passed / passed_with_issues / failed) taken from Task.verdict.</li>
+<li data-step="2.6" class="step done"><b>2.6</b> Add a count helper (replacing openRiskCount) that returns {count, tasks} for the KPI.</li>
+<li data-step="2.7" class="step done"><b>2.7</b> Delete src/model/risks.ts and test/unit/risks.test.ts. Update the taskIndex.ts:479 comment. Callers in panel.ts are switched in Group 3; until then, keep the build compiling by moving the imports in the same change if needed.</li>
+<li data-step="2.8" class="step done"><b>2.8</b> Ensure the Group 2 tests pass: npm test -- --grep &quot;followUps|dashboard-data|parseState&quot;.</li>
+</ul><details><summary>Acceptance criteria</summary><ul><li>6-8 new unit tests pass, and non-JSON variants are skipped without error.</li><li>The persisted index schema is unchanged (dashboard-data is not stored).</li></ul></details></section>
+<section data-group="3" class="group done card"><h2>Group 3: Follow-ups view, entry points, Risks removal, expander CSS (bugs 3, 4) <span class="badge g-badge"></span></h2>
+<p class="dim">Depends on: 1, 2</p><p><code>src/webview/followUpsMode.ts (new</code> <code>refactored from risksMode.ts)</code> <code>src/webview/risksMode.ts (delete)</code> <code>src/webview/dashboardMode.ts</code> <code>src/webview/fallbackTask.ts</code> <code>src/views/overviewView.ts</code> <code>src/views/nowTree.ts</code> <code>src/panel/panel.ts</code> <code>src/panel/messages.ts</code> <code>src/strings.ts</code> <code>media/webview.css</code> <code>package.json</code> <code>test/dom/surfaces.spec.ts</code> <code>test/dom/harness.ts</code> <code>test/dom/themes.spec.ts</code> <code>test/unit/manifest.test.ts</code> <code>test/unit/messages.test.ts</code> <code>test/unit/strings.test.ts</code> <code>test/integration/followUpsMode.test.ts (new</code> <code>replaces risksMode.test.ts)</code> <code>test/integration/risksMode.test.ts (delete)</code> <code>test/integration/dashboardMode.test.ts</code> <code>test/integration/fallbackTask.test.ts</code> <code>test/integration/nowTree.test.ts</code></p><ul class="steps"><li data-step="3.1" class="step done"><b>3.1</b> Write or migrate 6-8 focused tests:</li>
+<li data-step="3.2" class="step done"><b>3.2</b> Add the global [hidden]{display:none !important} rule to media/webview.css. Rename the .risks* classes to follow-ups equivalents using the existing tokens.</li>
+<li data-step="3.3" class="step done"><b>3.3</b> Refactor risksMode.ts into followUpsMode.ts. It renders the verdict breakdown at the top, then groups per task using the existing groupHeader/groupCard expanders (keep aria-expanded in sync). Rows are built with components.row(), with a text source chip and a severity chip for Issues only. The scoped non-completed task shows the empty state &quot;Follow-ups appear once this task is completed.&quot;. Delete risksMode.ts.</li>
+<li data-step="3.4" class="step done"><b>3.4</b> Row click: Issue and E2E rows post an open-task-dashboard message (mode task); Risk and Deferred rows use the existing openTask path.</li>
+<li data-step="3.5" class="step done"><b>3.5</b> Messages: rename openRisks to openFollowUps (type plus validation, optional folderUri).</li>
+<li data-step="3.6" class="step done"><b>3.6</b> Panel:</li>
+<li data-step="3.7" class="step done"><b>3.7</b> Strings: replace the RISKS block with FOLLOW_UPS; remove NOW.openRisks*; convert FALLBACK.openRisksLabel, DASHBOARD.openRisks* and titleRisks.</li>
+<li data-step="3.8" class="step done"><b>3.8</b> Entry points:</li>
+<li data-step="3.9" class="step done"><b>3.9</b> Update or remove the remaining Risks tests (themes.spec.ts, strings.test.ts, dashboardMode/fallbackTask/nowTree integration).</li>
+<li data-step="3.10" class="step done"><b>3.10</b> Ensure the Group 3 tests pass. Run only the migrated and new specs: npm test -- --grep &quot;manifest|messages|strings&quot;, npx playwright test test/dom/surfaces.spec.ts test/dom/themes.spec.ts (after npm run build), and the affected integration suites.</li>
+</ul><details><summary>Acceptance criteria</summary><ul><li>The bug-4 test (now on Follow-ups) is green, and every group arrow collapses and expands its list.</li><li>The Dashboard tile, the command and the per-task links all open Follow-ups. The Now tree has no risks node.</li><li>grep -rnE &quot;openRisks|mode: &#x27;risks&#x27;|RISKS\.|risksMode|collectRisks&quot; src package.json test returns nothing.</li></ul></details></section>
+<section data-group="4" class="group done card"><h2>Group 4: Docs + Test Review &amp; Gap Analysis <span class="badge g-badge"></span></h2>
+<p class="dim">Depends on: 1, 2, 3</p><p><code>README.md</code> <code>CHANGELOG.md</code> <code>test/**/*.test.ts</code> <code>test/dom/*.spec.ts</code></p><ul class="steps"><li data-step="4.1" class="step done"><b>4.1</b> Review the tests from Groups 1-3 (about 16-24 tests) against FR1-FR10.</li>
+<li data-step="4.2" class="step done"><b>4.2</b> Analyze the gaps for this feature only. Likely candidates: the Follow-ups watcher refresh, a bad-shape issue item mid-list, a scoped view of a completed task with zero follow-ups.</li>
+<li data-step="4.3" class="step done"><b>4.3</b> Write up to 10 additional strategic tests.</li>
+<li data-step="4.4" class="step done"><b>4.4</b> Update README (lines ~5, 47, 61, 81, 141: Follow-ups replaces Risks, and the Now node is removed) and CHANGELOG (the navigation fixes, the expander fix, Follow-ups).</li>
+<li data-step="4.5" class="step done"><b>4.5</b> Run npm run typecheck, npm run lint, npm test, npm run test:integration and npm run test:dom. Run the checklist grep.</li>
+</ul><details><summary>Acceptance criteria</summary><ul><li>All feature tests pass (~22-34 total), with no more than 10 added in this group.</li><li>All three suites plus lint and typecheck pass, and the checklist grep is empty.</li></ul></details></section>
+</main></body></html>

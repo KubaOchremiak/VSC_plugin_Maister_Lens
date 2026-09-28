@@ -1,0 +1,15 @@
+orchestrator:
+  completed_phases: [phase-1]
+  created: 2026-09-20T08:00:00Z
+  updated: 2026-09-21T18:00:00Z
+task:
+  title: In-progress task
+  status: in_progress
+task_context:
+  phase_summaries:
+    implementation:
+      decisions:
+        - {decision: Deferred caching to a follow-up, rationale: later}
+      risks: ["Open risk while in progress"]
+verification_context:
+  e2e_followup: [First, Second]

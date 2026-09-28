@@ -15,15 +15,22 @@ export const MAX_ARTIFACT_BYTES = 2 * 1024 * 1024;
 
 const CACHE_SIZE = 30;
 const MD_OR_HTML = /\.(md|html?)$/i;
+const DOC = /\.md$/i;
 const CHECK_MARKER = /^\[([ xX~])\]\s+/;
 
+/**
+ * Where the rendered document lives. An `artifact` sits in a task folder and links to its
+ * `.md`/`.html` siblings; a `doc` sits under `.maister/docs` and links only to other `.md` docs,
+ * so an `.html` there opens as a plain file.
+ */
 export interface RenderTarget {
-  /** Task-relative path of the artifact being rendered, e.g. `implementation/plan.md`. */
+  readonly kind: 'artifact' | 'doc';
+  /** Base-relative path of the document being rendered, e.g. `implementation/plan.md`. */
   readonly artifactRelPath: string;
-  /** The task folder relative to its workspace folder, e.g. `.maister/tasks/development/x`. */
-  readonly taskRelPath: string;
-  /** `asWebviewUri` for an in-task image, or null when the resource cannot be served. */
-  readonly imageUri: (taskRelPath: string) => string | null;
+  /** The base directory relative to its workspace folder, e.g. `.maister/tasks/development/x`. */
+  readonly baseRelPath: string;
+  /** `asWebviewUri` for an image inside the base, or null when the resource cannot be served. */
+  readonly imageUri: (baseRelPath: string) => string | null;
 }
 
 export interface Checklist {
@@ -53,9 +60,18 @@ export interface ReaderHero {
   readonly current: boolean;
 }
 
-/** § 6.2's posted payload. */
+/** The doc arm of `PanelLocation`; `docRelPath` is relative to `.maister/docs`. */
+export interface DocLocation {
+  readonly mode: 'doc';
+  readonly docsFolderUri: string;
+  readonly docRelPath: string;
+  readonly anchor?: string;
+}
+
+/** § 6.2's posted payload for a task artifact. */
 export interface RenderPayload {
   readonly type: 'render';
+  readonly kind?: 'artifact';
   readonly location: ReaderLocation;
   readonly taskTitle: string;
   readonly folderUri: string;
@@ -69,6 +85,22 @@ export interface RenderPayload {
   /** True when the artifact was refused outright, so only the notice and the source button show. */
   readonly refused: boolean;
 }
+
+/** The posted payload for a project doc: there is no task, so no title, heroes or source. */
+export interface DocRenderPayload {
+  readonly type: 'render';
+  readonly kind: 'doc';
+  readonly location: DocLocation;
+  readonly docLabel: string;
+  readonly summary: SummaryBlock | null;
+  readonly checklist: Checklist | null;
+  readonly bodyHtml: string;
+  readonly notice: string | null;
+  readonly refused: boolean;
+}
+
+/** Everything the reader bundle can be posted. */
+export type ReaderPayload = RenderPayload | DocRenderPayload;
 
 /** The reader restores its scroll position only for a re-post of the artifact it is showing. */
 export function sameArtifactLocation(left: ReaderLocation, right: ReaderLocation): boolean {
@@ -130,8 +162,8 @@ function decodePath(raw: string): string | null {
   }
 }
 
-/** The task-relative path a relative reference points at, or null when it leaves the task. */
-function insideTask(reference: string, target: RenderTarget): string | null {
+/** The base-relative path a relative reference points at, or null when it leaves the base. */
+function insideBase(reference: string, target: RenderTarget): string | null {
   const decoded = decodePath(reference);
   if (decoded === null || decoded === '' || decoded.startsWith('/') || /^[a-z][\w+.-]*:/i.test(decoded)) {
     return null;
@@ -166,13 +198,11 @@ export function classifyLink(href: string, target: RenderTarget): LinkTarget | n
     return null;
   }
 
-  const inTask = insideTask(reference, target);
-  if (inTask !== null) {
-    return MD_OR_HTML.test(inTask)
-      ? { kind: 'artifact', value: `${inTask}${fragment}` }
-      : workspaceFile(`${target.taskRelPath}/${parentOf(target.artifactRelPath)}/${reference}`);
-  }
-  return workspaceFile(`${target.taskRelPath}/${parentOf(target.artifactRelPath)}/${reference}`);
+  const inBase = insideBase(reference, target);
+  const readable = target.kind === 'doc' ? DOC : MD_OR_HTML;
+  return inBase !== null && readable.test(inBase)
+    ? { kind: 'artifact', value: `${inBase}${fragment}` }
+    : workspaceFile(`${target.baseRelPath}/${parentOf(target.artifactRelPath)}/${reference}`);
 }
 
 function workspaceFile(candidate: string): LinkTarget | null {
@@ -292,7 +322,7 @@ md.renderer.rules.link_close = (_tokens, _index, _options, env): string => {
   return suffix === null ? '</a>' : `<span class="sr-only"> ${escape(suffix)}</span></a>`;
 };
 
-/** § 6.2 step 7 — only in-task images are served; everything else degrades to its alt text. */
+/** § 6.2 step 7 — only images inside the base are served; everything else degrades to its alt text. */
 md.renderer.rules.image = (
   tokens: Token[],
   index: number,
@@ -303,8 +333,8 @@ md.renderer.rules.image = (
   const scope = env as RenderEnv;
   const token = tokens[index];
   const alt = self.renderInlineAsText(token.children ?? [], options, env);
-  const inTask = insideTask(token.attrGet('src') ?? '', scope.target);
-  const uri = inTask === null ? null : scope.target.imageUri(inTask);
+  const inBase = insideBase(token.attrGet('src') ?? '', scope.target);
+  const uri = inBase === null ? null : scope.target.imageUri(inBase);
   if (uri === null) {
     return escape(`${alt} ${READER.imageNotLoaded}`.trim());
   }

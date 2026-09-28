@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Lens nav fixes + Follow-ups</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--dim:#6b7280;--accent:#4f46e5;--accent-soft:#eef2ff;--ok:#16a34a;--ok-soft:#ecfdf3;--warn:#d97706;--warn-soft:#fffbeb;--crit:#dc2626;--crit-soft:#fef2f2;--info:#2563eb;--info-soft:#eff6ff;--radius:10px}
+@media (prefers-color-scheme: dark){:root{--bg:#111418;--surface:#1a1f26;--border:#2e3640;--text:#e6e9ee;--dim:#9aa4b2;--accent:#818cf8;--accent-soft:#26294a;--ok:#4ade80;--ok-soft:#11291a;--warn:#fbbf24;--warn-soft:#2e2410;--crit:#f87171;--crit-soft:#321616;--info:#60a5fa;--info-soft:#15233a}}
+*{box-sizing:border-box}body{margin:0 auto;max-width:1100px;padding:24px 20px 64px;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}h1{font-size:22px}h2{font-size:16px;margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.badge{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.sev{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;padding:1.5px 7px;border-radius:99px;margin-right:6px}
+.sev.critical{background:var(--crit-soft);color:var(--crit)}.sev.warning{background:var(--warn-soft);color:var(--warn)}.sev.info{background:var(--info-soft);color:var(--info)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}th{font-size:11.5px;text-transform:uppercase;color:var(--dim)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:4px}details>summary{cursor:pointer;font-weight:600}
+.crumbs{display:flex;gap:14px;font-size:13px;margin-bottom:18px;flex-wrap:wrap}.crumbs a.md{margin-left:auto;color:var(--dim)}.crumbs .here{font-weight:650}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px}.tile b{display:block;font-size:20px}.tile span{font-size:10.5px;text-transform:uppercase;color:var(--dim)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:700px){.two{grid-template-columns:1fr}}
+</style></head><body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><span class="here">Spec</span><a href="tdd-red-gate.md" target="_blank" rel="noopener">TDD red gate ↗</a><a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a></nav>
+<header><h1>Specification: Lens nav fixes + Follow-ups view</h1><span class="badge">spec</span> <span class="dim">2026-09-28</span></header>
+<div class="tiles"><div class="tile"><b>9</b><span>requirements</span></div><div class="tile"><b>9</b><span>reused</span></div><div class="tile"><b>4</b><span>new</span></div><div class="tile"><b>medium</b><span>risk</span></div></div>
+<section class="tldr card"><h2 style="margin-top:0">TL;DR</h2>
+<p>Fix three Lens defects: the shim back button gets its own label, companion <code>../dashboard.html</code> navigation works, and expanders collapse again. The Risks view is replaced by a Follow-ups view built only from <code>status === 'completed'</code> tasks, grouped by task, with a verdict breakdown from Task.verdict. Per-task Risks links open Follow-ups scoped to that task, and the Now-tree risks node is removed. The new model includes a shape-validated <code>dashboard-data.js</code> reader (JSON.parse, then yaml; never executed).</p>
+<h3>Key Decisions</h3><ul>
+<li>A new string "← Lens Dashboard" for the shim button. <code>FALLBACK.breadcrumb</code> is unchanged.</li>
+<li>Navigate hrefs resolve against <code>hostBaseRelDir</code>, and containment is still checked against the task root.</li>
+<li>A refused navigate shows a VS Code warning and is also logged.</li>
+<li>A global <code>[hidden]{display:none !important}</code> rule.</li>
+<li>Risks is removed entirely: <code>maister.openFollowUps</code>, mode <code>followUps</code>, message <code>openFollowUps</code>. No aliases are kept.</li>
+<li><code>dashboard-data.js</code>: strip the prefix, then try <code>JSON.parse</code> and fall back to <code>yaml</code>. Keep an issue only if it has a string description, a severity of critical, warning or info, and a boolean <code>fixed</code>. Otherwise skip the file silently. The file is never executed.</li>
+<li>"Completed" means <code>status === 'completed'</code>. There is no dismissal. §7 blocks, residual_issues and fixes_applied are excluded.</li>
+<li>The Now-tree risks node is dropped. The per-task Risks links in the fallback view and the overview become Follow-ups links scoped to that task.</li>
+<li>No cache. Counts are recomputed on an index refresh and when the dashboard-data.js watcher fires.</li>
+<li>Row click: Issue and E2E rows open the task dashboard. Risk and Deferred rows open the task.</li></ul>
+<h3>Open Questions / Risks</h3><ul>
+<li>Uncommitted project-docs changes sit in the same files. Build on the working tree.</li>
+<li>The deferred-decision regex is a heuristic.</li>
+<li>dashboard-data.js files with unquoted keys or JS expressions are skipped by design (no JSON5 dependency).</li>
+<li>The <code>verification_context</code> and <code>dashboard-data.js</code> shapes vary between Maister versions. Read every field defensively.</li>
+<li>Navigate containment is security-relevant. Test both accept and refuse.</li></ul></section>
+<div class="two"><div class="card"><h2 style="margin-top:0">In scope</h2><ul><li>The four bugs from test/bugs.md</li><li>Renaming every Risks entry point to Follow-ups</li><li>The dashboard-data.js reader, a fixture and tests</li><li>README and CHANGELOG</li></ul></div>
+<div class="card"><h2 style="margin-top:0">Out of scope</h2><ul><li>residual_issues, fixes_applied and §7 blocks</li><li>Stats beyond the verdict breakdown</li><li>Changes to Maister's own dashboard.html</li><li>A resolved toggle</li><li>Changes to Tasks search or to the fallback risks section</li></ul></div></div>
+<h2 id="requirements">Requirements</h2><div class="card"><table><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr>
+<tr><td>FR1</td><td>The shim button reads "← Lens Dashboard" (dedicated string + aria-label) and still posts openDashboard</td><td>must</td></tr>
+<tr><td>FR2</td><td>Companion navigate resolves against <code>hostBaseRelDir</code>, which the panel sets (never taken from the message). Order: strip #/?, decode, refuse scheme/absolute/backslash, join, then containedRelPath against the task root. <code>../dashboard.html</code> opens mode task</td><td>must</td></tr>
+<tr><td>FR3</td><td>A refused navigate shows a warning message</td><td>must</td></tr>
+<tr><td>FR4</td><td>The global <code>[hidden]</code> rule makes expanders work</td><td>must</td></tr>
+<tr><td>FR5</td><td>The Follow-ups view covers <code>status === 'completed'</code> tasks only, grouped by task and collapsible, with the verdict breakdown taken from Task.verdict. A scoped view of a task that is not completed shows an empty state. There is no dismissal</td><td>must</td></tr>
+<tr><td>FR6</td><td>Each row shows its text, a source chip (Issue/Risk/Deferred/E2E) and severity for issues. Issue and E2E rows open the task dashboard; Risk and Deferred rows open the task</td><td>must</td></tr>
+<tr><td>FR7</td><td>Sources: shape-valid verification.issues with fixed === false, unresolved phase risks, e2e_followup (a string is one item), and decisions matching <code>/\bdefer\w*\b.*\bfollow[- ]?up\b/i</code></td><td>must</td></tr>
+<tr><td>FR8</td><td>The KPI tile, command, panel mode and per-task links are renamed. The Now risks node is removed. Every item on the consumer checklist is converted, and the grep acceptance check passes</td></tr>
+<tr><td>FR9</td><td>Risks stay searchable in Tasks search. The fallback risks section content is kept</td><td>must</td></tr>
+<tr><td colspan="3"><details><summary>Risks consumer checklist</summary><ul>
+<li>package.json: the description, command and menus</li>
+<li>panel.ts: Location union, mode checks, openRisks handler, KPI keys, risksPayload, command and deserializer</li>
+<li>messages.ts: the openRisks type and its validation</li>
+<li>strings.ts: NOW.openRisks*, FALLBACK.openRisksLabel, DASHBOARD.openRisks*, titleRisks and the RISKS block</li>
+<li>nowTree.ts: the risks node, removed</li>
+<li>fallbackTask.ts 82-90 and overviewView.ts 127, 490-494</li>
+<li>risksMode.ts and risks.ts, replaced; the taskIndex.ts 479 comment</li>
+<li>README lines 5, 47, 61, 81 and 141</li>
+<li>Tests: risks.test, risksMode.test, themes.spec, harness, strings.test, dashboardMode.test, fallbackTask.test, nowTree.test, manifest.test and surfaces.spec</li>
+<li>Acceptance: grep for <code>openRisks|mode: 'risks'|RISKS\.|risksMode|collectRisks</code> returns nothing</li></ul></details><td>must</td></tr>
+</table></div>
+<h2>User stories</h2><div class="two">
+<div class="card">Clearly labelled back controls on companion pages</div><div class="card">The native "Dashboard" link opens the task dashboard</div>
+<div class="card">Group arrows collapse and expand their lists</div><div class="card">One Follow-ups view with a verdict breakdown for planning follow-up work</div></div>
+<h2>Components</h2><div class="card"><table><tr><th>Component</th><th>Kind</th><th>Use</th></tr>
+<tr><td><code>src/webview/risksMode.ts</code></td><td>reuse</td><td>Refactored into the Follow-ups view (groups, expander, KPI strip)</td></tr>
+<tr><td><code>src/model/risks.ts</code></td><td>reuse</td><td>Aggregation pattern for source (b). Replaced by followUps.ts</td></tr>
+<tr><td><code>src/webview/components.ts</code> row()</td><td>reuse</td><td>Rows and chips</td></tr>
+<tr><td><code>messages.ts</code> resolveInside / validateNavigate, <code>relPath.ts</code> containedRelPath</td><td>reuse</td><td>Containment with the new base dir</td></tr>
+<tr><td><code>panel.ts</code> route / buildArtifact / hostCompanion / risksPayload / KPI</td><td>reuse</td><td>Routing, context and payload</td></tr>
+<tr><td><code>parseState.ts</code></td><td>reuse</td><td>Tolerant parsing. Adds e2e_followup</td></tr>
+<tr><td><code>dashboardMode.ts</code></td><td>reuse</td><td>Renamed tile</td></tr>
+<tr><td><code>yaml</code> dependency</td><td>reuse</td><td>Fallback parser after JSON.parse</td></tr>
+<tr><td><code>src/model/followUps.ts</code></td><td>new</td><td>Combines several sources, completed-only filtering and verdict counts</td></tr>
+<tr><td>dashboard-data.js reader</td><td>new</td><td>The file is not read anywhere today</td></tr>
+<tr><td>Fixtures: a completed task (JSON-style), unquoted-key and JS-expression dashboard-data.js files, and a non-completed task</td><td>new</td><td>Existing fixtures have empty verification data</td></tr></table></div>
+<details class="card"><summary>Technical approach</summary><ul>
+<li>Bug 1: shim <code>backLink()</code> uses the new string.</li>
+<li>Bug 2: MessageContext gains <code>hostBaseRelDir</code>. In artifact mode the panel supplies the task folder and <code>dirname(artifactRelPath)</code>. The href follows the FR2 order, then goes to route(). Refusals trigger showWarningMessage. Task mode is unchanged.</li>
+<li>Bug 4: CSS only.</li>
+<li>Follow-ups data flow:<ol>
+<li>parseState adds e2eFollowUp.</li>
+<li>The panel reads dashboard-data.js asynchronously for completed tasks. It is not stored in the index.</li>
+<li><code>collectFollowUps</code> returns grouped rows plus verdict counts.</li>
+<li>The rows are posted to the followUps mode.</li></ol></li>
+<li>The KPI count reuses the same function and is recomputed on an index refresh or a watcher change. There is no cache.</li></ul></details>
+<details class="card"><summary>Testing and standards</summary><ul>
+<li>2-8 focused tests per step group. Run only the new and affected tests.</li>
+<li>The red tests (shim label, companion navigate, expander moved to Follow-ups) must go green.</li>
+<li>New tests:<ul>
+<li>the FR2 navigate matrix (<code>../dashboard.html</code> accepted; <code>../../x</code>, <code>%2e%2e</code>, <code>https:</code>, <code>/abs</code> and backslash refused) and the warning shown;</li>
+<li>the reader (JSON accepted; unquoted-key, expression and bad-shape files skipped);</li>
+<li>collectFollowUps (sources, regex, string e2e as one item, verdict);</li>
+<li>the scoped empty state, the manifest command, the Now node removed, and the per-task links.</li></ul></li>
+<li>Standards: minimal-implementation, coding-style, error-handling, validation, conventions, accessibility, css.</li></ul></details>
+<h2>Success criteria</h2><div class="card"><ul>
+<li>Distinct back labels, and the native link opens the task dashboard.</li>
+<li>An escaping href is refused with a warning.</li>
+<li>The group arrows collapse and expand.</li>
+<li>The Now tree has no risks node, and the checklist grep returns nothing.</li>
+<li>The fixture shows the correct counts for the four sources, completed-only, plus the verdict breakdown. Non-JSON variants are skipped without error.</li>
+<li>npm test, test:integration and test:dom all pass.</li></ul></div>
+</body></html>

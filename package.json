@@ -1,8 +1,8 @@
 {
   "name": "maister-lens",
   "displayName": "Maister Lens",
-  "description": "Explore Maister AI development workflows, tasks, artifacts and risks inside VS Code.",
-  "version": "0.1.0",
+  "description": "Explore Maister AI development workflows, tasks, artifacts and follow-ups inside VS Code.",
+  "version": "0.1.1",
   "publisher": "jakub-ochremiak",
   "license": "MIT",
   "repository": {
@@ -130,10 +130,16 @@
         "icon": "dashboard"
       },
       {
-        "command": "maister.openRisks",
-        "title": "Open Risks",
+        "command": "maister.openProject",
+        "title": "Open Project Documentation",
         "category": "Maister",
-        "icon": "warning"
+        "icon": "book"
+      },
+      {
+        "command": "maister.openFollowUps",
+        "title": "Open Follow-ups",
+        "category": "Maister",
+        "icon": "checklist"
       },
       {
         "command": "maister.refresh",
@@ -217,6 +223,10 @@
           "when": "false"
         },
         {
+          "command": "maister.openProject",
+          "when": "false"
+        },
+        {
           "command": "maister.startWorkflow",
           "when": "isWorkspaceTrusted"
         }
@@ -238,7 +248,7 @@
           "group": "navigation@1"
         },
         {
-          "command": "maister.openRisks",
+          "command": "maister.openFollowUps",
           "when": "view == maister.overview",
           "group": "navigation@2"
         },
@@ -317,7 +327,7 @@
           "group": "navigation@4"
         },
         {
-          "command": "maister.openRisks",
+          "command": "maister.openFollowUps",
           "when": "activeWebviewPanelId == 'maister.panel'",
           "group": "navigation@5"
         },
@@ -333,7 +343,7 @@
         },
         {
           "command": "maister.revealInExplorer",
-          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.mode != 'dashboard'",
+          "when": "activeWebviewPanelId == 'maister.panel' && maister.panel.mode != 'dashboard' && maister.panel.mode != 'project' && maister.panel.mode != 'doc'",
           "group": "navigation@8"
         }
       ]

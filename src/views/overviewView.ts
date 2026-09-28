@@ -124,7 +124,7 @@ function heroesOf(task: Task): OverviewRow['heroes'] {
     }));
 }
 
-/** The staleness threshold every surface reads; Dashboard and Risks mode import it. */
+/** The staleness threshold every surface reads; Dashboard imports it. */
 export function quietDaysSetting(): number {
   return (
     vscode.workspace.getConfiguration('maisterLens').get<number>('staleness.quietDays') ?? 3
@@ -487,9 +487,9 @@ export class OverviewViewProvider implements vscode.WebviewViewProvider, vscode.
       case 'openDashboard':
         await this.run('maister.openDashboard');
         return;
-      case 'openRisks':
+      case 'openFollowUps':
         await this.run(
-          'maister.openRisks',
+          'maister.openFollowUps',
           message.folderUri === undefined ? undefined : { folderUri: message.folderUri }
         );
         return;

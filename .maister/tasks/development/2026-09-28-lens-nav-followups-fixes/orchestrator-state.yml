@@ -1,0 +1,45 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: [phase-1, phase-2, phase-3, phase-5, phase-6, phase-7, phase-8, phase-9, phase-10, phase-11, phase-12, phase-14]
+  skipped_phases: [{phase: phase-4, reason: "user chose to skip mockups"}, {phase: phase-13, reason: "user docs disabled"}]
+  tdd_red_passed: true
+  tdd_green_passed: true
+  failed_phases: []
+  options:
+    html_output: true
+    mockup_format: html
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: true
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: 2026-09-28T15:38:05Z
+  updated: 2026-09-28T20:02:35Z
+  task_path: .maister/tasks/development/2026-09-28-lens-nav-followups-fixes
+task:
+  title: Fix Lens nav buttons and replace dashboard issue list with Follow-ups
+  description: "fix bugs as described in test/bugs.md (1: rename plugin back button to '<- Lens Dashboard'; 2: native Maister 'Dashboard' back button does nothing on pages opened from dashboard; 3: replace issue list with aggregated Follow-ups from final task outcomes + stats; 4: issue list toggle arrows don't open/close)"
+  status: completed
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  project_context:
+    project_doc_paths: [.maister/docs/project/vision.md, .maister/docs/project/tech-stack.md]
+  task_characteristics:
+    has_reproducible_defect: true
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: true
+    ui_heavy: true
+  scope_expanded: false
+  phase_summaries:
+    gap_analysis: {summary: "Defects 1,2,4 reproducible; Follow-ups replaces Risks across command/tree/mode; needs dashboard-data.js parser.", decisions: ["rename all Risks entry points","strip-prefix yaml parse of dashboard-data.js","completed only","fields+narrow phrase","show message on refused navigate","group by task"], artifacts: [{path: analysis/gap-analysis.md, label: Gap analysis, html: null},{path: analysis/scope-clarifications.md, label: Scope clarifications, html: null}]}
+    codebase_analysis: {summary: "Bugs 1,2,4 localized (shim label, navigate resolution for artifact mode, CSS [hidden] override); bug 3 needs verification_context parsing + Follow-ups view replacing Risks.", artifacts: [{path: analysis/codebase-analysis.md, label: Codebase analysis, html: null}]}
+    clarifications: ["Issue list = Lens Risks view", "Replace Risks with Follow-ups", "Stats: verdict breakdown", "Sources: unfixed verification issues, open final risks, deferred decisions + e2e_followup"]
+verification_context:
+  last_status: passed_with_issues
+  reverify_count: 2
+  fixes_applied: [W1, W2, W3, W4, W5, W6, W7, I1, I2, I3, I6, I7, I8, R2, R3]

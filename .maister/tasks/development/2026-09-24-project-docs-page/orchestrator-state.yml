@@ -1,0 +1,49 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: [phase-1, phase-2, phase-4, phase-5, phase-6, phase-7, phase-8, phase-10, phase-11, phase-12, phase-14]
+  failed_phases: []
+  options:
+    html_output: true
+    mockup_format: html
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: true
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: 2026-09-24T06:54:33Z
+  updated: 2026-09-24T09:08:23Z
+  task_path: .maister/tasks/development/2026-09-24-project-docs-page
+task:
+  title: Project page (docs & standards) in Maister Lens sidebar
+  description: Build second page like dashboard called "Project" with button below "Dashboard" on the sidebar. "Project" shows shortcuts to project vision and all standards and doc files, renders .md files the same way as dashboard pages. On top present TL;DR with key tech stack and project goal.
+  status: completed
+task_context:
+  risk_level: medium
+  scope_expanded: false
+  project_context:
+    project_doc_paths: [.maister/docs/project/vision.md, .maister/docs/project/tech-stack.md]
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: false
+    ui_heavy: true
+  clarifications_resolved: true
+  phase_summaries:
+    codebase_analysis: {summary: "Project page = new project mode like dashboard + non-task doc mode reusing renderArtifact/reader; openArtifact unusable for docs.", risks: ["~6 mode branches in panel.ts must handle new modes", "tests assume fixed view/surface counts"], artifacts: [{path: analysis/codebase-analysis.md, label: Codebase analysis, html: null}, {path: analysis/clarifications.md, label: Clarifications, html: null}]}
+    gap_analysis: {summary: "Nothing reads .maister/docs today; need project+doc panel modes, projectMode bundle, parseProjectDocs, openProject/openDoc messages, nav node, docs watcher, and link-base refactor in render/reader.", risks: ["~12 mode branches in panel.ts"], artifacts: [{path: analysis/gap-analysis.md, label: Gap analysis, html: null}]}
+    scope_clarifications: {summary: "Section per workspace folder; always-visible nav + empty state; humanized labels; INDEX>project>standards order; Project breadcrumb; update pinned tests."}
+    ui_mockups: {summary: "5 HTML screens approved; user added requirement: a '← Project' back button on the doc reader (like '← Dashboard'), no further mockups.", artifacts: [{path: analysis/design-context/INDEX.md, label: Design index, html: null}]}
+    design: {summary: "Mockups in analysis/design-context/mockups bound to webview.css classes.", index_path: analysis/design-context/INDEX.md, screen_count: 5}
+  design_reference: {source: phase-4, mockup_count: 5, index_path: analysis/design-context/INDEX.md}
+    specification: {summary: "13 requirements R1-R13; project+doc panel modes, projectMode bundle, parseProjectDocs, openProject/openDoc, docs watcher, link-base generalization; nav-only entry.", risks: ["INDEX.md parsing heuristic", "~12 mode-branch sites in panel.ts", "link-base refactor touches every artifact render"], artifacts: [{path: implementation/spec.md, label: Specification, html: implementation/spec.html}]}
+    spec_audit: {summary: "pass-with-concerns (0C/4H/6M/5L); all H/M/L resolved in spec revision per user: task links->editor, restore out of scope, strict workspace-folder openDoc, no tech chips.", artifacts: [{path: verification/spec-audit.md, label: Spec audit, html: null}]}
+    planning: {summary: "6 groups/33 steps; groups 1-2 parallel, 4->5 serialized; full visual coverage.", artifacts: [{path: implementation/implementation-plan.md, label: Plan, html: implementation/implementation-plan.html}]}
+    implementation: {summary: "6 groups/33 steps done; 21 files touched; check 62, DOM 29, integration 47 passing.", risks: ["watcherExclude guard untested", "minor mockup deviations: no Source label row in TL;DR, empty state has no bold title", "no prettier config in repo"], artifacts: [{path: implementation/work-log.md, label: Work log, html: null}]}
+verification_context:
+  last_status: passed
+  reverify_count: 1
+  fixes_applied: [tldr-first-paragraph, vision-goal, per-folder-debounce, watcher-rebuild, drop-exclude-guard, doc-payload-dedupe, changelog-readme, worklog-count, cleanups]

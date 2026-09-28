@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   openSurface, overviewPayload, fallbackPayload, readerPayload,
-  dashboardPayload, risksPayload
+  dashboardPayload, followUpsPayload
 } from './harness.ts';
 
 const themes = [
@@ -32,7 +32,7 @@ async function applyTheme(page: Page, theme: typeof themes[number]): Promise<voi
 
 for (const [bundle, payload] of [
   ['overview', overviewPayload()], ['fallbackTask', fallbackPayload()],
-  ['reader', readerPayload()], ['dashboardMode', dashboardPayload()], ['risksMode', risksPayload()]
+  ['reader', readerPayload()], ['dashboardMode', dashboardPayload()], ['followUpsMode', followUpsPayload()]
 ] as const) {
   test(`theme: ${bundle} updates colors and native controls without reload`, async ({ page }) => {
     await openSurface(page, bundle, payload);

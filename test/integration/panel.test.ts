@@ -65,31 +65,47 @@ describe('panel/integration', () => {
   it('opens and reuses the panel in the active editor group', async function () {
     this.timeout(30_000);
     const harness = await hostedPanel('panel-active-group');
-    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(harness.dir, 'dashboard-data.js')));
-    const panelTabs = () => vscode.window.tabGroups.all.flatMap((group) =>
-      group.tabs.filter((tab) => tab.input instanceof vscode.TabInputWebview)
-        .map((tab) => ({ group, tab }))
+    const document = await vscode.workspace.openTextDocument(
+      vscode.Uri.file(path.join(harness.dir, 'dashboard-data.js'))
     );
+    const panelTabs = () =>
+      vscode.window.tabGroups.all.flatMap((group) =>
+        group.tabs
+          .filter((tab) => tab.input instanceof vscode.TabInputWebview)
+          .map((tab) => ({ group, tab }))
+      );
     try {
       await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
       await harness.panel.show({ mode: 'task', folderUri: harness.folderUri });
-      await waitFor(() => panelTabs().some(({ group, tab }) =>
-        group.viewColumn === vscode.ViewColumn.One && tab.isActive
-      ), 5_000, 'new task panel did not open in the active group');
+      await waitFor(
+        () =>
+          panelTabs().some(
+            ({ group, tab }) => group.viewColumn === vscode.ViewColumn.One && tab.isActive
+          ),
+        5_000,
+        'new task panel did not open in the active group'
+      );
       const count = panelTabs().length;
 
       await vscode.window.showTextDocument(document, vscode.ViewColumn.Two);
       await harness.panel.show({ mode: 'task', folderUri: harness.folderUri });
-      await waitFor(() => panelTabs().some(({ group, tab }) =>
-        group.viewColumn === vscode.ViewColumn.Two && tab.isActive
-      ) && vscode.window.tabGroups.activeTabGroup.viewColumn === vscode.ViewColumn.Two,
-      5_000, 'reused task panel stayed in its previous group');
+      await waitFor(
+        () =>
+          panelTabs().some(
+            ({ group, tab }) => group.viewColumn === vscode.ViewColumn.Two && tab.isActive
+          ) && vscode.window.tabGroups.activeTabGroup.viewColumn === vscode.ViewColumn.Two,
+        5_000,
+        'reused task panel stayed in its previous group'
+      );
       assert.equal(panelTabs().length, count, 'navigation created a duplicate webview');
     } finally {
       await harness.dispose();
       for (const group of vscode.window.tabGroups.all) {
         for (const tab of group.tabs) {
-          if (tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === document.uri.toString()) {
+          if (
+            tab.input instanceof vscode.TabInputText &&
+            tab.input.uri.toString() === document.uri.toString()
+          ) {
             await vscode.window.tabGroups.close(tab);
           }
         }
@@ -103,7 +119,11 @@ describe('panel/integration', () => {
     const harness = await hostedPanel('panel-refresh');
     try {
       await harness.panel.show({ mode: 'task', folderUri: harness.folderUri });
-      assert.equal(harness.panel.isHosting, true, 'the real dashboard was not recognized as hostable');
+      assert.equal(
+        harness.panel.isHosting,
+        true,
+        'the real dashboard was not recognized as hostable'
+      );
 
       const startedAt = Date.now();
       fs.appendFileSync(path.join(harness.dir, 'dashboard-data.js'), '\n// touched\n');
@@ -135,7 +155,10 @@ describe('panel/integration', () => {
         (count, group) => count + group.tabs.length,
         0
       );
-      await harness.panel.handleMessage({ type: 'navigate', href: 'implementation/spec.md' });
+      await harness.panel.handleMessage({
+        type: 'navigate',
+        href: 'implementation/spec.md'
+      });
 
       assert.deepEqual(harness.panel.location, {
         mode: 'artifact',
@@ -154,13 +177,20 @@ describe('panel/integration', () => {
         'the navigate reached the system browser'
       );
 
-      await harness.panel.handleMessage({ type: 'navigate', href: '../elsewhere/dashboard.html' });
+      await harness.panel.handleMessage({
+        type: 'navigate',
+        href: '../elsewhere/dashboard.html'
+      });
       assert.equal(
         harness.panel.location?.mode,
         'artifact',
         'an out-of-folder navigate moved the panel (A2.1)'
       );
-      assert.equal(harness.log.length, 1, `the out-of-folder navigate was not logged: ${harness.log.join(' | ')}`);
+      assert.equal(
+        harness.log.length,
+        1,
+        `the out-of-folder navigate was not logged: ${harness.log.join(' | ')}`
+      );
 
       assert.equal(harness.panel.canGoBack, true, 'the panel kept no history');
       await harness.panel.back();
@@ -169,6 +199,56 @@ describe('panel/integration', () => {
       await harness.dispose();
     }
   });
+  it('FR3 — a refused navigate shows a warning; FR2 — ../dashboard.html from a companion opens the task dashboard', async function () {
+    this.timeout(60_000);
+
+    const harness = await hostedPanel('panel-navigate-warn');
+    const original = vscode.window.showWarningMessage;
+    const warnings: unknown[] = [];
+    (vscode.window as { showWarningMessage: unknown }).showWarningMessage = (message: unknown) => {
+      warnings.push(message);
+      return Promise.resolve(undefined);
+    };
+    try {
+      await harness.panel.show({ mode: 'task', folderUri: harness.folderUri });
+      await harness.panel.handleMessage({
+        type: 'navigate',
+        href: '../elsewhere/dashboard.html'
+      });
+      assert.equal(warnings.length, 1, 'a refused navigate showed no warning');
+      assert.match(String(warnings[0]), /elsewhere/);
+      assert.equal(harness.log.length, 1, 'the refused navigate was not also logged');
+
+      await harness.panel.handleMessage({
+        type: 'openTask',
+        folderUri: 'file:///nowhere'
+      });
+      assert.equal(warnings.length, 1, 'a refusal other than navigate showed a warning');
+
+      fs.writeFileSync(
+        path.join(harness.dir, 'implementation', 'spec.html'),
+        '<!doctype html><html><head><title>Spec</title></head><body><a href="../dashboard.html">back</a></body></html>'
+      );
+      await harness.panel.show({
+        mode: 'artifact',
+        folderUri: harness.folderUri,
+        artifactRelPath: 'implementation/spec.html',
+        variant: 'html'
+      });
+      await harness.panel.handleMessage({
+        type: 'navigate',
+        href: '../dashboard.html'
+      });
+      assert.deepEqual(harness.panel.location, {
+        mode: 'task',
+        folderUri: harness.folderUri
+      });
+    } finally {
+      (vscode.window as { showWarningMessage: unknown }).showWarningMessage = original;
+      await harness.dispose();
+    }
+  });
+
   it('registers every command package.json contributes, including Reveal in Explorer (A4)', async function () {
     this.timeout(60_000);
 
@@ -179,7 +259,9 @@ describe('panel/integration', () => {
     await extension.activate();
 
     const contributed = (
-      extension.packageJSON as { contributes: { commands: { command: string }[] } }
+      extension.packageJSON as {
+        contributes: { commands: { command: string }[] };
+      }
     ).contributes.commands.map((entry) => entry.command);
     const registered = new Set(await vscode.commands.getCommands(true));
     const missing = contributed.filter((command) => !registered.has(command));
@@ -238,7 +320,10 @@ describe('panel/integration', () => {
     const spy = spyOnCommand('vscode.open');
     try {
       await panel.show({ mode: 'task', folderUri: folderUriOf(dir) });
-      await panel.handleMessage({ type: 'openFile', workspaceRelPath: 'notes/a%20b.md' });
+      await panel.handleMessage({
+        type: 'openFile',
+        workspaceRelPath: 'notes/a%20b.md'
+      });
 
       assert.equal(spy.calls.length, 1, `openFile opened nothing: ${log.join(' | ')}`);
       assert.equal(

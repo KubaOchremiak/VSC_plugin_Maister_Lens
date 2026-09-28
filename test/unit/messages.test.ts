@@ -10,6 +10,7 @@ function context(overrides: Partial<MessageContext> = {}): MessageContext {
     isTrusted: true,
     hostFolderUri: TASK,
     workspaceRootUri: 'file:///w',
+    workspaceFolderUris: ['file:///w', 'file:///second'],
     ...overrides
   };
 }
@@ -29,9 +30,15 @@ function refused(raw: unknown, overrides: Partial<MessageContext> = {}): string 
 describe('messages/unit', () => {
   it('accepts every type in the A2 table and drops an unlisted type, a wrong primitive, a missing key and an over-long text patch', () => {
     assert.deepEqual(accepted({ type: 'ready' }), { type: 'ready' });
-    assert.deepEqual(accepted({ type: 'clearFilter' }), { type: 'clearFilter' });
-    assert.deepEqual(accepted({ type: 'openDashboard' }), { type: 'openDashboard' });
-    assert.deepEqual(accepted({ type: 'startWorkflow' }), { type: 'startWorkflow' });
+    assert.deepEqual(accepted({ type: 'clearFilter' }), {
+      type: 'clearFilter'
+    });
+    assert.deepEqual(accepted({ type: 'openDashboard' }), {
+      type: 'openDashboard'
+    });
+    assert.deepEqual(accepted({ type: 'startWorkflow' }), {
+      type: 'startWorkflow'
+    });
     assert.deepEqual(accepted({ type: 'openTask', folderUri: TASK }), {
       type: 'openTask',
       folderUri: TASK
@@ -40,9 +47,9 @@ describe('messages/unit', () => {
       type: 'runNextAction',
       folderUri: TASK
     });
-    assert.deepEqual(accepted({ type: 'openRisks' }), { type: 'openRisks' });
-    assert.deepEqual(accepted({ type: 'openRisks', folderUri: TASK }), {
-      type: 'openRisks',
+    assert.deepEqual(accepted({ type: 'openFollowUps' }), { type: 'openFollowUps' });
+    assert.deepEqual(accepted({ type: 'openFollowUps', folderUri: TASK }), {
+      type: 'openFollowUps',
       folderUri: TASK
     });
     assert.deepEqual(
@@ -76,8 +83,16 @@ describe('messages/unit', () => {
       url: 'https://example.test/a'
     });
     assert.deepEqual(
-      accepted({ type: 'openInBrowser', folderUri: TASK, artifactRelPath: 'dashboard.html' }),
-      { type: 'openInBrowser', folderUri: TASK, artifactRelPath: 'dashboard.html' }
+      accepted({
+        type: 'openInBrowser',
+        folderUri: TASK,
+        artifactRelPath: 'dashboard.html'
+      }),
+      {
+        type: 'openInBrowser',
+        folderUri: TASK,
+        artifactRelPath: 'dashboard.html'
+      }
     );
     assert.deepEqual(accepted({ type: 'navigate', href: 'implementation/spec.md' }), {
       type: 'navigate',
@@ -136,13 +151,25 @@ describe('messages/unit', () => {
     refused({ type: 'openExternal', url: 'javascript:alert(1)' });
     refused({ type: 'openExternal', url: 'not a url' });
     refused({ type: 'openFile', workspaceRelPath: '../../etc/passwd' });
-    refused({ type: 'openInBrowser', folderUri: TASK, artifactRelPath: 'notes.md' });
-    refused({ type: 'openInBrowser', folderUri: TASK, artifactRelPath: '../beta/dashboard.html' });
+    refused({
+      type: 'openInBrowser',
+      folderUri: TASK,
+      artifactRelPath: 'notes.md'
+    });
+    refused({
+      type: 'openInBrowser',
+      folderUri: TASK,
+      artifactRelPath: '../beta/dashboard.html'
+    });
 
     for (const trustGated of [
       { type: 'startWorkflow' },
       { type: 'runNextAction', folderUri: TASK },
-      { type: 'openInBrowser', folderUri: TASK, artifactRelPath: 'dashboard.html' }
+      {
+        type: 'openInBrowser',
+        folderUri: TASK,
+        artifactRelPath: 'dashboard.html'
+      }
     ]) {
       assert.match(
         refused(trustGated, { isTrusted: false }),
@@ -171,8 +198,17 @@ describe('messages/unit', () => {
         /outside/,
         `navigate accepted ${encoded}`
       );
-      refused({ type: 'openArtifact', folderUri: TASK, artifactRelPath: encoded, variant: 'md' });
-      refused({ type: 'openSource', folderUri: TASK, artifactRelPath: encoded });
+      refused({
+        type: 'openArtifact',
+        folderUri: TASK,
+        artifactRelPath: encoded,
+        variant: 'md'
+      });
+      refused({
+        type: 'openSource',
+        folderUri: TASK,
+        artifactRelPath: encoded
+      });
       refused({ type: 'openFile', workspaceRelPath: encoded });
       refused({
         type: 'openInBrowser',
@@ -189,13 +225,17 @@ describe('messages/unit', () => {
     });
   });
 
-  it('openFile carries the surface\'s own workspace folder and the decoded, normalized path', () => {
+  it("openFile carries the surface's own workspace folder and the decoded, normalized path", () => {
     assert.deepEqual(
       accepted(
         { type: 'openFile', workspaceRelPath: 'notes/a%20b.md' },
         { workspaceRootUri: 'file:///second' }
       ),
-      { type: 'openFile', folderUri: 'file:///second', workspaceRelPath: 'notes/a b.md' },
+      {
+        type: 'openFile',
+        folderUri: 'file:///second',
+        workspaceRelPath: 'notes/a b.md'
+      },
       'openFile did not name its folder or decode its path'
     );
     assert.deepEqual(
@@ -203,7 +243,11 @@ describe('messages/unit', () => {
         { type: 'openFile', workspaceRelPath: './docs/../notes/x.md' },
         { workspaceRootUri: 'file:///second' }
       ),
-      { type: 'openFile', folderUri: 'file:///second', workspaceRelPath: 'notes/x.md' }
+      {
+        type: 'openFile',
+        folderUri: 'file:///second',
+        workspaceRelPath: 'notes/x.md'
+      }
     );
 
     // No root to contain against is a refusal, not a guess at the first folder.
@@ -234,5 +278,112 @@ describe('messages/unit', () => {
       href: './analysis/notes.md#top',
       targetRelPath: 'analysis/notes.md'
     });
+  });
+
+  it('a companion page navigates relative to its own folder, so ../dashboard.html reaches the task dashboard', () => {
+    const companion = {
+      hostBaseRelDir: 'implementation'
+    } as Partial<MessageContext>;
+    assert.deepEqual(accepted({ type: 'navigate', href: '../dashboard.html' }, companion), {
+      type: 'navigate',
+      href: '../dashboard.html',
+      targetRelPath: 'dashboard.html'
+    });
+    assert.match(
+      refused({ type: 'navigate', href: '../../beta/dashboard.html' }, companion),
+      /outside/
+    );
+  });
+
+  it('FR2 — a companion navigate decodes before joining and refuses a scheme, an absolute path and a backslash on the href alone', () => {
+    const companion = {
+      hostBaseRelDir: 'implementation'
+    } as Partial<MessageContext>;
+    assert.deepEqual(accepted({ type: 'navigate', href: '../dashboard.html#top' }, companion), {
+      type: 'navigate',
+      href: '../dashboard.html#top',
+      targetRelPath: 'dashboard.html'
+    });
+    assert.deepEqual(accepted({ type: 'navigate', href: 'work-log.md' }, companion), {
+      type: 'navigate',
+      href: 'work-log.md',
+      targetRelPath: 'implementation/work-log.md'
+    });
+    for (const href of [
+      '../../x',
+      '%2e%2e/%2e%2e/x',
+      'https://example.com/x',
+      '/abs',
+      '..\\x',
+      '%2fabs'
+    ]) {
+      assert.match(refused({ type: 'navigate', href }, companion), /outside/, href);
+    }
+  });
+
+  it('FR2 — with an empty base (task mode) navigate behaves as before', () => {
+    const task = { hostBaseRelDir: '' } as Partial<MessageContext>;
+    assert.deepEqual(accepted({ type: 'navigate', href: 'implementation/spec.md' }, task), {
+      type: 'navigate',
+      href: 'implementation/spec.md',
+      targetRelPath: 'implementation/spec.md'
+    });
+    for (const href of ['../dashboard.html', '%2e%2e/x', 'https://x', '/abs', 'a\\b']) {
+      assert.match(refused({ type: 'navigate', href }, task), /outside/, href);
+    }
+  });
+
+  it('R9 — openProject is accepted and openDoc needs a workspace root, a contained .md path and a valid anchor', () => {
+    assert.deepEqual(accepted({ type: 'openProject' }), {
+      type: 'openProject'
+    });
+    assert.deepEqual(
+      accepted({
+        type: 'openDoc',
+        docsFolderUri: 'file:///second',
+        docRelPath: './standards/global/../frontend/css.md',
+        anchor: 'design-tokens'
+      }),
+      {
+        type: 'openDoc',
+        docsFolderUri: 'file:///second',
+        docRelPath: 'standards/frontend/css.md',
+        anchor: 'design-tokens'
+      }
+    );
+    assert.deepEqual(
+      accepted({
+        type: 'openDoc',
+        docsFolderUri: 'file:///w',
+        docRelPath: 'INDEX.MD'
+      }),
+      { type: 'openDoc', docsFolderUri: 'file:///w', docRelPath: 'INDEX.MD' }
+    );
+
+    const doc = (patch: Record<string, unknown>): Record<string, unknown> => ({
+      type: 'openDoc',
+      docsFolderUri: 'file:///w',
+      docRelPath: 'INDEX.md',
+      ...patch
+    });
+    assert.match(refused(doc({ docsFolderUri: 'file:///elsewhere' })), /workspace folder/);
+    assert.match(refused(doc({ docsFolderUri: 'file:///w/' })), /workspace folder/);
+    assert.match(refused(doc({ docsFolderUri: TASK })), /workspace folder/);
+    assert.match(refused(doc({}), { workspaceFolderUris: undefined }), /workspace folder/);
+    for (const docRelPath of [
+      '../tasks/x/spec.md',
+      '%2e%2e/secrets.md',
+      'standards\\global\\css.md',
+      '/etc/passwd.md',
+      'file:///w/.maister/docs/INDEX.md',
+      'project/vision.html',
+      '',
+      '.',
+      42
+    ]) {
+      refused(doc({ docRelPath }));
+    }
+    assert.match(refused(doc({ anchor: 'a b' })), /anchor/);
+    assert.match(refused(doc({ anchor: 7 })), /anchor/);
   });
 });

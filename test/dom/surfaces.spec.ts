@@ -1,15 +1,17 @@
 import { expect, test } from '@playwright/test';
-import { DASHBOARD, FALLBACK, OVERVIEW, PANEL, READER, RISKS, format } from '../../src/strings.ts';
+import { DASHBOARD, FALLBACK, FOLLOW_UPS, OVERVIEW, PANEL, READER, format } from '../../src/strings.ts';
 import {
   dashboardPayload,
   fallbackPayload,
   focusables,
+  followUpsPayload,
   headings,
   openHostedDashboard,
   openSurface,
   overviewPayload,
+  projectPayload,
+  readerDocPayload,
   readerPayload,
-  risksPayload,
   tabOrder,
   texts
 } from './harness.ts';
@@ -25,8 +27,10 @@ const SURFACES = [
   { bundle: 'overview', payload: overviewPayload() },
   { bundle: 'fallbackTask', payload: fallbackPayload() },
   { bundle: 'reader', payload: readerPayload() },
+  { bundle: 'reader', payload: readerDocPayload() },
   { bundle: 'dashboardMode', payload: dashboardPayload() },
-  { bundle: 'risksMode', payload: risksPayload() }
+  { bundle: 'followUpsMode', payload: followUpsPayload() },
+  { bundle: 'projectMode', payload: projectPayload() }
 ] as const;
 
 test('dom: the shim turns a click on the real dashboard\'s a[target="_blank"] into a navigate post carrying that href', async ({
@@ -191,7 +195,7 @@ test('dom: a Dashboard bar activation posts setFilter with the right patch; char
   });
 });
 
-test('dom: every interactive element in all five generated surfaces is a <button>/<a> with an accessible name in a tab-reachable order; each surface renders exactly one next-action control per row, distinct from the title control; Show resolved reveals resolved rows struck through with a visible "Resolved" label', async ({
+test('dom: every interactive element in all six generated surfaces is a <button>/<a> with an accessible name in a tab-reachable order; each surface renders exactly one next-action control per row, distinct from the title control', async ({
   page
 }) => {
   for (const surface of SURFACES) {
@@ -232,21 +236,6 @@ test('dom: every interactive element in all five generated surfaces is a <button
 
   await openSurface(page, 'fallbackTask', fallbackPayload());
   await expect(page.locator('.fb-head .action')).toHaveCount(1);
-
-  // AC18 — Show resolved reveals resolved rows, struck through, with a visible label.
-  await openSurface(page, 'risksMode', risksPayload());
-  await expect(page.locator('section.risk-group .action-small')).toHaveCount(1);
-  await expect(page.locator('section.risk-group .risk-group-title')).toHaveCount(1);
-  await expect(page.locator('li.risk-resolved')).toHaveCount(0);
-
-  await page.locator('#show-resolved').check();
-  const resolved = page.locator('li.risk-resolved');
-  await expect(resolved).toHaveCount(1);
-  await expect(resolved.locator('s')).toHaveText('Old sessions stay valid until expiry');
-  await expect(resolved.locator('.chip')).toHaveText(RISKS.resolvedBadge);
-  await expect(page.locator('div.head .dim').first()).toContainText(
-    format(RISKS.resolvedClause, { n: 1 })
-  );
 });
 
 test('dom: the Overview surface labels its document box with OVERVIEW.title', async ({ page }) => {
@@ -255,15 +244,17 @@ test('dom: the Overview surface labels its document box with OVERVIEW.title', as
   await expect(page.locator('main#root')).toHaveAttribute('aria-label', OVERVIEW.title);
 });
 
-test('dom: the fallbackTask back link is the first focusable control, and the surface inventory is still five', async ({
+test('dom: the fallbackTask back link is the first focusable control, and the surface inventory is the six bundles plus a doc-mode reader', async ({
   page
 }) => {
   expect(SURFACES.map((surface) => surface.bundle)).toEqual([
     'overview',
     'fallbackTask',
     'reader',
+    'reader',
     'dashboardMode',
-    'risksMode'
+    'followUpsMode',
+    'projectMode'
   ]);
 
   await openSurface(page, 'fallbackTask', fallbackPayload());
@@ -272,4 +263,71 @@ test('dom: the fallbackTask back link is the first focusable control, and the su
   expect(controls[0].tag).toBe('button');
   expect(controls[0].name).toBe(FALLBACK.breadcrumb);
   expect(await tabOrder(page, 1)).toEqual([0]);
+});
+
+test('dom: a Follow-ups group expander hides and reveals its list', async ({ page }) => {
+  await openSurface(page, 'followUpsMode', followUpsPayload());
+  const list = page.locator('section.follow-up-group ul.follow-ups');
+  const expander = page.locator('section.follow-up-group .expander');
+  await expect(list).toBeVisible();
+
+  await expander.click();
+  await expect(list).toBeHidden();
+  await expect(expander).toHaveAttribute('aria-expanded', 'false');
+
+  await expander.click();
+  await expect(list).toBeVisible();
+  await expect(expander).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('dom: the Follow-ups view shows the verdict breakdown, source chips and issue severity only', async ({
+  page
+}) => {
+  const surface = await openSurface(page, 'followUpsMode', followUpsPayload());
+
+  await expect(page.locator('.kpis .kpi-label')).toHaveText([
+    FOLLOW_UPS.verdictPassed,
+    FOLLOW_UPS.verdictPassedWithIssues,
+    FOLLOW_UPS.verdictFailed
+  ]);
+  await expect(page.locator('.kpis .kpi-value')).toHaveText(['3', '1', '1']);
+
+  const rows = page.locator('li.follow-up');
+  await expect(rows).toHaveCount(4);
+  await expect(rows.nth(0).locator('.chip')).toHaveText([
+    FOLLOW_UPS.sourceIssue,
+    FOLLOW_UPS.severity.critical
+  ]);
+  await expect(rows.nth(1).locator('.chip')).toHaveText([FOLLOW_UPS.sourceRisk]);
+  await expect(rows.nth(2).locator('.chip')).toHaveText([FOLLOW_UPS.sourceDeferred]);
+  await expect(rows.nth(3).locator('.chip')).toHaveText([FOLLOW_UPS.sourceE2e]);
+  await expect(page.locator('#show-resolved')).toHaveCount(0);
+
+  await rows.nth(0).locator('.trow-title').click();
+  expect(await surface.posted()).toContainEqual({
+    type: 'openTask',
+    folderUri: 'file:///tasks/.maister/tasks/development/auth-token-rotation'
+  });
+});
+
+test('dom: a scoped Follow-ups view of an unfinished task shows the not-completed state', async ({
+  page
+}) => {
+  await openSurface(page, 'followUpsMode', {
+    ...followUpsPayload(),
+    groups: [],
+    scopedTitle: 'Auth token rotation',
+    scopedNotCompleted: true
+  });
+  await expect(page.locator('p.empty')).toHaveText(FOLLOW_UPS.notCompleted);
+  await expect(page.locator('section.follow-up-group')).toHaveCount(0);
+});
+
+test('dom: the Follow-ups view says how many task data files could not be read', async ({ page }) => {
+  await openSurface(page, 'followUpsMode', followUpsPayload());
+  await expect(page.locator('.follow-ups-unreadable')).toHaveCount(0);
+  await openSurface(page, 'followUpsMode', { ...followUpsPayload(), unreadable: 2 });
+  await expect(page.locator('.follow-ups-unreadable')).toHaveText(
+    format(FOLLOW_UPS.unreadable, { n: 2 })
+  );
 });

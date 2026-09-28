@@ -6,11 +6,17 @@ All notable changes to Maister Lens are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-09-28
+
 ### Fixed
 
 - Opening a task moves the reusable panel to the active editor group, including when
   the panel was previously opened or restored in another group. Background refreshes
   preserve its location and focus.
+- The companion back button now reads "← Lens Dashboard".
+- Relative links inside a hosted HTML companion resolve against the companion's own folder;
+  a refused link now shows a warning instead of failing silently.
+- Group expanders (Dashboard, Follow-ups) hide and reveal their lists again.
 
 ### Added
 
@@ -25,9 +31,19 @@ All notable changes to Maister Lens are recorded here. The format follows
 - **Back links on task panels** — a "← Dashboard" breadcrumb is now the first control on a task
   panel, both in the built-in fallback task view and on a hosted `dashboard.html`, so the
   cross-task Dashboard is always one keystroke away.
+- **Project page** — a **Project** item in the sidebar opens a page with a TL;DR of the
+  project's goal and tech stack and every `.maister/docs` file grouped by folder. Each doc opens
+  rendered in the panel with a **← Project** link, and the page refreshes live when the docs change.
 
 ### Changed
 
+- **Follow-ups replaces Risks** — the Risks view is now **Follow-ups**: what completed tasks
+  left open (unfixed verification issues, unresolved risks, deferred follow-up decisions, E2E
+  follow-ups), with a verdict breakdown. The Dashboard KPI tile, `maister.openFollowUps` command
+  and per-task links point to it.
+- **Breaking:** the `maister.openRisks` command id is removed; it is replaced by
+  `maister.openFollowUps`. Update any custom keybindings or tasks that invoke the old id.
+- The Now tree no longer shows a per-task open-risks node.
 - Filter labels and counts use matching theme colors in default, hover and selected states.
 - Native webview controls follow light, dark and high-contrast theme classes.
 - Repository links and MIT holder now identify Jakub Ochremiak (Maister Lens); the

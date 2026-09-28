@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import type { TaskIndex } from '../index/taskIndex.ts';
-import { openRiskCount } from '../model/risks.ts';
 import type { ArtifactRef, IconHint, Task, TaskStatus } from '../model/types.ts';
 import { NOW, STATUS_LABELS, WORKFLOW_LABELS, format } from '../strings.ts';
 import { formatActivity, formatAge, formatSpokenActivity } from './relativeTime.ts';
@@ -23,7 +22,7 @@ const PHASE_ICONS: Readonly<Record<IconHint, string>> = {
   done: 'flag'
 };
 
-export type NowNodeKind = 'task' | 'progress' | 'decision' | 'artifacts' | 'artifact' | 'risks';
+export type NowNodeKind = 'task' | 'progress' | 'decision' | 'artifacts' | 'artifact';
 
 /**
  * A tree node doubles as the argument the `view/item/context` commands receive, so its
@@ -128,8 +127,6 @@ export class NowTreeProvider implements vscode.TreeDataProvider<NowNode>, vscode
         return this.groupItem(node);
       case 'artifact':
         return this.artifactItem(node);
-      case 'risks':
-        return this.risksItem(node);
       default:
         return this.plainItem(node);
     }
@@ -187,14 +184,6 @@ export class NowTreeProvider implements vscode.TreeDataProvider<NowNode>, vscode
       });
     }
 
-    const risks = openRiskCount(task);
-    if (risks > 0) {
-      children.push({
-        kind: 'risks',
-        folderUri: task.ref.folderUri,
-        label: risks === 1 ? NOW.openRisksOne : format(NOW.openRisks, { count: risks })
-      });
-    }
     return children;
   }
 
@@ -346,19 +335,6 @@ export class NowTreeProvider implements vscode.TreeDataProvider<NowNode>, vscode
           variant: node.variant ?? 'md'
         }
       ]
-    };
-    return item;
-  }
-
-  private risksItem(node: NowNode): vscode.TreeItem {
-    const item = new vscode.TreeItem(node.label, vscode.TreeItemCollapsibleState.None);
-    item.id = `now:${node.folderUri}#risks`;
-    item.iconPath = new vscode.ThemeIcon('warning');
-    item.accessibilityInformation = { label: node.label };
-    item.command = {
-      command: 'maister.openRisks',
-      title: node.label,
-      arguments: [{ folderUri: node.folderUri }]
     };
     return item;
   }

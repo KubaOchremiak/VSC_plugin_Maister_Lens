@@ -4,11 +4,12 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Page } from '@playwright/test';
 import { hostDashboardHtml } from '../../src/panel/hostDashboard.ts';
-import type { RenderPayload } from '../../src/panel/render.ts';
+import type { DocRenderPayload, RenderPayload } from '../../src/panel/render.ts';
 import type { DashboardPayload } from '../../src/webview/dashboardMode.ts';
 import type { FallbackPayload } from '../../src/webview/fallbackTask.ts';
 import type { OverviewPayload } from '../../src/webview/overview.ts';
-import type { RisksPayload } from '../../src/webview/risksMode.ts';
+import type { ProjectPayload, ProjectSection } from '../../src/webview/projectMode.ts';
+import type { FollowUpsPayload } from '../../src/webview/followUpsMode.ts';
 import {
   DASHBOARD,
   FALLBACK,
@@ -16,7 +17,6 @@ import {
   OVERVIEW,
   PANEL,
   PARSE,
-  RISKS,
   TIME,
   format
 } from '../../src/strings.ts';
@@ -28,7 +28,7 @@ import {
  * Nothing here renders images or compares pixels.
  */
 
-export type BundleName = 'overview' | 'fallbackTask' | 'reader' | 'dashboardMode' | 'risksMode';
+export type BundleName = 'overview' | 'fallbackTask' | 'reader' | 'dashboardMode' | 'followUpsMode' | 'projectMode';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const FIXTURE_DASHBOARD = path.join(REPO_ROOT, 'test', 'fixtures', 'tasks', 'dev-real');
@@ -354,6 +354,25 @@ export function readerPayload(overrides: Partial<RenderPayload> = {}): RenderPay
   };
 }
 
+export function readerDocPayload(overrides: Partial<DocRenderPayload> = {}): DocRenderPayload {
+  const docsFolderUri = 'file:///workspace/maister-lens/.maister/docs';
+  return {
+    type: 'render',
+    kind: 'doc',
+    location: { mode: 'doc', docsFolderUri, docRelPath: 'standards/global/coding-style.md' },
+    docLabel: 'Coding Style',
+    summary: null,
+    checklist: null,
+    bodyHtml:
+      '<h1 id="coding-style">Coding Style</h1>' +
+      '<p>See <a href="#" data-artifact="standards/global/commenting.md#rules">commenting.md</a>, ' +
+      'and <a href="#" data-file="eslint.config.mjs">eslint.config.mjs</a>.</p>',
+    notice: null,
+    refused: false,
+    ...overrides
+  };
+}
+
 export function dashboardPayload(): DashboardPayload {
   return {
     type: 'dashboard',
@@ -369,12 +388,12 @@ export function dashboardPayload(): DashboardPayload {
         context: format(DASHBOARD.kpiTasksContext, { n: 2 })
       },
       {
-        key: 'openRisks',
-        glyph: '⚠',
-        tone: 'orange',
+        key: 'followUps',
+        glyph: '☑',
+        tone: 'purple',
         value: 3,
-        label: DASHBOARD.kpiOpenRisks,
-        context: format(DASHBOARD.openRisksContext, { k: 2 })
+        label: DASHBOARD.kpiFollowUps,
+        context: format(DASHBOARD.followUpsContext, { k: 2 })
       }
     ],
     charts: [
@@ -455,54 +474,63 @@ export function dashboardPayload(): DashboardPayload {
   };
 }
 
-export function risksPayload(): RisksPayload {
+export function followUpsPayload(): FollowUpsPayload {
   return {
-    type: 'risks',
-    kpis: [
-      {
-        key: 'openRisks',
-        glyph: '⚠',
-        tone: 'orange',
-        value: 1,
-        label: RISKS.kpiOpen,
-        context: format(RISKS.kpiOpenContext, { k: 1 })
-      }
-    ],
+    type: 'followUps',
+    verdicts: { passed: 3, passedWithIssues: 1, failed: 1 },
     groups: [
       {
         folderUri: 'file:///tasks/.maister/tasks/development/auth-token-rotation',
         title: 'Auth token rotation',
-        typeKey: 'development',
         typeLabel: 'Development',
-        statusGlyph: '◯',
-        statusText: 'In progress',
-        verdict: null,
+        verdict: 'Passed with issues',
         activity: '2d ago',
-        author: 'Marek Nowak',
-        openCount: 1,
-        unfinished: true,
-        nextAction: { id: 'resume', label: 'Resume' },
-        risks: [
-          {
-            text: 'Clock skew on token expiry',
-            resolved: false,
-            source: 'implementation/spec.md',
-            sourceKind: 'artifact',
-            artifactRelPath: 'implementation/spec.md'
-          },
-          {
-            text: 'Old sessions stay valid until expiry',
-            resolved: true,
-            source: 'specification',
-            sourceKind: 'state',
-            artifactRelPath: null
-          }
+        items: [
+          { text: 'Unescaped HTML in row', source: 'issue', severity: 'critical' },
+          { text: 'Clock skew on token expiry', source: 'risk', severity: null },
+          { text: 'Deferred the retry logic to a follow-up task', source: 'deferred', severity: null },
+          { text: 'Run the E2E suite against a real workspace', source: 'e2e', severity: null }
         ]
       }
     ],
-    typeFacets: [{ key: 'development', label: 'Development', pressed: false }],
-    scopedTitle: null
+    scopedTitle: null,
+    scopedNotCompleted: false,
+    unreadable: 0
   };
+}
+
+export function projectSection(overrides: Partial<ProjectSection> = {}): ProjectSection {
+  return {
+    folderName: 'maister-lens',
+    docsFolderUri: 'file:///workspace/maister-lens',
+    tldr: {
+      goal: 'A read-only view layer over Maister tasks.',
+      goalSource: 'project/vision.md',
+      techStack: 'TypeScript on the VS Code Extension API.',
+      techStackSource: 'project/tech-stack.md'
+    },
+    groups: [
+      { key: 'index', label: 'Index', docs: [{ relPath: 'INDEX.md', label: 'Index' }] },
+      {
+        key: 'project',
+        label: 'Project',
+        docs: [
+          { relPath: 'project/tech-stack.md', label: 'Tech stack' },
+          { relPath: 'project/vision.md', label: 'Vision' }
+        ]
+      },
+      {
+        key: 'standards/global',
+        label: 'Standards · Global',
+        docs: [{ relPath: 'standards/global/coding-style.md', label: 'Coding style' }]
+      }
+    ],
+    ...overrides
+  };
+}
+
+export function projectPayload(overrides: Partial<ProjectPayload> = {}): ProjectPayload {
+  return { type: 'project', multiRoot: false, sections: [projectSection()], empty: false, ...overrides };
 }
 
 export function overviewPayload(): OverviewPayload {

@@ -4,18 +4,27 @@ import { NAV } from '../strings.ts';
 export const NAV_VIEW_ID = 'maister.nav';
 
 export interface NavNode {
-  readonly kind: 'dashboard';
+  readonly kind: 'dashboard' | 'project';
 }
 
 const DASHBOARD_NODE: NavNode = { kind: 'dashboard' };
+const PROJECT_NODE: NavNode = { kind: 'project' };
 
-/** A fixed navigation row: no index, no state, and nothing that ever changes. */
+/** Fixed navigation rows: no index, no state, and nothing that ever changes. */
 export class NavTreeProvider implements vscode.TreeDataProvider<NavNode> {
   getChildren(node?: NavNode): NavNode[] {
-    return node === undefined ? [DASHBOARD_NODE] : [];
+    return node === undefined ? [DASHBOARD_NODE, PROJECT_NODE] : [];
   }
 
-  getTreeItem(_node: NavNode): vscode.TreeItem {
+  getTreeItem(node: NavNode): vscode.TreeItem {
+    if (node.kind === 'project') {
+      const item = new vscode.TreeItem(NAV.project, vscode.TreeItemCollapsibleState.None);
+      item.id = 'nav:project';
+      item.iconPath = new vscode.ThemeIcon('book');
+      item.accessibilityInformation = { label: NAV.projectLabel };
+      item.command = { command: 'maister.openProject', title: NAV.project };
+      return item;
+    }
     const item = new vscode.TreeItem(NAV.dashboard, vscode.TreeItemCollapsibleState.None);
     item.id = 'nav:dashboard';
     item.iconPath = new vscode.ThemeIcon('dashboard');

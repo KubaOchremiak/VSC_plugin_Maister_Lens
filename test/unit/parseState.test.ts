@@ -12,6 +12,18 @@ function issuesFor(task: Task, fieldPrefix: string): ParseIssue[] {
 }
 
 describe('parseState', () => {
+  it('reads verification_context.e2e_followup as a string or a list of strings, ignoring other shapes', () => {
+    const e2eOf = (value: string): string[] =>
+      parseState({
+        ...fixtureInput('no-dashboard'),
+        text: `task:\n  status: completed\nverification_context:\n  e2e_followup: ${value}\n`
+      }).e2eFollowUp;
+    assert.deepEqual(e2eOf('Run the suite'), ['Run the suite']);
+    assert.deepEqual(e2eOf('[One, 2, "", Two]'), ['One', 'Two']);
+    assert.deepEqual(e2eOf('{a: b}'), []);
+    assert.deepEqual(parseFixture('dev-real').e2eFollowUp, []);
+  });
+
   it('extracts the four A14 clarifications from this development task in file order', () => {
     const task = parseFixture('dev-real');
     const clarifications = task.decisions.filter((d) => d.source === 'clarifications');

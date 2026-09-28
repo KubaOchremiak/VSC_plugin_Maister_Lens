@@ -60,7 +60,7 @@ export function tile(options: TileOptions): HTMLButtonElement {
   return button;
 }
 
-/** The tones Dashboard and Risks colour with; each resolves to a `--vscode-charts-*` variable. */
+/** The tones Dashboard and Follow-ups colour with; each resolves to a `--vscode-charts-*` variable. */
 export type Tone = 'blue' | 'green' | 'orange' | 'red' | 'purple' | 'neutral';
 
 export interface KpiOptions {

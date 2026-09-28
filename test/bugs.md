@@ -1,0 +1,4 @@
+1. Now we have two "<- dashboard" one on top of the other on main content preview pages. Rename the top one added by plugin) to "<-Lens Dashboard"
+2. On page opened from "dashboard" i.e. "Specification the back button "Dashboard" from Maister native view doesnt work. It does nothing and should move back to maister's dashboard.
+3. Replace issue list on dashboard with "Follow-ups" with aggregated actions to be done after based on tasks summaries. Consider also other valuable stats from the results. Do not count intermeediet products only the final tasks outcome.
+4. on the Issue list small arrows doesnt close/open content. See point 3 above, the list content will change.

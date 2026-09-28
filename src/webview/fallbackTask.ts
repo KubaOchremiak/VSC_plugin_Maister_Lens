@@ -80,12 +80,12 @@ function section(label: string, id?: string): HTMLHeadingElement {
   return el('h2', id === undefined ? {} : { id }, [label]);
 }
 
-/** § 5.7's entry point: the Risks heading opens Risks mode scoped to this task. */
+/** The Risks heading opens the Follow-ups view scoped to this task. */
 function risksSection(payload: FallbackPayload): HTMLHeadingElement {
   const open = el('button', { class: 'link', type: 'button' }, [FALLBACK.risksLabel]);
-  open.setAttribute('aria-label', format(FALLBACK.openRisksLabel, { title: payload.title }));
+  open.setAttribute('aria-label', format(FALLBACK.openFollowUpsLabel, { title: payload.title }));
   open.addEventListener('click', () =>
-    post({ type: 'openRisks', folderUri: payload.folderUri })
+    post({ type: 'openFollowUps', folderUri: payload.folderUri })
   );
   return el('h2', {}, [open]);
 }

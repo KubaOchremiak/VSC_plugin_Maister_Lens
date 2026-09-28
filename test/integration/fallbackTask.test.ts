@@ -1,5 +1,4 @@
 import { strict as assert } from 'node:assert';
-import { openRiskCount } from '../../src/model/risks.ts';
 import { TaskPanel } from '../../src/panel/panel.ts';
 import type { FallbackPayload } from '../../src/webview/fallbackTask.ts';
 import { FALLBACK, PANEL } from '../../src/strings.ts';
@@ -72,12 +71,10 @@ describe('fallbackTask/integration', () => {
         'decisions are not grouped by source'
       );
 
-      const task = index.index.snapshot.tasks.get(folderUri);
-      assert.ok(task !== undefined);
       assert.equal(
-        payload.risks.filter((risk) => !risk.resolved).length,
-        openRiskCount(task),
-        'the fallback view recounts risks instead of reading collectRisks (A5)'
+        new Set(payload.risks.map((risk) => risk.text.trim().toLowerCase())).size,
+        payload.risks.length,
+        'the fallback view lists a risk twice'
       );
       assert.ok(
         payload.risks.some((risk) => risk.text.includes('Mobile clients')),

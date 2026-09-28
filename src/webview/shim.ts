@@ -6,7 +6,7 @@
  * body and turns every link into a `navigate` message the host validates.
  */
 
-import { FALLBACK } from '../strings.ts';
+import { FALLBACK, SHIM } from '../strings.ts';
 
 declare function acquireVsCodeApi(): { postMessage(message: unknown): void };
 
@@ -181,7 +181,7 @@ const BUTTON_STYLE: ReadonlyArray<readonly [string, string, string?]> = [
   ['background', 'none'],
   ['border', 'none'],
   ['text-decoration', 'none'],
-  ['cursor', 'pointer'],
+  ['cursor', 'pointer']
 ];
 
 const NAV_STYLE: ReadonlyArray<readonly [string, string, string?]> = [
@@ -210,7 +210,7 @@ const NAV_STYLE: ReadonlyArray<readonly [string, string, string?]> = [
   ['margin', '0 0 12px 0'],
   ['padding', '8px 12px'],
   ['background', 'var(--vscode-editor-background, transparent)'],
-  ['border', 'none'],
+  ['border', 'none']
 ];
 
 function applyStyle(
@@ -225,7 +225,7 @@ function applyStyle(
 function backLink(): HTMLElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.textContent = FALLBACK.breadcrumb;
+  button.textContent = SHIM.lensBack;
   applyStyle(button, BUTTON_STYLE);
 
   button.addEventListener('click', (event: MouseEvent) => {

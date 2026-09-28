@@ -4,11 +4,27 @@ import { NAV } from '../../src/strings.ts';
 import { NavTreeProvider, type NavNode } from '../../src/views/navTree.ts';
 
 describe('navTree/integration', () => {
-  it('lists exactly one root row (FR1 AC2)', () => {
+  it('lists Dashboard then Project as the only root rows (FR1 AC2, R1)', () => {
     const provider = new NavTreeProvider();
     const roots = provider.getChildren();
 
-    assert.equal(roots.length, 1);
+    assert.equal(roots.length, 2);
+    assert.deepEqual(
+      roots.map((node) => node.kind),
+      ['dashboard', 'project']
+    );
+  });
+
+  it('renders Project with the book icon, openProject and a screen-reader label (R1)', () => {
+    const provider = new NavTreeProvider();
+    const item = provider.getTreeItem(provider.getChildren()[1] as NavNode);
+
+    assert.equal(item.label, NAV.project);
+    assert.equal((item.iconPath as vscode.ThemeIcon).id, 'book');
+    assert.equal(item.command?.command, 'maister.openProject');
+    assert.equal(item.accessibilityInformation?.label, NAV.projectLabel);
+    assert.equal(item.collapsibleState, vscode.TreeItemCollapsibleState.None);
+    assert.deepEqual(provider.getChildren({ kind: 'project' }), []);
   });
 
   it('renders the row with the dashboard icon and no children affordance (FR1 AC3)', () => {

@@ -107,6 +107,8 @@ export interface Task {
   options: TaskOptions;
   decisions: Decision[];
   risks: Risk[];
+  /** `verification_context.e2e_followup`: a string is one item, a list one item per string. */
+  e2eFollowUp: string[];
   artifacts: ArtifactRef[];
   hasDashboard: boolean;
   hasDashboardData: boolean;
@@ -127,10 +129,4 @@ export interface StateInput {
   activityMtime: number;
   hasDashboard: boolean;
   hasDashboardData: boolean;
-}
-
-/** A risk as A5 returns it: attributed to its task and to the thing that recorded it. */
-export interface CollectedRisk extends Risk {
-  sourceKind: 'state' | 'artifact';
-  folderUri: string;
 }

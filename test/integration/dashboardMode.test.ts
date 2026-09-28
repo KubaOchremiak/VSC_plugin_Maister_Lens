@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import * as vscode from 'vscode';
-import { openRiskCount } from '../../src/model/risks.ts';
+import { followUpCount } from '../../src/model/followUps.ts';
 import type { TaskIndex } from '../../src/index/taskIndex.ts';
 import { TaskPanel } from '../../src/panel/panel.ts';
 import { DASHBOARD } from '../../src/strings.ts';
@@ -81,6 +81,15 @@ async function dashboardHarness(prefix: string): Promise<Harness> {
   };
 }
 
+/** The dashboard payload is built asynchronously after a filter change. */
+async function waitFor(condition: () => boolean, timeoutMs = 5_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!condition()) {
+    assert.ok(Date.now() < deadline, 'timed out waiting for the panel to republish');
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
 function latest(harness: Harness): DashboardPayload {
   const payload = harness.payloads.at(-1);
   assert.ok(payload !== undefined, 'the panel posted no dashboard payload');
@@ -129,7 +138,9 @@ describe('dashboardMode/integration', () => {
 
       // AC8 — the panel writes the one shared TaskQuery instance, not a copy of its own.
       const before = sharedFilter().value;
+      const posted = harness.payloads.length;
       await harness.panel.handleMessage({ type: 'setFilter', patch: { types: ['research'] } });
+      await waitFor(() => harness.payloads.length > posted);
       assert.notEqual(sharedFilter().value, before, 'the shared filter was not updated');
       assert.deepEqual(sharedFilter().value.types, ['research']);
 
@@ -154,7 +165,7 @@ describe('dashboardMode/integration', () => {
     }
   });
 
-  it('gives the Open risks KPI the sum of openRiskCount over the index and names the same k tasks (A5, AC18)', async function () {
+  it('gives the Follow-ups KPI the follow-up count of the completed tasks and names the same k tasks', async function () {
     this.timeout(60_000);
 
     const harness = await dashboardHarness('dash-kpi');
@@ -163,17 +174,17 @@ describe('dashboardMode/integration', () => {
       const payload = latest(harness);
 
       const tasks = [...harness.index.snapshot.tasks.values()];
-      const expected = tasks.reduce((sum, task) => sum + openRiskCount(task), 0);
-      const tasksWithRisks = tasks.filter((task) => openRiskCount(task) > 0).length;
-      assert.ok(expected > 0, 'the fixture portfolio records no open risks');
+      const expected = followUpCount(tasks, new Map());
+      assert.deepEqual(expected, { count: 1, tasks: 1 }, 'only Beta is completed with an open risk');
 
-      const tile = payload.kpis.find((kpi) => kpi.key === 'openRisks');
-      assert.ok(tile !== undefined, 'the dashboard carries no Open risks tile');
-      assert.equal(tile.value, expected, 'the Open risks tile recounts risks instead of reading openRiskCount');
-      assert.equal(tile.context, DASHBOARD.openRisksContext.replace('{k}', String(tasksWithRisks)));
+      const tile = payload.kpis.find((kpi) => kpi.key === 'followUps');
+      assert.ok(tile !== undefined, 'the dashboard carries no Follow-ups tile');
+      assert.equal(tile.value, expected.count, 'the Follow-ups tile counts unfinished tasks too');
+      assert.equal(tile.label, DASHBOARD.kpiFollowUps);
+      assert.equal(tile.context, DASHBOARD.followUpsContext.replace('{k}', String(expected.tasks)));
       assert.deepEqual(
         payload.kpis.map((kpi) => kpi.key),
-        ['tasks', 'failedVerification', 'quiet', 'openRisks'],
+        ['tasks', 'failedVerification', 'quiet', 'followUps'],
         'the KPI tiles are out of § 5.5 order'
       );
       assert.ok(

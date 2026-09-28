@@ -7,7 +7,8 @@
  * message boundary can use it.
  */
 
-const SCHEME = /^[a-zA-Z][a-zA-Z\d+.-]*:/;
+/** A URI scheme prefix such as `https:` or `command:`. */
+export const SCHEME = /^[a-zA-Z][a-zA-Z\d+.-]*:/;
 
 /**
  * The normalized folder-relative form of `text`, or `null` when it names a scheme, an

@@ -360,6 +360,7 @@ function emptyTask(input: StateInput, ref: TaskRef, issues: Issues, type: Workfl
     options: {},
     decisions: [],
     risks: [],
+    e2eFollowUp: [],
     artifacts: [],
     hasDashboard: input.hasDashboard,
     hasDashboardData: input.hasDashboardData,
@@ -563,11 +564,16 @@ export function parseState(input: StateInput): Task {
   }
 
   // N13/N14.
-  const verdictRaw = asText(asDict(root.verification_context)?.last_status);
+  const verification = asDict(root.verification_context);
+  const verdictRaw = asText(verification?.last_status);
   const verdict: Verdict =
     verdictRaw !== null && (VERDICTS as readonly string[]).includes(verdictRaw)
       ? (verdictRaw as Verdict)
       : null;
+  const e2eRaw = verification?.e2e_followup;
+  const e2eFollowUp = (asList(e2eRaw) ?? [e2eRaw])
+    .map(asText)
+    .filter((text): text is string => text !== null);
 
   const characteristics: Record<string, boolean | string> = {};
   const rawCharacteristics =
@@ -597,6 +603,7 @@ export function parseState(input: StateInput): Task {
     options,
     decisions,
     risks: collected.risks,
+    e2eFollowUp,
     artifacts,
     hasDashboard: input.hasDashboard,
     hasDashboardData: input.hasDashboardData,

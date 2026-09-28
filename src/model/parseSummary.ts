@@ -10,7 +10,7 @@ const MAX_LEADING_HEADINGS = 4;
 const HEADING = /^(#{2,3})\s*(.+?)\s*$/;
 const TLDR = /^tl;?\s*dr\b/i;
 const KEY_DECISIONS = /^key decisions\b/i;
-const RISKS = /^(open questions\s*(\/|&|and)\s*risks|risks|open questions)\b/i;
+const RISKS_HEADING = /^(open questions\s*(\/|&|and)\s*risks|risks|open questions)\b/i;
 const BULLET = /^[-*+]\s+(.*)$/;
 const RATIONALE_SEPARATORS = [' — ', ' – ', ' - '];
 
@@ -23,7 +23,7 @@ function sectionKind(heading: string): SectionKind | null {
   if (KEY_DECISIONS.test(heading)) {
     return 'decisions';
   }
-  if (RISKS.test(heading)) {
+  if (RISKS_HEADING.test(heading)) {
     return 'risks';
   }
   return null;

@@ -15,7 +15,7 @@ declare function acquireVsCodeApi(): {
 };
 
 export interface DashboardKpi {
-  readonly key: 'tasks' | 'failedVerification' | 'quiet' | 'openRisks';
+  readonly key: 'tasks' | 'failedVerification' | 'quiet' | 'followUps';
   readonly glyph: string;
   readonly tone: Tone;
   readonly value: number;
@@ -497,11 +497,11 @@ export function render(payload: DashboardPayload, root: HTMLElement): void {
   for (const tile of payload.kpis) {
     tiles.append(
       kpi(
-        tile.key === 'openRisks'
+        tile.key === 'followUps'
           ? {
               ...tile,
-              onActivate: () => post({ type: 'openRisks' }),
-              actionLabel: format(DASHBOARD.openRisksLabel, { k: tile.value })
+              onActivate: () => post({ type: 'openFollowUps' }),
+              actionLabel: format(DASHBOARD.followUpsLabel, { k: tile.value })
             }
           : tile
       )

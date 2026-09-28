@@ -1,0 +1,16 @@
+window.MAISTER_DATA = {generated:"2026-09-28T20:02:35Z",task:{title:"Fix Lens nav buttons and replace dashboard issue list with Follow-ups",type:"development",status:"completed",description:"Bugs from test/bugs.md",path:".maister/tasks/development/2026-09-28-lens-nav-followups-fixes",current_activity:null},characteristics:{has_reproducible_defect:true,modifies_existing_code:true,creates_new_entities:false,involves_data_operations:true,ui_heavy:true},phases:[
+{id:"phase-1",name:"Codebase analysis",icon_hint:"analysis",status:"completed",artifacts:[{path:"analysis/codebase-analysis.md",label:"Codebase analysis",html:null}]},
+{id:"phase-2",name:"Gap analysis",icon_hint:"analysis",status:"completed",artifacts:[{path:"analysis/gap-analysis.md",label:"Gap analysis",html:null}]},
+{id:"phase-3",name:"TDD Red",icon_hint:"code",status:"completed",artifacts:[{path:"implementation/tdd-red-gate.md",label:"TDD red",html:null}]},
+{id:"phase-4",name:"UI mockups",icon_hint:"spec",status:"skipped",skip_reason:"user chose to skip"},
+{id:"phase-5",name:"Specification",icon_hint:"spec",status:"completed",artifacts:[{path:"implementation/spec.md",label:"Spec",html:"implementation/spec.html"}]},
+{id:"phase-6",name:"Spec audit",icon_hint:"verify",status:"completed",artifacts:[{path:"verification/spec-audit.md",label:"Spec audit",html:null}]},
+{id:"phase-7",name:"Planning",icon_hint:"plan",status:"completed",artifacts:[{path:"implementation/implementation-plan.md",label:"Plan",html:"implementation/implementation-plan.html"}]},
+{id:"phase-8",name:"Implementation",icon_hint:"code",status:"completed",artifacts:[{path:"implementation/work-log.md",label:"Work log",html:null}]},
+{id:"phase-9",name:"TDD Green",icon_hint:"verify",status:"completed",artifacts:[{path:"implementation/tdd-green-gate.md",label:"TDD green",html:null}]},
+{id:"phase-10",name:"Verification options",icon_hint:"verify",status:"completed"},
+{id:"phase-11",name:"Verification",icon_hint:"verify",status:"completed",artifacts:[{path:"verification/implementation-verification.md",label:"Verification",html:"verification/implementation-verification.html"}]},
+{id:"phase-12",name:"E2E",icon_hint:"verify",status:"completed",artifacts:[{path:"verification/e2e-verification-report.md",label:"E2E",html:"verification/e2e-verification-report.html"}]},
+{id:"phase-13",name:"User docs",icon_hint:"docs",status:"skipped",skip_reason:"disabled by user"},
+{id:"phase-14",name:"Finalize",icon_hint:"done",status:"completed"}],
+verification:{status:"passed_with_issues",issues:[{severity:"warning",category:"reality",description:"project-docs dashboard-data.js with JS expressions reported unreadable (accepted)",fixable:false,fixed:false}],fixes:["W1","W2","W3","W4","W5","W6","W7","I1","I2","I3","I6","I7","I8","R2","R3"],reverify_count:2}};

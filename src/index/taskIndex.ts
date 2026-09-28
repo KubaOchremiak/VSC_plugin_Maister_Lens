@@ -476,7 +476,7 @@ export class TaskIndex implements vscode.Disposable {
     };
   }
 
-  /** Populates `ArtifactRef.summary` in place; `collectRisks` depends on it (A5, AC18). */
+  /** Populates `ArtifactRef.summary` in place; search and the fallback task view read it. */
   private async extractSummaries(
     dirFsPath: string,
     artifacts: readonly ArtifactRef[]

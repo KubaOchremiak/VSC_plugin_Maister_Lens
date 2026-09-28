@@ -4,7 +4,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { TaskIndex, type IndexChange } from '../../src/index/taskIndex.ts';
-import { collectRisks } from '../../src/model/risks.ts';
 
 const STATE_FILE = 'orchestrator-state.yml';
 
@@ -156,8 +155,8 @@ describe('index/integration', () => {
       assert.ok(summary, 'the index did not populate the registered artifact § 7 summary');
       assert.equal(summary.tldr, 'Ship the lens.');
       assert.ok(
-        collectRisks(alphaTask).some((risk) => risk.sourceKind === 'artifact'),
-        'artifact risks never reached collectRisks, so the AC18 counts would be short'
+        summary.risks.length > 0,
+        'the index did not populate the registered artifact § 7 risks'
       );
 
       const excludeKey = '**/.maister/**';

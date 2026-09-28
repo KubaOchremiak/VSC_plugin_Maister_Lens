@@ -64,6 +64,7 @@ test('dom: the shim injects the back link as the first child of the hosted body'
       className: first?.className ?? '',
       buttonTag: button?.tagName ?? '',
       buttonType: button?.getAttribute('type') ?? '',
+      buttonAriaLabel: button?.getAttribute('aria-label') ?? null,
       text: button?.textContent?.trim() ?? '',
       display: button === null || button === undefined ? '' : getComputedStyle(button).display,
       visibility:
@@ -76,7 +77,8 @@ test('dom: the shim injects the back link as the first child of the hosted body'
   expect(shape.className).toContain('maister-lens-back');
   expect(shape.buttonTag).toBe('BUTTON');
   expect(shape.buttonType).toBe('button');
-  expect(shape.text).toBe(FALLBACK.breadcrumb);
+  expect(shape.buttonAriaLabel).toBeNull();
+  expect(shape.text).toBe('← Lens Dashboard');
   expect(shape.display).not.toBe('none');
   expect(shape.visibility).toBe('visible');
 });

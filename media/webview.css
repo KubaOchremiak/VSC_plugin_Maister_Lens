@@ -4,6 +4,11 @@
  * hard-coded colour. The layout is fluid so a 250 px sidebar and a 400 px one both work.
  */
 
+/* The `hidden` attribute always wins over a class that sets `display`. */
+[hidden] {
+  display: none !important;
+}
+
 body.vscode-light,
 body.vscode-high-contrast-light {
   color-scheme: light;
@@ -828,27 +833,21 @@ body.panel {
   font-size: 0.9em;
 }
 
-.checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.risk-groups {
+.follow-up-groups {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
-.risk-group-head {
+.follow-up-group-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
 }
 
-.risk-group-title {
+.follow-up-group-title {
   padding: 0;
   border: 0;
   background: none;
@@ -858,11 +857,11 @@ body.panel {
   cursor: pointer;
 }
 
-.risk-group-title:hover {
+.follow-up-group-title:hover {
   text-decoration: underline;
 }
 
-.risk-count {
+.follow-up-count {
   margin-left: auto;
   padding: 0 0.5rem;
   border-radius: 9px;
@@ -871,25 +870,17 @@ body.panel {
   font-size: 0.85em;
 }
 
-.risks {
+.follow-ups {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   margin: 0.5rem 0 0 1.4rem;
 }
 
-.risk {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.risk-resolved {
-  color: var(--vscode-disabledForeground);
-}
-
-.risk-source {
-  color: var(--vscode-descriptionForeground);
-  font-size: 0.85em;
+/* A follow-up is a sentence, not a title: it wraps instead of being cut off. */
+.follow-up .trow-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* High contrast themes draw structure with borders, not with fills. */

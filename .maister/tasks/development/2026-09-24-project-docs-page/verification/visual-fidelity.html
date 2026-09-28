@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Visual Fidelity — 2026-09-24-project-docs-page</title><style>:root{--bg:#f6f7f9;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--dim:#6b7280;--accent:#4f46e5;--accent-soft:#eef2ff;--ok:#16a34a;--warn:#d97706;--warn-soft:#fffbeb;--crit:#dc2626;--radius:10px}
+@media (prefers-color-scheme: dark){:root{--bg:#111418;--surface:#1a1f26;--border:#2e3640;--text:#e6e9ee;--dim:#9aa4b2;--accent:#818cf8;--accent-soft:#26294a;--ok:#4ade80;--warn:#fbbf24;--warn-soft:#2e2410;--crit:#f87171}}
+*{box-sizing:border-box}body{margin:0 auto;max-width:1100px;padding:24px 20px 64px;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}h1{font-size:22px}h2{font-size:16px;margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.crumbs{display:flex;gap:14px;font-size:13px;margin-bottom:18px;flex-wrap:wrap}.crumbs a.md{margin-left:auto;color:var(--dim)}.crumbs .here{font-weight:650}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px}.tile b{display:block;font-size:20px}.tile span{font-size:10.5px;text-transform:uppercase;color:var(--dim)}
+.banner{background:var(--warn-soft);color:var(--warn);font-weight:700;padding:10px 16px;border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}th{font-size:11.5px;text-transform:uppercase;color:var(--dim)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+img.shot{max-width:100%;border:1px solid var(--border);border-radius:var(--radius)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.pair{grid-template-columns:1fr}}</style></head><body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><a href="../implementation/spec.html">Spec</a><span class="here">Visual Fidelity</span><a href="e2e-verification-report.html">E2E report</a><a class="md" href="visual-fidelity.md" target="_blank" rel="noopener">md twin ↗</a></nav>
+<header><span class="banner">Structural match — no drift (report-only)</span></header><div class="tiles"><div class="tile"><b>3</b><span>match</span></div><div class="tile"><b>3</b><span>minor</span></div><div class="tile"><b>0</b><span>drift</span></div><div class="tile"><b>1</b><span>not compared</span></div></div>
+<section class="card"><h1>Visual Fidelity Report</h1>
+<p><strong>Mode</strong>: Report-only (does NOT gate completion)
+<strong>Comparison</strong>: LLM-judged structural match (not pixel-perfect)
+<strong>Source</strong>: analysis/design-context/INDEX.md
+<strong>Captured</strong>: verification/screenshots/</p>
+<h2>TL;DR</h2>
+<p>The structure is faithful and there is no substantive drift. Of 6 compared items, 3 match, 3 have minor deviations and 0 have drift. One screen (sidebar-navigation) was not compared because it is a native TreeView. The two intentional deviations, no tech chips and no Source button in the reader, are confirmed and not counted as drift.</p>
+<h2>Key Decisions</h2>
+<ul>
+<li>The intended deviations (Q4 no chips, R8 no Source button) are counted as matches.</li>
+<li>Where the mockup and the spec disagree, the spec wins. This covers alphabetical file order and &quot;← Project&quot; in the reader.</li>
+</ul>
+<h2>Open Questions / Risks</h2>
+<ul>
+<li>The mockup lists Vision before Tech stack, and Global before Frontend. The implementation sorts alphabetically, as R3 requires. Confirm that this is the intended ordering.</li>
+</ul>
+<h2>Summary</h2>
+<ul>
+<li>Total screens compared: 6 (4 screens + 2 components; screen:sidebar-navigation not compared)</li>
+<li>Match (✓): 3</li>
+<li>Minor deviation (⚠): 3</li>
+<li>Substantive drift (✗): 0</li>
+</ul>
+<h2>Per-Screen Comparison</h2>
+<h3>screen:project-page (⚠ Minor Deviation)</h3>
+<ul>
+<li>Mockup: analysis/design-context/mockups/project-page.html (<a href="screenshots/mockup-project-page.png">screenshots/mockup-project-page.png</a>)</li>
+<li>Screenshot: <a href="screenshots/02-project-light.png">screenshots/02-project-light.png</a></li>
+<li>Layout matches: H1, then the TL;DR card, then collapsible groups with rows showing a label on the left and the path on the right</li>
+<li>Deviations:
+<ul>
+<li>The mockup has one &quot;Source: INDEX.md&quot;; the implementation has a source link per field (vision.md, tech-stack.md).</li>
+<li>Doc rows are plain text, not link-coloured.</li>
+<li>The file and domain order is alphabetical rather than the mockup order.</li>
+<li>The labels are &quot;Goal&quot; and &quot;Tech stack&quot; rather than &quot;What is this app&quot; and &quot;Key tech stack&quot;.</li>
+<li>No chips (intended).</li>
+</ul>
+</li>
+</ul>
+<h3>screen:project-page-multi-root (⚠ Minor Deviation)</h3>
+<ul>
+<li>Mockup: analysis/design-context/mockups/project-page-multi-root.html (<a href="screenshots/mockup-project-page-multi-root.png">screenshots/mockup-project-page-multi-root.png</a>)</li>
+<li>Screenshot: <a href="screenshots/04-multi-light.png">screenshots/04-multi-light.png</a></li>
+<li>One headed section per folder, each with a TL;DR card and groups, matches the mockup</li>
+<li>Deviations:
+<ul>
+<li>The folder heading is an H2 with no folder icon or rule.</li>
+<li>The partial note is generic and does not name the missing field, whereas the mockup says &quot;No Vision entry in INDEX.md.&quot;</li>
+</ul>
+</li>
+</ul>
+<h3>screen:project-doc-reader (✓ Match)</h3>
+<ul>
+<li>Mockup: analysis/design-context/mockups/project-doc-reader.html (<a href="screenshots/mockup-project-doc-reader.png">screenshots/mockup-project-doc-reader.png</a>)</li>
+<li>Screenshot: <a href="screenshots/08-reader-light.png">screenshots/08-reader-light.png</a></li>
+<li>The &quot;Project › path&quot; breadcrumb, the rendered headings and the working doc and file links match</li>
+<li>The implementation also has &quot;← Project&quot; (required by R8)</li>
+<li>No Source button (intended)</li>
+<li>The mockup's TL;DR card is absent only because coding-style.md has no TL;DR</li>
+</ul>
+<h3>screen:project-empty-state (⚠ Minor Deviation)</h3>
+<ul>
+<li>Mockup: analysis/design-context/mockups/project-empty-state.html (<a href="screenshots/mockup-project-empty-state.png">screenshots/mockup-project-empty-state.png</a>)</li>
+<li>Screenshot: <a href="screenshots/06-empty-light.png">screenshots/06-empty-light.png</a></li>
+<li>Heading, message and <code>/maister:init</code> hint in code match the mockup</li>
+<li>Deviations:
+<ul>
+<li>There is no dashed box and no bold &quot;No project documentation found.&quot; title.</li>
+<li>The copy is shorter.</li>
+</ul>
+</li>
+</ul>
+<h3>component:project-tldr (✓ Match)</h3>
+<ul>
+<li>A summaryCard with the goal, the stack text and source links. No chips (intended).</li>
+</ul>
+<h3>component:doc-row (✓ Match)</h3>
+<ul>
+<li>A <code>trow</code> with the label and a dim path; posts <code>openDoc</code> (verified in E2E 4.2).</li>
+</ul>
+<h3>screen:sidebar-navigation (not compared)</h3>
+<ul>
+<li>A VS Code TreeView, which cannot be rendered in a browser. The code check passed (Project node with <code>book</code> icon, directly below Dashboard).</li>
+</ul>
+</section><h2>Screenshots</h2><div class="card"><b>Project page: mockup vs impl</b><div class="pair"><img class="shot" src="screenshots/mockup-project-page.png" alt="mockup-project-page.png"><img class="shot" src="screenshots/02-project-light.png" alt="02-project-light.png"></div></div><div class="card"><b>Multi-root</b><div class="pair"><img class="shot" src="screenshots/mockup-project-page-multi-root.png" alt="mockup-project-page-multi-root.png"><img class="shot" src="screenshots/04-multi-light.png" alt="04-multi-light.png"></div></div><div class="card"><b>Doc reader</b><div class="pair"><img class="shot" src="screenshots/mockup-project-doc-reader.png" alt="mockup-project-doc-reader.png"><img class="shot" src="screenshots/08-reader-light.png" alt="08-reader-light.png"></div></div><div class="card"><b>Empty</b><div class="pair"><img class="shot" src="screenshots/mockup-project-empty-state.png" alt="mockup-project-empty-state.png"><img class="shot" src="screenshots/06-empty-light.png" alt="06-empty-light.png"></div></div></body></html>

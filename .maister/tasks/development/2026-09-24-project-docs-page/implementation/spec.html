@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Project Docs Page</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--dim:#6b7280;--accent:#4f46e5;--accent-soft:#eef2ff;--ok:#16a34a;--ok-soft:#ecfdf3;--warn:#d97706;--warn-soft:#fffbeb;--crit:#dc2626;--crit-soft:#fef2f2;--info:#2563eb;--info-soft:#eff6ff;--radius:10px}
+@media (prefers-color-scheme: dark){:root{--bg:#111418;--surface:#1a1f26;--border:#2e3640;--text:#e6e9ee;--dim:#9aa4b2;--accent:#818cf8;--accent-soft:#26294a;--ok:#4ade80;--ok-soft:#11291a;--warn:#fbbf24;--warn-soft:#2e2410;--crit:#f87171;--crit-soft:#321616;--info:#60a5fa;--info-soft:#15233a}}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:1100px;padding:24px 20px 64px;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:22px;letter-spacing:-.01em}h2{font-size:16px;margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.badge{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.sev{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;padding:1.5px 7px;border-radius:99px;margin-right:6px}
+.sev.critical{background:var(--crit-soft);color:var(--crit)}.sev.warning{background:var(--warn-soft);color:var(--warn)}.sev.info{background:var(--info-soft);color:var(--info)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--dim)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+details>summary{cursor:pointer;font-weight:600}
+.crumbs{display:flex;gap:14px;font-size:13px;margin-bottom:18px;flex-wrap:wrap}
+.crumbs a.md{margin-left:auto;color:var(--dim)}.crumbs .here{font-weight:650}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px}
+.tile b{display:block;font-size:20px}.tile span{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stories{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+.tldr{border-left:4px solid var(--accent)}
+</style>
+</head>
+<body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><span class="here">Spec</span><a href="implementation-plan.html">Plan</a><a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a></nav>
+<header><h1>Specification: Project Docs Page</h1><span class="badge">spec</span> <span class="badge">2026-09-24</span></header>
+<div class="tiles">
+<div class="tile"><b>13</b><span>requirements</span></div>
+<div class="tile"><b>12</b><span>reused</span></div>
+<div class="tile"><b>3</b><span>new components</span></div>
+<div class="tile"><b>7</b><span>design refs</span></div>
+<div class="tile"><b>medium</b><span>risk</span></div>
+</div>
+
+<section class="card tldr">
+<h2 style="margin-top:0">TL;DR</h2>
+<p>This adds a read-only <b>Project</b> page, reached only from a sidebar item placed directly below Dashboard. For each workspace folder it shows a TL;DR with the goal and the tech stack, both taken verbatim from the Vision and Tech Stack entries in INDEX.md. Below that are grouped shortcuts to every <code>.maister/docs/**/*.md</code>. Docs open in the existing reader using a doc variant of the payload: "← Project" and "Project › path" post <code>openProject</code>, links between docs post <code>openDoc</code>, and there is no Source button. <code>openDoc</code> requires an exact workspace-folder URI plus a docs-relative, contained <code>.md</code> path. Restoring after a reload is out of scope.</p>
+<h3>Key Decisions</h3>
+<ul>
+<li><b>Entry point:</b> the nav item is the only way in. <code>maister.openProject</code> is hidden from the palette, and neither new mode gets a title-bar button.</li>
+<li><b>Modes:</b> two new modes, <code>project</code> and <code>doc</code>, in the single <code>TaskPanel</code>. The doc location's field is named <code>docsFolderUri</code> so that the compiler flags every <code>mode !== 'dashboard'</code> site.</li>
+<li><b>Links (Q1):</b> <code>classifyLink</code> is unchanged apart from its base. A link inside the docs folder opens the doc. Any other relative link, including one into a task folder, opens in the editor.</li>
+<li><b>Restore (Q2):</b> out of scope. Every mode keeps the existing fallback to Dashboard.</li>
+<li><b>Security (Q3):</b> <code>docRelPath</code> is relative to <code>.maister/docs</code>. <code>docsFolderUri</code> must exactly match one of <code>MessageContext.workspaceFolderUris</code>. Paths go through <code>containedRelPath</code> and a <code>.md</code> allowlist.</li>
+<li><b>TL;DR (Q4):</b> no tech chips. The Tech Stack text is shown as written. This departs from the mockups.</li>
+<li><b>Watcher:</b> owned by <code>TaskPanel</code>. It honours <code>watcherExclude</code>, is debounced, and republishes the same location so the scroll position is kept.</li>
+</ul>
+<h3>Open Questions / Risks</h3>
+<ul>
+<li><span class="sev warning">warning</span>If the INDEX.md heading format drifts, the page shows the "missing" note.</li>
+<li><span class="sev warning">warning</span>The link-base refactor touches every artifact render. <code>render.test.ts</code> must stay byte-identical.</li>
+<li><span class="sev info">info</span>Symlinks under the docs folder are not resolved. Containment is lexical.</li>
+</ul>
+</section>
+
+<nav>Contents: <a href="#scope">Scope</a> · <a href="#stories">User Stories</a> · <a href="#req">Requirements</a> · <a href="#visual">Visual Design</a> · <a href="#reuse">Components</a> · <a href="#tech">Technical</a> · <a href="#success">Success</a></nav>
+
+<h2 id="scope">Goal &amp; Scope</h2>
+<p>Give users a one-click, always-rendered view of what the project is (goal and stack) and of every project doc and standard, without leaving Maister Lens.</p>
+<div class="grid2">
+<div class="card"><b class="pass">In scope</b><ul><li>The nav node and the hidden command</li><li>The project and doc panel modes, plus the doc <code>RenderPayload</code> variant</li><li>The projectMode bundle and the docs parser</li><li>The <code>openProject</code> and <code>openDoc</code> messages, and workspace-folder validation</li><li>The docs watcher, strings and tests</li></ul></div>
+<div class="card"><b class="fail">Out of scope</b><ul><li>Editing docs and search</li><li>A Source button or raw-source view for docs</li><li>Palette and title-bar entries</li><li>Tech chips</li><li>Restoring after a reload (any mode)</li><li>Rendered routing for doc-to-task links</li><li>Symlink resolution, new dependencies and H1 labels</li></ul></div>
+</div>
+
+<h2 id="stories">User Stories</h2>
+<div class="stories">
+<div class="card">As a developer, I want a Project entry directly below Dashboard so that I can recall the project goal and stack in seconds.</div>
+<div class="card">As a developer, I want shortcuts to every standard and project doc, grouped by folder, so that I can open the one I need without searching the Explorer.</div>
+<div class="card">As a developer, I want docs rendered like artifacts, with a "← Project" back control, so that reading stays in one consistent place.</div>
+<div class="card">As a multi-root user, I want one section per workspace folder so that the docs of each project are kept apart.</div>
+</div>
+
+<h2 id="req">Core Requirements</h2>
+<div class="card"><table>
+<tr><th>ID</th><th>Requirement</th><th>Priority</th></tr>
+<tr><td>R1</td><td>A Project nav node with the <code>book</code> icon, directly below Dashboard and always visible. It runs <code>maister.openProject</code> (<code>when:false</code>), which is registered in <code>registerPanel</code>.</td><td>must</td></tr>
+<tr><td>R2</td><td>A <code>{mode:'project'}</code> location with its own title and context key. It is not restored after a reload.</td><td>must</td></tr>
+<tr><td>R3</td><td>Discovery of the docs in each folder, grouped as INDEX, then project/, then standards/&lt;domain&gt;/, then others. Files are sorted alphabetically and labelled with humanized names.</td><td>must</td></tr>
+<tr><td>R4</td><td>A pure parser. It reads the <code>## Project Documentation</code> section and the <code>####</code> headings starting with "Vision" or "Tech Stack" (case-insensitive), takes the source from the backticked suffix and the text up to the next heading, and never throws.</td><td>must</td></tr>
+<tr><td>R5</td><td>A <code>projectMode.ts</code> bundle. For each folder it shows the TL;DR card (goal text, stack text with no chips, source links) followed by groups of <code>trow</code> rows.</td><td>must</td></tr>
+<tr><td>R6</td><td>A partial TL;DR with a "missing" note, and an empty state with a <code>/maister:init</code> hint.</td><td>must</td></tr>
+<tr><td>R7</td><td>A <code>{mode:'doc', docsFolderUri, docRelPath, anchor?}</code> location, where the path is relative to the docs folder. It uses a doc variant of <code>RenderPayload</code> with no task title and no heroes. It is not restored after a reload.</td><td>must</td></tr>
+<tr><td>R8</td><td>The reader in doc mode: "← Project" and "Project › path" post <code>openProject</code>, links inside the docs folder post <code>openDoc</code>, there is no Source button, and it never posts openSource, openArtifact or openTask.</td><td>must</td></tr>
+<tr><td>R9</td><td><code>openProject</code> and <code>openDoc</code> messages. <code>docsFolderUri</code> must be an exact workspace-folder URI. The path must pass <code>containedRelPath</code> and <code>/\.md$/i</code>, and must not be empty. The anchor follows the <code>ANCHOR</code> regex, mirroring <code>validateArtifact</code>.</td><td>must</td></tr>
+<tr><td>R10</td><td><code>classifyLink</code> is unchanged apart from its base (the docs folder). A <code>.md</code> link inside the docs folder opens the doc, and a <code>.html</code> link there falls back to <code>openFile</code>. Every other relative link, including task links, is a <code>file</code> link that opens in the editor. External links open in the browser.</td><td>must</td></tr>
+<tr><td>R11</td><td>A docs watcher refreshes the page or doc that is open.</td><td>must</td></tr>
+<tr><td>R12</td><td>All strings live in <code>strings.ts</code>: <code>NAV.project</code>, <code>PANEL.titleProject</code> and a <code>PROJECT</code> block.</td><td>must</td></tr>
+<tr><td>R13</td><td>Updates to existing tests, plus new focused tests.</td><td>must</td></tr>
+</table></div>
+
+<h2 id="visual">Visual Design</h2>
+<p>The mockups are <b>binding</b>. The planner attaches Visual References to the UI task groups. Fidelity is structural, and colours come from the <code>--vscode-*</code> tokens.</p>
+<p><span class="sev warning">deviation</span>The tech stack is shown as plain text, not chips (Q4). The Source button on the doc reader is omitted (R8).</p>
+<div class="card"><table>
+<tr><th>ID</th><th>Mockup</th><th>Req</th><th>Key elements</th></tr>
+<tr><td>screen:sidebar-navigation</td><td><a href="../analysis/design-context/mockups/sidebar-navigation.html">open</a></td><td>R1</td><td>The Project node below Dashboard</td></tr>
+<tr><td>screen:project-page</td><td><a href="../analysis/design-context/mockups/project-page.html">open</a></td><td>R3–R5</td><td>The TL;DR card, then the doc groups</td></tr>
+<tr><td>screen:project-page-multi-root</td><td><a href="../analysis/design-context/mockups/project-page-multi-root.html">open</a></td><td>R5, R6</td><td>Per-folder sections and a partial TL;DR</td></tr>
+<tr><td>screen:project-doc-reader</td><td><a href="../analysis/design-context/mockups/project-doc-reader.html">open</a></td><td>R7, R8, R10</td><td>"← Project", the breadcrumb and openDoc links</td></tr>
+<tr><td>screen:project-empty-state</td><td><a href="../analysis/design-context/mockups/project-empty-state.html">open</a></td><td>R6</td><td>The empty state with a /maister:init hint</td></tr>
+<tr><td>component:project-tldr</td><td><a href="../analysis/design-context/mockups/project-page.html">open</a></td><td>R4, R5</td><td>A summaryCard with the goal text, the stack text (no chips) and source links</td></tr>
+<tr><td>component:doc-row</td><td><a href="../analysis/design-context/mockups/project-page.html">open</a></td><td>R3, R5, R9</td><td>A trow that posts openDoc</td></tr>
+</table></div>
+
+<h2 id="reuse">Reusable vs New Components</h2>
+<div class="card"><table>
+<tr><th>Kind</th><th>Item</th><th>Use</th></tr>
+<tr><td class="pass">reuse</td><td><code>src/panel/panel.ts</code></td><td>The modes, buildView, bundleHtml, dispatch and republish</td></tr>
+<tr><td class="pass">reuse</td><td><code>src/panel/render.ts</code></td><td>renderArtifact and classifyLink with a generalised base. The <code>taskRelPath</code> parameter is renamed</td></tr>
+<tr><td class="pass">reuse</td><td><code>src/webview/reader.ts</code></td><td>Rendering, scroll restore by locationKey, and doc-payload branches</td></tr>
+<tr><td class="pass">reuse</td><td><code>risksMode.ts:430-432</code> / <code>dashboardMode.ts</code></td><td>The bundle template and the back-control pattern</td></tr>
+<tr><td class="pass">reuse</td><td><code>components.ts</code>, <code>shim.ts</code></td><td>el, row, summaryCard and the handshake</td></tr>
+<tr><td class="pass">reuse</td><td><code>messages.ts</code>, <code>relPath.ts</code></td><td>validate, ANCHOR, validateArtifact (as a pattern) and containedRelPath</td></tr>
+<tr><td class="pass">reuse</td><td><code>parseSummary.ts</code>, <code>navTree.ts</code>, <code>watcher.ts</code></td><td>The patterns for parsing, the nav node, the watcher and watcherExclude</td></tr>
+<tr><td class="pass">reuse</td><td><code>media/webview.css</code>, <code>esbuild.mjs</code></td><td>The existing classes, and automatic bundling</td></tr>
+<tr><td class="fail">new</td><td><code>src/webview/projectMode.ts</code></td><td>No bundle renders a grouped doc list with a TL;DR card</td></tr>
+<tr><td class="fail">new</td><td><code>src/model/parseProjectDocs.ts</code></td><td>The parser, plus the grouping and humanize helpers (pure)</td></tr>
+<tr><td class="fail">new</td><td>The docs watcher in TaskPanel</td><td>The existing watcher feeds TaskIndex, not docs</td></tr>
+</table></div>
+
+<h2 id="tech">Technical Approach</h2>
+<details class="card" open><summary>Mode-branch sites (panel.ts)</summary>
+<table>
+<tr><th>Site</th><th>project</th><th>doc</th></tr>
+<tr><td>show readable check (369/375)</td><td>always readable</td><td>the file exists, otherwise an honest error</td></tr>
+<tr><td>sourceUri (451/458)</td><td>undefined</td><td>undefined (no Source button)</td></tr>
+<tr><td>workspaceRootUri (607)</td><td>undefined</td><td>docsFolderUri</td></tr>
+<tr><td>render / buildView (634, 665-685)</td><td>project payload</td><td>doc RenderPayload + reader</td></tr>
+<tr><td>resourceRoots (1334)</td><td>media only</td><td>media + <code>&lt;docsFolderUri&gt;/.maister/docs</code> only</td></tr>
+<tr><td>onIndexChange (1397/1401)</td><td>ignored</td><td>ignored</td></tr>
+<tr><td>onFilterChange (1413)</td><td>ignored</td><td>ignored</td></tr>
+<tr><td>republish (1420)</td><td>rebuilds</td><td>re-renders the same location (keeps scroll)</td></tr>
+<tr><td>applyContextKeys (1433-1439)</td><td>mode=project</td><td>mode=doc</td></tr>
+<tr><td>dispatch (499+)</td><td colspan="2">openProject and openDoc are handled in every mode</td></tr>
+<tr><td>registerPanel (1470+)</td><td colspan="2">registers maister.openProject</td></tr>
+<tr><td>readLocation (1525+)</td><td colspan="2">unchanged; falls back to the dashboard</td></tr>
+</table></details>
+<details class="card"><summary>Title bar, watcher, link base</summary>
+<ul>
+<li><b>Title bar:</b> the <code>revealInExplorer</code> when-clause also excludes project and doc. <code>openArtifactSource</code> stays limited to artifact mode. The new modes have no title-bar buttons.</li>
+<li><b>Watcher:</b> <code>TaskPanel</code> creates one <code>.maister/docs/**</code> watcher per workspace folder and disposes it with the panel. It skips folders excluded by <code>watcherExclude</code> and debounces events (about 200 ms). It republishes only in project mode, or in doc mode for the matching folder, and keeps the same location.</li>
+<li><b>Link base:</b> RenderTarget and readerPayload take a base directory and a kind. Artifact output stays byte-identical.</li>
+<li><code>vscode</code> stays out of <code>src/model</code> and <code>render.ts</code>.</li>
+</ul></details>
+<details class="card"><summary>Testing approach (2-8 tests per step group)</summary>
+<ul><li>Parser: this repo's format with backticked suffixes, case, a missing section, entry or INDEX, and group order and labels</li>
+<li>openDoc: accept a valid path. Reject a foreign root, <code>..</code>, <code>%2e%2e</code>, a backslash, an absolute path, <code>.html</code>, an empty path, and a bad anchor</li>
+<li>classifyLink with the docs base: a doc link is an artifact link, a tasks link is a file link, and render.test.ts stays byte-identical</li>
+<li>Playwright DOM: the project bundle with no chips, and the doc reader ("← Project", openDoc links, no Source button)</li>
+<li>Integration: the project and doc modes, and a watcher republish that keeps the location</li>
+<li>Existing tests: the harness BundleName, surfaces.spec.ts (projectMode plus the doc fixture), manifest.test.ts (the count stays at 9, the stale title is renamed, and <code>when:false</code> is asserted), and navTree.test.ts (roots goes from 1 to 2)</li></ul>
+<p>Test verification runs only the new tests.</p></details>
+<details class="card"><summary>Standards compliance</summary>
+<ul><li>global: minimal-implementation, coding-style, validation, error-handling, commenting</li><li>frontend: components, css, accessibility</li><li>project/tech-stack: runtime dependencies are unchanged</li></ul></details>
+
+<h2 id="success">Success Criteria</h2>
+<div class="card"><ul>
+<li>The page opens from the sidebar item below Dashboard and shows the goal and stack text from this repo's INDEX.md.</li>
+<li>Every doc appears once, in the specified group order, and opens rendered with a working "← Project" control.</li>
+<li>Links between docs open rendered. Other relative links open in the editor, and external links open in the browser.</li>
+<li>openDoc rejects foreign roots, traversal and anything that is not <code>.md</code>.</li>
+<li>Editing a doc refreshes the open view in place and keeps the scroll position.</li>
+<li>Existing tests pass, apart from the deliberately updated ones.</li>
+</ul></div>
+</body>
+</html>

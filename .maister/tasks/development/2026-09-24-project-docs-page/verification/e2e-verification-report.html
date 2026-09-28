@@ -1,0 +1,581 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>E2E Verification — 2026-09-24-project-docs-page</title><style>:root{--bg:#f6f7f9;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--dim:#6b7280;--accent:#4f46e5;--accent-soft:#eef2ff;--ok:#16a34a;--warn:#d97706;--warn-soft:#fffbeb;--crit:#dc2626;--radius:10px}
+@media (prefers-color-scheme: dark){:root{--bg:#111418;--surface:#1a1f26;--border:#2e3640;--text:#e6e9ee;--dim:#9aa4b2;--accent:#818cf8;--accent-soft:#26294a;--ok:#4ade80;--warn:#fbbf24;--warn-soft:#2e2410;--crit:#f87171}}
+*{box-sizing:border-box}body{margin:0 auto;max-width:1100px;padding:24px 20px 64px;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}h1{font-size:22px}h2{font-size:16px;margin-top:28px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.crumbs{display:flex;gap:14px;font-size:13px;margin-bottom:18px;flex-wrap:wrap}.crumbs a.md{margin-left:auto;color:var(--dim)}.crumbs .here{font-weight:650}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px}.tile b{display:block;font-size:20px}.tile span{font-size:10.5px;text-transform:uppercase;color:var(--dim)}
+.banner{background:var(--warn-soft);color:var(--warn);font-weight:700;padding:10px 16px;border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}th{font-size:11.5px;text-transform:uppercase;color:var(--dim)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+img.shot{max-width:100%;border:1px solid var(--border);border-radius:var(--radius)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.pair{grid-template-columns:1fr}}</style></head><body>
+<nav class="crumbs"><a href="../dashboard.html">← Dashboard</a><a href="../implementation/spec.html">Spec</a><span class="here">E2E Verification</span><a href="visual-fidelity.html">Visual fidelity</a><a class="md" href="e2e-verification-report.md" target="_blank" rel="noopener">md twin ↗</a></nav>
+<header><span class="banner">⚠️ GO WITH CAVEATS</span></header><div class="tiles"><div class="tile"><b>7/7</b><span>scenarios passed</span></div><div class="tile"><b>0</b><span>critical/major</span></div><div class="tile"><b>2</b><span>minor</span></div><div class="tile"><b>1</b><span>cosmetic</span></div><div class="tile"><b>0</b><span>console errors</span></div></div>
+<section class="card"><h1>E2E Verification Report</h1>
+<h2>TL;DR</h2>
+<p><strong>GO WITH CAVEATS.</strong> 7 of 7 executed scenarios passed. 3 had minor issues, and there were no console errors. All the requested behaviour works: the TL;DR is shown verbatim with no chips, groups come in order, rows post <code>openDoc</code>, the multi-root layout and the missing note appear, the empty state shows the <code>/maister:init</code> hint, and the reader shows &quot;← Project&quot; and a breadcrumb that both post <code>openProject</code>, with no Source button. The caveats are cosmetic or minor. The tech-stack text shows raw Markdown backticks, <code>css.md</code> is labelled &quot;Css&quot;, and the partial-TL;DR note does not say which field is missing.</p>
+<h2>Key Decisions</h2>
+<ul>
+<li>The pages were driven through a harness-equivalent shell: the same <code>media/webview.css</code> and <code>dist/webview/*.js</code> files, with <code>acquireVsCodeApi</code> stubbed and loaded over file://. <code>harness.ts</code> has no server and no theme support, so <code>--vscode-*</code> token values for the light and dark themes were injected by the test setup.</li>
+<li>The payloads were generated from the real <code>.maister/docs</code>. The <code>parseProjectIndex</code>, <code>parseVisionGoal</code> and <code>groupDocs</code> functions were run on this repo's INDEX.md and vision.md, and the reader body was rendered from <code>standards/global/coding-style.md</code> with markdown-it. Two <code>data-artifact</code> and <code>data-file</code> links were appended from the harness fixture.</li>
+</ul>
+<h2>Open Questions / Risks</h2>
+<ul>
+<li>The sidebar nav node (R1) is a VS Code TreeView and cannot run in a browser. It was checked in code only (see §8).</li>
+<li>The tech stack is shown verbatim, so the INDEX.md backticks appear as literal characters (§5.4).</li>
+</ul>
+<h2>1. Identifier</h2>
+<ul>
+<li><strong>Task</strong>: 2026-09-24-project-docs-page</li>
+<li><strong>Task path</strong>: /Users/jakub/dev_WORKSPACE/VSC_Maister_plugin/.maister/tasks/development/2026-09-24-project-docs-page</li>
+<li><strong>Spec</strong>: implementation/spec.md</li>
+<li><strong>Date</strong>: 2026-09-24</li>
+<li><strong>Git ref</strong>: 2f9fbb3 main (uncommitted working tree)</li>
+<li><strong>Tester</strong>: e2e-test-verifier (maister)</li>
+</ul>
+<h2>2. Test Environment</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base URL</td>
+<td>file:// shell pages (no server; harness-equivalent), bundles from <code>dist/webview/</code> after <code>npm run build</code></td>
+</tr>
+<tr>
+<td>Browser</td>
+<td>Chromium (Playwright MCP)</td>
+</tr>
+<tr>
+<td>Viewport</td>
+<td>720×900</td>
+</tr>
+<tr>
+<td>Auth context</td>
+<td>anonymous (webview; <code>acquireVsCodeApi</code> stub)</td>
+</tr>
+<tr>
+<td>Test data</td>
+<td>live repo <code>.maister/docs</code> + one synthetic second root (<code>legacy-api</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2>3. Executive Summary</h2>
+<p><strong>Verdict</strong>: ⚠️ GO WITH CAVEATS</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scenarios planned</td>
+<td>8</td>
+</tr>
+<tr>
+<td>Scenarios executed</td>
+<td>7</td>
+</tr>
+<tr>
+<td>Passed</td>
+<td>7</td>
+</tr>
+<tr>
+<td>Failed</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Blocked</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Pass rate</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Critical issues</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Major issues</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Minor issues</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Cosmetic issues</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The Project bundle and the doc-mode reader behave as the spec requires with real content. Every control posts the right message with the right payload. The keyboard order follows the reading order, and both themes render legibly. One planned scenario, the sidebar nav node, was not run in the browser because it is a native TreeView. The only findings are about presentation: the verbatim text keeps its Markdown backticks, one label is humanized oddly, and the partial-TL;DR note is vague.</p>
+<h2>4. Verification Scenarios</h2>
+<h3>4.1 Project page with real docs — ⚠️ Passed with issues</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: R3, R4 (plus amendment), R5, Q4</li>
+<li><strong>Preconditions</strong>: single root; payload built from this repo's INDEX.md and vision.md</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Post projectMode payload</td>
+<td>H1 &quot;Project&quot;, TL;DR card</td>
+<td>H1 Project, <code>.project-tldr</code> with GOAL + TECH STACK</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Read goal text</td>
+<td>First paragraph of the vision.md Problem Statement, verbatim</td>
+<td>Identical text (&quot;Maister produces well-structured output…rather than code and git.&quot;)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Read tech-stack text</td>
+<td>The INDEX.md Tech Stack paragraph, verbatim, no chips</td>
+<td>Identical text; 0 chip elements</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Group order</td>
+<td>Index, Project, Standards · Frontend, Standards · Global</td>
+<td>Index (1), Project (2), Standards · Frontend (4), Standards · Global (6)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Row labels</td>
+<td>Humanized names</td>
+<td>&quot;Coding style&quot;, &quot;Error handling&quot;, &quot;Minimal implementation&quot;…; <code>css.md</code> becomes &quot;Css&quot;</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Source links</td>
+<td>project/vision.md, project/tech-stack.md</td>
+<td>Both present as <code>.link</code> buttons</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: §5.4 #1 (backticks), §5.3 #2 (&quot;Css&quot;)</li>
+<li><strong>Evidence</strong>: <a href="screenshots/01-project-dark.png">screenshots/01-project-dark.png</a>, <a href="screenshots/02-project-light.png">screenshots/02-project-light.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] TL;DR is verbatim with no chips</li>
+<li>[x] Groups are in the specified order, and files are sorted alphabetically within each group</li>
+<li>[x] Every docs file appears once (13 files)</li>
+</ul>
+</li>
+</ul>
+<h3>4.2 Row and source clicks post openDoc — ✅ Passed</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: R5, R9</li>
+<li><strong>Preconditions</strong>: the page from 4.1</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Press Enter on the focused &quot;INDEX.md&quot; row</td>
+<td><code>openDoc{docsFolderUri, docRelPath:&quot;INDEX.md&quot;}</code></td>
+<td>Posted exactly</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Click the &quot;Coding style&quot; row</td>
+<td>openDoc <code>standards/global/coding-style.md</code></td>
+<td>Posted exactly</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Click the goal source link</td>
+<td>openDoc <code>project/vision.md</code></td>
+<td>Posted exactly</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: <em>None observed.</em></li>
+<li><strong>Evidence</strong>: <a href="screenshots/09-project-focus-ring.png">screenshots/09-project-focus-ring.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] Rows and source links post <code>openDoc</code> with the section's workspace-folder URI</li>
+</ul>
+</li>
+</ul>
+<h3>4.3 Multi-root with partial TL;DR — ⚠️ Passed with issues</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: R5, R6</li>
+<li><strong>Preconditions</strong>: two sections; the second (<code>legacy-api</code>) has a goal but no tech stack</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Post the multi-root payload</td>
+<td>One H2 per folder</td>
+<td>H2 &quot;VSC_Maister_plugin&quot;, H2 &quot;legacy-api&quot;</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Inspect the partial card</td>
+<td>Shows what was found, plus the &quot;missing&quot; note</td>
+<td>Goal shown; note &quot;Not found in .maister/docs/INDEX.md under &quot;## Project Documentation&quot;.&quot;</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Click &quot;Vision&quot; in the second root</td>
+<td>openDoc carries <code>file:///ws/legacy-api</code></td>
+<td>Posted with the correct root</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: §5.3 #3 (the note does not name the missing field)</li>
+<li><strong>Evidence</strong>: <a href="screenshots/03-multi-dark.png">screenshots/03-multi-dark.png</a>, <a href="screenshots/04-multi-light.png">screenshots/04-multi-light.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] Folder name is shown only when the workspace is multi-root</li>
+<li>[x] An honest missing note appears</li>
+</ul>
+</li>
+</ul>
+<h3>4.4 Empty state — ✅ Passed</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: R6</li>
+<li><strong>Preconditions</strong>: <code>{empty:true, sections:[]}</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Post the empty payload</td>
+<td><code>.empty</code> with the /maister:init hint</td>
+<td>&quot;This workspace has no .maister/docs documentation yet. Run <code>/maister:init</code> to generate it.&quot; in <code>role=status</code></td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: <em>None observed.</em></li>
+<li><strong>Evidence</strong>: <a href="screenshots/05-empty-dark.png">screenshots/05-empty-dark.png</a>, <a href="screenshots/06-empty-light.png">screenshots/06-empty-light.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] Empty state and init hint are shown</li>
+</ul>
+</li>
+</ul>
+<h3>4.5 Reader in doc mode — ✅ Passed</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: R7, R8, R10</li>
+<li><strong>Preconditions</strong>: doc RenderPayload for <code>standards/global/coding-style.md</code> rendered from the real file</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Render</td>
+<td>&quot;← Project&quot;, then &quot;Project › path&quot;</td>
+<td>&quot;← Project&quot;; nav <code>aria-label=&quot;Project › standards/global/coding-style.md&quot;</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Click &quot;← Project&quot;</td>
+<td><code>openProject</code></td>
+<td>Posted</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Click the &quot;Project&quot; crumb</td>
+<td><code>openProject</code></td>
+<td>Posted</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Look for a Source button</td>
+<td>None</td>
+<td>0 controls matching /source/i</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Click the <code>commenting.md#rules</code> link</td>
+<td><code>openDoc</code> with <code>anchor:&quot;rules&quot;</code></td>
+<td>Posted exactly</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Click <code>eslint.config.mjs</code></td>
+<td><code>openFile</code></td>
+<td><code>openFile{workspaceRelPath}</code></td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: <em>None observed.</em></li>
+<li><strong>Evidence</strong>: <a href="screenshots/07-reader-dark.png">screenshots/07-reader-dark.png</a>, <a href="screenshots/08-reader-light.png">screenshots/08-reader-light.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] Back control and breadcrumb post <code>openProject</code></li>
+<li>[x] No Source button; no <code>openSource</code>, <code>openArtifact</code> or <code>openTask</code> posted</li>
+</ul>
+</li>
+</ul>
+<h3>4.6 Keyboard focus order — ✅ Passed</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: frontend/accessibility.md, R5, R8</li>
+<li><strong>Preconditions</strong>: focus parked on the body, then Tab pressed 8 times</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Tab on the Project page</td>
+<td>Reading order</td>
+<td>vision.md → tech-stack.md → Index (1) → INDEX.md → Project (2) → Tech stack → Vision → Standards · Frontend (4)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Tab in the reader</td>
+<td>Reading order</td>
+<td>Skip to document → ← Project → Project → commenting.md → eslint.config.mjs</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Tab on the empty page</td>
+<td>No stray controls</td>
+<td>Focus stays on the document (there are no controls)</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: <em>None observed.</em></li>
+<li><strong>Evidence</strong>: <a href="screenshots/09-project-focus-ring.png">screenshots/09-project-focus-ring.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] Native buttons, and tab order equals reading order</li>
+</ul>
+</li>
+</ul>
+<h3>4.7 Light and dark themes — ✅ Passed</h3>
+<ul>
+<li><strong>User story / acceptance criterion</strong>: frontend/css.md (<code>--vscode-*</code> tokens)</li>
+<li><strong>Preconditions</strong>: token sets injected, with body classes <code>vscode-dark</code> and <code>vscode-light</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Action</th>
+<th>Expected</th>
+<th>Actual</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Render all 4 surfaces in both themes</td>
+<td>Legible, no hard-coded colours</td>
+<td>All 8 renders are legible</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Issues observed</strong>: <em>None observed.</em></li>
+<li><strong>Evidence</strong>: <a href="screenshots/01-project-dark.png">screenshots/01-project-dark.png</a>, <a href="screenshots/02-project-light.png">screenshots/02-project-light.png</a>, <a href="screenshots/07-reader-dark.png">screenshots/07-reader-dark.png</a>, <a href="screenshots/08-reader-light.png">screenshots/08-reader-light.png</a></li>
+<li><strong>Acceptance criteria checklist</strong>:
+<ul>
+<li>[x] Both themes render</li>
+</ul>
+</li>
+</ul>
+<h2>5. Discrepancies</h2>
+<h3>5.1 Critical</h3>
+<p><em>None observed.</em></p>
+<h3>5.2 Major</h3>
+<p><em>None observed.</em></p>
+<h3>5.3 Minor</h3>
+<p><strong>#2 <code>css.md</code> is humanized as &quot;Css&quot;</strong></p>
+<ul>
+<li><strong>Spec requirement</strong>: R3, humanized filenames</li>
+<li><strong>Expected</strong>: &quot;CSS&quot;</li>
+<li><strong>Actual</strong>: &quot;Css&quot;</li>
+<li><strong>Evidence</strong>: <a href="screenshots/01-project-dark.png">screenshots/01-project-dark.png</a></li>
+<li><strong>Root cause hypothesis</strong>: <code>humanizeDocName</code> sentence-cases every name and has no acronym handling</li>
+<li><strong>User impact</strong>: the label looks odd</li>
+<li><strong>Recommended fix</strong>: accept it (it matches the mockup, which also says &quot;Css&quot;) or add a small acronym allowlist</li>
+<li><strong>Workaround</strong>: none needed</li>
+</ul>
+<p><strong>#3 The partial-TL;DR note does not say which field is missing</strong></p>
+<ul>
+<li><strong>Spec requirement</strong>: R6, an &quot;honest missing note&quot;</li>
+<li><strong>Expected</strong>: the note makes clear that the Tech Stack entry is missing</li>
+<li><strong>Actual</strong>: a generic &quot;Not found in .maister/docs/INDEX.md under &quot;## Project Documentation&quot;.&quot; shown under the goal, which reads as if the goal itself were missing</li>
+<li><strong>Evidence</strong>: <a href="screenshots/04-multi-light.png">screenshots/04-multi-light.png</a></li>
+<li><strong>Root cause hypothesis</strong>: a single <code>PROJECT.missing</code> string is used for any absent field</li>
+<li><strong>User impact</strong>: mild confusion in partial cases</li>
+<li><strong>Recommended fix</strong>: name the missing field, for example &quot;Tech stack: not found…&quot;</li>
+<li><strong>Workaround</strong>: open INDEX.md</li>
+</ul>
+<h3>5.4 Cosmetic</h3>
+<p><strong>#1 Raw Markdown backticks in the tech-stack text</strong></p>
+<ul>
+<li><strong>Spec requirement</strong>: R5 / Q4, &quot;the tech stack text shown as written&quot;</li>
+<li><strong>Expected</strong>: readable stack text</li>
+<li><strong>Actual</strong>: literal backticks, as in <code>(`yaml`, `markdown-it`)</code> and <code>`vsce`</code></li>
+<li><strong>Evidence</strong>: <a href="screenshots/02-project-light.png">screenshots/02-project-light.png</a></li>
+<li><strong>Root cause hypothesis</strong>: the entry is inserted as plain text, so inline code is not rendered</li>
+<li><strong>User impact</strong>: small visual noise; the content is still correct</li>
+<li><strong>Recommended fix</strong>: strip the backticks or render inline code spans only</li>
+<li><strong>Workaround</strong>: none needed</li>
+</ul>
+<h2>6. Console &amp; Network Errors</h2>
+<p><em>None observed.</em> No console errors and no page errors appeared on any of the 8 renders. The only errors were in the mockup pages' own design-studio websocket, not in the product.</p>
+<h2>7. Spec Alignment</h2>
+<ul>
+<li><strong>Fully implemented</strong>: R3 grouping and order, R4 plus amendment (goal from vision.md), R5 TL;DR card with no chips and source links, R6 empty and partial states, R8 back control, breadcrumb and no Source button, R9 and R10 client side (the <code>openDoc</code> anchor split, <code>openFile</code> for non-docs files)</li>
+<li><strong>Partially implemented</strong>: <em>None.</em></li>
+<li><strong>Not implemented</strong>: <em>None.</em></li>
+<li><strong>Extra (unspecified) behavior</strong>: the group headers are collapsible (<code>aria-expanded</code>), matching the mockup annotation</li>
+</ul>
+<h2>8. Variances from Plan</h2>
+<ul>
+<li>R1, the sidebar nav node, was not browser-tested because it is a VS Code TreeView. A code check confirmed that <code>navTree.ts</code> returns <code>[DASHBOARD_NODE, PROJECT_NODE]</code> with <code>ThemeIcon('book')</code> and the <code>maister.openProject</code> command, and that <code>package.json</code> hides <code>maister.openProject</code> with <code>&quot;when&quot;: &quot;false&quot;</code>.</li>
+<li>The theme token values were injected by the test setup, because the harness supplies none.</li>
+<li>R11 (watcher) and host-side validation are outside the browser's reach and are covered by the unit and integration suites.</li>
+</ul>
+<h2>9. Evaluation Against Exit Criteria</h2>
+<table>
+<thead>
+<tr>
+<th>Criterion (from spec)</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project page shows goal and stack text from this repo</td>
+<td>✅</td>
+<td>4.1</td>
+</tr>
+<tr>
+<td>Every <code>.maister/docs/**/*.md</code> appears once, in group order, and opens with a working &quot;← Project&quot;</td>
+<td>✅</td>
+<td>4.1, 4.2, 4.5</td>
+</tr>
+<tr>
+<td>Links between docs open rendered; other links open in the editor</td>
+<td>✅</td>
+<td>4.5 steps 5–6 (client side)</td>
+</tr>
+<tr>
+<td>openDoc rejects foreign roots or traversal</td>
+<td>⚠️</td>
+<td>Host-side; not browser-testable (unit tests)</td>
+</tr>
+<tr>
+<td>Live refresh keeps scroll</td>
+<td>⚠️</td>
+<td>Not browser-testable (integration tests)</td>
+</tr>
+</tbody>
+</table>
+<h2>10. Recommendations</h2>
+<ul>
+<li><strong>Must fix before merge</strong>: <em>None.</em></li>
+<li><strong>Should fix soon</strong>: §5.3 #3</li>
+<li><strong>Nice-to-have</strong>: §5.4 #1, §5.3 #2</li>
+</ul>
+<h2>11. Artifacts</h2>
+<ul>
+<li><strong>Screenshots</strong>: <code>verification/screenshots/</code> (13 files: 8 surface renders, 1 focus, 4 mockup captures)</li>
+<li><strong>Visual-fidelity report</strong>: <code>verification/visual-fidelity.md</code></li>
+<li><strong>Console log dump</strong>: inline in §6</li>
+</ul>
+<h2>12. Conclusion</h2>
+<p>The verdict is ⚠️ GO WITH CAVEATS. Every browser-verifiable requirement passed with real repo content, and there were no console errors. The remaining items are presentational polish. The recommendation is to merge, and optionally to reword the partial missing note first.</p>
+</section><h2>Screenshots</h2><div class="card"><b>Project page</b><div class="pair"><img class="shot" src="screenshots/01-project-dark.png" alt="01-project-dark.png"><img class="shot" src="screenshots/02-project-light.png" alt="02-project-light.png"></div></div><div class="card"><b>Multi-root</b><div class="pair"><img class="shot" src="screenshots/03-multi-dark.png" alt="03-multi-dark.png"><img class="shot" src="screenshots/04-multi-light.png" alt="04-multi-light.png"></div></div><div class="card"><b>Empty state</b><div class="pair"><img class="shot" src="screenshots/05-empty-dark.png" alt="05-empty-dark.png"><img class="shot" src="screenshots/06-empty-light.png" alt="06-empty-light.png"></div></div><div class="card"><b>Doc reader</b><div class="pair"><img class="shot" src="screenshots/07-reader-dark.png" alt="07-reader-dark.png"><img class="shot" src="screenshots/08-reader-light.png" alt="08-reader-light.png"></div></div><div class="card"><b>Focus</b><div class="pair"><img class="shot" src="screenshots/09-project-focus-ring.png" alt="09-project-focus-ring.png"></div></div></body></html>

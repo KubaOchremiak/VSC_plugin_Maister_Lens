@@ -27,22 +27,36 @@ describe('strings', () => {
     assert.ok(found.size > 0, 'src/strings.ts exports no strings at all');
 
     const offenders = [...found].filter(([, text]) => FORBIDDEN.test(text));
-    assert.deepEqual(offenders, [], `forbidden wording in src/strings.ts: ${JSON.stringify(offenders)}`);
+    assert.deepEqual(
+      offenders,
+      [],
+      `forbidden wording in src/strings.ts: ${JSON.stringify(offenders)}`
+    );
+  });
+
+  it('labels the shim back button "\u2190 Lens Dashboard", distinct from the fallback breadcrumb (FR1)', () => {
+    assert.equal(strings.SHIM.lensBack, '\u2190 Lens Dashboard');
+    assert.notEqual(strings.SHIM.lensBack, strings.FALLBACK.breadcrumb);
   });
 
   it('titles the Overview view "Tasks"', () => {
     assert.equal(strings.OVERVIEW.title, 'Tasks');
   });
 
-  it('gives the native fallback the same breadcrumb copy as the Risks view', () => {
+  it('gives the native fallback the same breadcrumb copy as the Follow-ups view', () => {
     assert.equal(strings.FALLBACK.breadcrumb, '\u2190 Dashboard');
     assert.equal(strings.FALLBACK.breadcrumbLabel, 'Breadcrumb');
-    assert.equal(strings.FALLBACK.breadcrumb, strings.RISKS.breadcrumb);
-    assert.equal(strings.FALLBACK.breadcrumbLabel, strings.RISKS.breadcrumbLabel);
+    assert.equal(strings.FALLBACK.breadcrumb, strings.FOLLOW_UPS.breadcrumb);
+    assert.equal(strings.FALLBACK.breadcrumbLabel, strings.FOLLOW_UPS.breadcrumbLabel);
   });
 
   it('exports a visible and an accessible label for the Dashboard nav row', () => {
     assert.ok(strings.NAV.dashboard.length > 0, 'NAV.dashboard is empty');
     assert.ok(strings.NAV.dashboardLabel.length > 0, 'NAV.dashboardLabel is empty');
+  });
+  it('words the unreadable data-file note for the Follow-ups tile and view', () => {
+    assert.equal(strings.unreadableText(0), '');
+    assert.equal(strings.unreadableText(1), '1 task data file could not be read');
+    assert.equal(strings.unreadableText(3), '3 task data files could not be read');
   });
 });

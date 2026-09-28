@@ -7,7 +7,7 @@
  * This module is deliberately free of `vscode`, so the boundary can be unit-tested.
  */
 
-import { containedRelPath } from '../model/relPath.ts';
+import { containedRelPath, SCHEME } from '../model/relPath.ts';
 
 const MAX_TEXT_CHARS = 200;
 const MAX_FACET_MEMBERS = 16;
@@ -57,7 +57,14 @@ export type Message =
   | { type: 'setFilter'; patch: Record<string, unknown> }
   | { type: 'clearFilter' }
   | { type: 'openDashboard' }
-  | { type: 'openRisks'; folderUri?: string }
+  | { type: 'openProject' }
+  | {
+      type: 'openDoc';
+      docsFolderUri: string;
+      docRelPath: string;
+      anchor?: string;
+    }
+  | { type: 'openFollowUps'; folderUri?: string }
   | { type: 'startWorkflow' }
   | { type: 'runNextAction'; folderUri: string };
 
@@ -68,11 +75,18 @@ export interface MessageContext {
   /** Task folder of the document that sent a `navigate`; without it, `navigate` is refused. */
   hostFolderUri?: string;
   /**
+   * The task-relative folder of the hosted document (`''` for the task dashboard). A
+   * `navigate` href is relative to it. Set by the panel only, never read from a message.
+   */
+  hostBaseRelDir?: string;
+  /**
    * The workspace folder the surface's workspace-relative paths are rooted at — the folder
    * holding the task on screen. `openFile` resolves inside it and nowhere else; without it
    * there is no root to contain against, so `openFile` is refused.
    */
   workspaceRootUri?: string;
+  /** Every open workspace folder; an `openDoc` root must be exactly one of them. */
+  workspaceFolderUris?: readonly string[];
 }
 
 export type Validation = { ok: true; message: Message } | { ok: false; reason: string };
@@ -101,12 +115,13 @@ function isEnumArray(value: unknown, allowed: readonly string[]): boolean {
 }
 
 /**
- * Resolves `relPath` against `folderUri` and returns the folder-relative result, or `null`
- * when it points at anything outside that folder. Decoding comes first and normalizing
- * second, so `%2e%2e%2f` is a `..` segment by the time containment is decided; an absolute
- * path, a foreign scheme and a backslash separator are all refused outright.
+ * Resolves `relPath` against `folderUri`, relative to `baseRelDir` inside it, and returns the
+ * folder-relative result, or `null` when it points at anything outside that folder. Decoding
+ * comes first, so `%2e%2e%2f` is a `..` segment by the time containment is decided; a
+ * scheme, an absolute path and a backslash are refused on the href alone, before the join,
+ * and containment is decided on the normalized joined path.
  */
-export function resolveInside(folderUri: string, relPath: string): string | null {
+export function resolveInside(folderUri: string, relPath: string, baseRelDir = ''): string | null {
   try {
     new URL(folderUri.endsWith('/') ? folderUri : `${folderUri}/`);
   } catch {
@@ -119,7 +134,10 @@ export function resolveInside(folderUri: string, relPath: string): string | null
   } catch {
     return null;
   }
-  return containedRelPath(decoded);
+  if (SCHEME.test(decoded) || decoded.startsWith('/') || decoded.includes('\\')) {
+    return null;
+  }
+  return containedRelPath(baseRelDir === '' ? decoded : `${baseRelDir}/${decoded}`);
 }
 
 function validPatch(patch: unknown): Record<string, unknown> | null {
@@ -219,6 +237,25 @@ function validateArtifact(raw: Record<string, unknown>, context: MessageContext)
   return accept(raw.anchor === undefined ? message : { ...message, anchor: raw.anchor });
 }
 
+function validateDoc(raw: Record<string, unknown>, context: MessageContext): Validation {
+  const docsFolderUri = raw.docsFolderUri;
+  if (typeof docsFolderUri !== 'string' || !context.workspaceFolderUris?.includes(docsFolderUri)) {
+    return refuse('openDoc carries a docsFolderUri that is not a workspace folder');
+  }
+  if (typeof raw.docRelPath !== 'string') {
+    return refuse('openDoc carries no docRelPath');
+  }
+  const docRelPath = resolveInside(docsFolderUri, raw.docRelPath);
+  if (docRelPath === null || !/\.md$/i.test(docRelPath)) {
+    return refuse(`openDoc path ${raw.docRelPath} is not a markdown file inside .maister/docs`);
+  }
+  if (raw.anchor !== undefined && (typeof raw.anchor !== 'string' || !ANCHOR.test(raw.anchor))) {
+    return refuse('openDoc carries an anchor outside /^[-\\w.]{1,128}$/');
+  }
+  const message: Message = { type: 'openDoc', docsFolderUri, docRelPath };
+  return accept(raw.anchor === undefined ? message : { ...message, anchor: raw.anchor });
+}
+
 function validateNavigate(raw: Record<string, unknown>, context: MessageContext): Validation {
   if (typeof raw.href !== 'string') {
     return refuse('navigate carries no href');
@@ -227,7 +264,7 @@ function validateNavigate(raw: Record<string, unknown>, context: MessageContext)
     return refuse(`navigate from a surface that hosts no task folder: ${raw.href}`);
   }
   // A2.1 — containment is the single final word, so another task's dashboard is out of folder.
-  const targetRelPath = resolveInside(context.hostFolderUri, raw.href);
+  const targetRelPath = resolveInside(context.hostFolderUri, raw.href, context.hostBaseRelDir);
   if (targetRelPath === null) {
     return refuse(`navigate to ${raw.href} resolves outside the hosting task folder`);
   }
@@ -260,7 +297,9 @@ function validateOpenFile(raw: Record<string, unknown>, context: MessageContext)
   }
   const folderUri = context.workspaceRootUri;
   if (folderUri === undefined) {
-    return refuse(`openFile from a surface that hosts no workspace folder: ${raw.workspaceRelPath}`);
+    return refuse(
+      `openFile from a surface that hosts no workspace folder: ${raw.workspaceRelPath}`
+    );
   }
   const workspaceRelPath = resolveInside(folderUri, raw.workspaceRelPath);
   return workspaceRelPath === null
@@ -298,6 +337,10 @@ export function validate(raw: unknown, context: MessageContext): Validation {
       return accept({ type: 'clearFilter' });
     case 'openDashboard':
       return accept({ type: 'openDashboard' });
+    case 'openProject':
+      return accept({ type: 'openProject' });
+    case 'openDoc':
+      return validateDoc(raw, context);
     case 'startWorkflow':
       return accept({ type: 'startWorkflow' });
     case 'navigate':
@@ -315,14 +358,14 @@ export function validate(raw: unknown, context: MessageContext): Validation {
         ? refuse(`${raw.type} carries a folderUri that is not in the index`)
         : accept({ type: raw.type, folderUri });
     }
-    case 'openRisks': {
+    case 'openFollowUps': {
       if (raw.folderUri === undefined) {
-        return accept({ type: 'openRisks' });
+        return accept({ type: 'openFollowUps' });
       }
       const folderUri = indexedFolder(raw, context);
       return folderUri === null
-        ? refuse('openRisks carries a folderUri that is not in the index')
-        : accept({ type: 'openRisks', folderUri });
+        ? refuse('openFollowUps carries a folderUri that is not in the index')
+        : accept({ type: 'openFollowUps', folderUri });
     }
     case 'openArtifact':
       return validateArtifact(raw, context);
@@ -332,7 +375,11 @@ export function validate(raw: unknown, context: MessageContext): Validation {
         return refuse('openSource carries a folderUri that is not in the index');
       }
       if (raw.artifactRelPath === undefined) {
-        return accept({ type: 'openSource', folderUri, artifactRelPath: STATE_FILE });
+        return accept({
+          type: 'openSource',
+          folderUri,
+          artifactRelPath: STATE_FILE
+        });
       }
       if (typeof raw.artifactRelPath !== 'string') {
         return refuse('openSource carries a non-string artifactRelPath');
@@ -361,7 +408,7 @@ const OVERVIEW_TYPES = new Set([
   'openTask',
   'openArtifact',
   'openDashboard',
-  'openRisks',
+  'openFollowUps',
   'startWorkflow',
   'runNextAction'
 ]);
@@ -376,7 +423,7 @@ export type OverviewMessage = Extract<
       | 'openTask'
       | 'openArtifact'
       | 'openDashboard'
-      | 'openRisks'
+      | 'openFollowUps'
       | 'startWorkflow'
       | 'runNextAction';
   }

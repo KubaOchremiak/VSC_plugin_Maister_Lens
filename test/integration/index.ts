@@ -14,7 +14,8 @@ const SUITES: Record<string, readonly string[]> = {
     'fallbackTask',
     'reader',
     'dashboardMode',
-    'risksMode'
+    'followUpsMode',
+    'projectMode'
   ],
   untrusted: ['trust']
 };

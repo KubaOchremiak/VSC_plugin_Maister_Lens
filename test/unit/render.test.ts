@@ -12,8 +12,9 @@ import {
 import { READER, format } from '../../src/strings.ts';
 
 const TARGET: RenderTarget = {
+  kind: 'artifact',
   artifactRelPath: 'implementation/implementation-plan.md',
-  taskRelPath: '.maister/tasks/development/auth',
+  baseRelPath: '.maister/tasks/development/auth',
   imageUri: (relPath) => `https://webview/${relPath}`
 };
 
@@ -192,5 +193,36 @@ describe('render/unit', () => {
       { ok: false, notice: READER.companionTooLarge },
       'a companion over the 2 MB ceiling was hosted'
     );
+  });
+
+  it('R10 — under the docs base a .md link is an artifact link and everything else is a file', () => {
+    const docTarget: RenderTarget = {
+      kind: 'doc',
+      artifactRelPath: 'standards/global/coding-style.md',
+      baseRelPath: '.maister/docs',
+      imageUri: (relPath) => `https://webview/${relPath}`
+    };
+    const html = renderArtifact(
+      [
+        '[css](../frontend/css.md#tokens)',
+        '[index](../../INDEX.md)',
+        '[page](../../project/overview.html)',
+        '[task](../../../tasks/development/x/implementation/spec.md)',
+        '[code](../../../../src/panel/render.ts)',
+        '[ext](https://example.com/x)',
+        '[frag](#naming)',
+        '![img](diagram.png)'
+      ].join('\n\n'),
+      docTarget
+    ).bodyHtml;
+
+    assert.ok(html.includes('data-artifact="standards/frontend/css.md#tokens"'), html);
+    assert.ok(html.includes('data-artifact="INDEX.md"'), html);
+    assert.ok(html.includes('data-file=".maister/docs/project/overview.html"'), html);
+    assert.ok(html.includes('data-file=".maister/tasks/development/x/implementation/spec.md"'), html);
+    assert.ok(html.includes('data-file="src/panel/render.ts"'), html);
+    assert.ok(html.includes('data-external="https://example.com/x"'), html);
+    assert.ok(html.includes('href="#naming"'), html);
+    assert.ok(html.includes('src="https://webview/standards/global/diagram.png"'), html);
   });
 });

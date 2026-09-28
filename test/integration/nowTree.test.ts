@@ -2,7 +2,6 @@ import { strict as assert } from 'node:assert';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { createTaskWatcher } from '../../src/index/watcher.ts';
-import { openRiskCount } from '../../src/model/risks.ts';
 import { NOW } from '../../src/strings.ts';
 import {
   NowTreeProvider,
@@ -171,7 +170,7 @@ describe('nowTree/integration', () => {
       });
       assert.deepEqual(
         children.map((child) => child.kind),
-        ['progress', 'decision', 'artifacts', 'risks'],
+        ['progress', 'decision', 'artifacts'],
         'the child order does not match § 4.1'
       );
       assert.equal(children[2].label, NOW.recentArtifacts);
@@ -185,23 +184,16 @@ describe('nowTree/integration', () => {
       const artifactItem = provider.getTreeItem(artifactNodes[0]);
       assert.equal(artifactItem.contextValue, 'artifact.md');
 
-      assert.equal(
-        children[3].label,
-        `${openRiskCount(task)} open risks`,
-        'the risk child does not read openRiskCount'
-      );
-
       const bareTask = harness.index.snapshot.tasks.get(folderUriOf(bare));
       assert.ok(bareTask);
-      assert.equal(openRiskCount(bareTask), 0);
       const bareChildren = await provider.getChildren({
         kind: 'task',
         folderUri: folderUriOf(bare),
         label: bareTask.title
       });
       assert.ok(
-        !bareChildren.some((child) => child.kind === 'risks'),
-        'Open risks was not omitted at zero'
+        bareChildren.every((child) => ['progress', 'decision', 'artifacts'].includes(child.kind)),
+        'a bare task shows a child outside progress, decision and artifacts'
       );
     } finally {
       provider.dispose();
@@ -305,12 +297,12 @@ describe('nowTree/integration', () => {
         { folderUri, artifactRelPath: 'implementation/spec.md', variant: 'md' }
       ]);
 
-      const risksItem = children
-        .filter((child) => child.kind === 'risks')
-        .map((child) => provider.getTreeItem(child))[0];
-      assert.ok(risksItem, 'the task has no Open risks child');
-      assert.equal(risksItem.command?.command, 'maister.openRisks');
-      assert.deepEqual(risksItem.command?.arguments, [{ folderUri }]);
+      assert.ok(
+        children
+          .map((child) => provider.getTreeItem(child))
+          .every((item) => item.command?.command !== 'maister.openFollowUps'),
+        'the Now tree still links a task to its risks or follow-ups'
+      );
     } finally {
       provider.dispose();
       harness.dispose();
