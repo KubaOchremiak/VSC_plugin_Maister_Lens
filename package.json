@@ -2,7 +2,7 @@
   "name": "maister-lens",
   "displayName": "Maister Lens",
   "description": "Explore Maister AI development workflows, tasks, artifacts and follow-ups inside VS Code.",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "publisher": "jakub-ochremiak",
   "license": "MIT",
   "repository": {

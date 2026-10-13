@@ -18,6 +18,17 @@ Maister product and does not imply affiliation with or endorsement by the Maiste
 ## Getting started
 
 Requires desktop **VS Code 1.90 or newer** and a local or remote filesystem workspace.
+
+1. Open **Extensions** in VS Code (`Ctrl+Shift+X` on Windows/Linux, `Cmd+Shift+X` on macOS).
+2. Search for **Maister Lens** by **Jakub Ochremiak** and click **Install**.
+   You can also install it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=jakub-ochremiak.maister-lens).
+
+Alternatively, install from the command line:
+
+```sh
+code --install-extension jakub-ochremiak.maister-lens
+```
+
 Open the folder containing `.maister/tasks/<type>/<task>/orchestrator-state.yml`, then
 select the **Maister Lens** icon in the Activity Bar. Use **Overview → Dashboard** for
 all tasks, **Now** for unfinished work, and **Tasks** to search and filter.
@@ -26,20 +37,6 @@ Maister Lens reads existing Maister task files; it does not install Maister or c
 workflows by itself. To execute `/maister:*` commands, configure Maister in your chosen
 assistant. Viewing tasks does not require an AI account. Git attribution requires Git.
 Only trust workspaces whose HTML and scripts you are comfortable running.
-
-### Install a local build
-
-With Node.js 22.18 or newer and npm available, run from this repository:
-
-```sh
-npm ci
-npm run package
-code --install-extension ./maister-lens-0.1.1.vsix
-```
-
-Alternatively, run **Extensions: Install from VSIX…** in VS Code and select the package.
-Run **Developer: Reload Window** after updating an existing installation.
-`npm run package` builds the extension automatically before creating the VSIX.
 
 ### Light, dark and high-contrast themes
 
@@ -159,6 +156,8 @@ Exactly two, both load-bearing:
 
 ## Development
 
+Requires Node.js 22.18 or newer and npm. Run from this repository:
+
 ```sh
 npm ci
 npm run build          # esbuild bundle into dist/
@@ -178,6 +177,19 @@ Criteria that no harness can reach — hosted-dashboard rendering, the Claude Co
 a real installation, the four themes, a screen-reader pass and mockup comparison — remain manual release checks; see [the release checklist](docs/RELEASING.md).
 Do not treat automated test results as manual sign-off.
 
+### Install a local build
+
+To test a development build in VS Code:
+
+```sh
+npm run package
+code --install-extension ./maister-lens-0.3.0.vsix
+```
+
+Alternatively, run **Extensions: Install from VSIX…** in VS Code and select the package.
+Run **Developer: Reload Window** after updating an existing installation.
+`npm run package` builds the extension automatically before creating the VSIX.
+
 ### Benchmark
 
 Measured on Darwin arm64 over 300 generated task folders. Reported, **not** a gate:
@@ -188,7 +200,7 @@ Measured on Darwin arm64 over 300 generated task folders. Reported, **not** a ga
 | Warm start from the cached snapshot | 14.1 ms | < 300 ms |
 | Decision-text query | 1.3 ms | < 100 ms |
 
-## Known limitations (first release)
+## Known limitations
 
 1. Standalone `.maister/tasks/mockups/*` folders have no state file and are not listed.
 2. `quick-dev`, `quick-plan` and `quick-bugfix` leave no task directory, so they are invisible.
