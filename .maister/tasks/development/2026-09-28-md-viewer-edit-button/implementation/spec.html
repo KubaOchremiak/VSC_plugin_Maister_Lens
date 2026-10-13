@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Specification — Edit button on markdown viewer pages</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.meta { color:var(--dim); font-size:13px; }
+.grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
+.grid2 .card { margin:0; }
+.in h3 { color:var(--ok); } .out h3 { color:var(--dim); }
+h3 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; margin:0 0 8px; }
+ul { margin:6px 0; padding-left:20px; } li { margin:3px 0; }
+.stories { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+.story { border-left:3px solid var(--accent); }
+.tldr { border-left:3px solid var(--accent); }
+.new { color:var(--warn); font-weight:600; } .reuse { color:var(--ok); font-weight:600; }
+.toc { font-size:13px; color:var(--dim); }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <span class="here">Spec</span>
+  <a href="implementation-plan.html">Plan</a>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="spec.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+
+<header>
+  <span class="badge">Specification</span>
+  <h1>Edit button on Maister Lens markdown viewer pages</h1>
+  <p class="meta">Task 2026-09-28-md-viewer-edit-button · generated 2026-09-28 · <a href="spec.md" target="_blank" rel="noopener">spec.md</a></p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>10</b><span>requirements</span></div>
+  <div class="tile"><b>8</b><span>acceptance criteria</span></div>
+  <div class="tile"><b>11</b><span>reused elements</span></div>
+  <div class="tile"><b>4</b><span>new elements</span></div>
+  <div class="tile"><b>Low</b><span>risk level</span></div>
+</div>
+
+<section class="card tldr">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <p>Every markdown page the reader bundle renders (<code>.maister/docs</code> docs and <code>.md</code> task artifacts, rendered or refused) gets a text <b>Edit</b> button. Refused <code>.html</code> artifacts get none. It sits at the right end of a new, non-sticky header row, and opens the underlying file in VS Code's text editor in the same editor group.</p>
+  <ul>
+    <li>Artifact pages post the existing <code>openSource</code> message.</li>
+    <li>Doc pages post a new, strictly validated <code>editDoc {docsFolderUri, docRelPath}</code>. Its validation shares the <code>openDoc</code> rules; the logic is extracted once, not copied.</li>
+    <li>The host reuses <code>openInEditor</code> → <code>vscode.open</code>. The existing watchers refresh the viewer after a save.</li>
+    <li>The README and CHANGELOG are updated. vision.md is not changed.</li>
+  </ul>
+  <h3>Key decisions</h3>
+  <ul>
+    <li><b>Doc pages post a new <code>editDoc</code> message, not the existing <code>openFile</code>.</b> <code>openFile</code> accepts any workspace file, while <code>editDoc</code> accepts only <code>.md</code> files under <code>.maister/docs</code> in a workspace folder (validation.md, allowlists).</li>
+    <li><b>Artifact pages reuse <code>openSource</code>.</b> It is already validated, and AC5 says artifact <code>vscode.open</code> is reached "only via openSource".</li>
+    <li><b>The Edit button sits outside <code>nav.rd-crumbs</code>, after the back link and breadcrumb in DOM order.</b> Edit is an action, not navigation, and readerDoc.spec needs the strict locator and the focus order to stay as they are.</li>
+    <li><b>Visible text is "Edit". The tooltip (<code>title</code>) is "Open &lt;file name&gt; in the editor".</b> There is no aria-label. An sr-only suffix makes the accessible name "Edit &lt;file name&gt;". It still starts with the visible "Edit" (WCAG 2.5.3 label-in-name). <i>(Amended after verification.)</i></li>
+    <li><b>Refused pages keep both controls.</b> They show the header Edit button and the in-body "Open source file" button. The user accepted the duplication.</li>
+    <li><b>Styling is text only (<code>.action .action-small</code>).</b> There is no icon font and no CSP or asset change.</li>
+    <li><b>Nothing else changes.</b> No title-bar command for doc mode, no trust gate, no split-editor option. The existing artifact title-bar Open Source File icon stays.</li>
+  </ul>
+  <h3>Open questions / risks</h3>
+  <ul>
+    <li><span class="sev info">info</span><b>The fixture passes a different URI than the real panel.</b> The DOM fixture <code>readerDocPayload()</code> passes the docs directory as <code>docsFolderUri</code>, and the real panel passes the workspace folder. The webview only echoes <code>payload.location.docsFolderUri</code>, so the DOM test asserts against the fixture's value, and the integration test asserts against the real workspace folder. The fixture is not changed.</li>
+    <li><span class="sev info">info</span><b>The viewer is hidden while editing.</b> Opening in the same editor group puts the text editor in front of the viewer. The live refresh after a save is visible only when the user switches back to the viewer tab. This is expected.</li>
+    <li><span class="sev info">info</span><b>Refused <code>.html</code> artifacts get no Edit button.</b> They have no markdown to edit, and the in-body "Open source file" button still reaches the file. <i>(Amended after verification.)</i></li>
+    <li><span class="sev warning">warning</span><b>README wording must change.</b> The "read-only" and "one, explicit way" statements (README L12, L84-85) have to be reworded so they stay true.</li>
+  </ul>
+</section>
+
+<p class="toc">Contents: <a href="#scope">Scope</a> · <a href="#stories">User stories</a> · <a href="#requirements">Requirements</a> · <a href="#components">Components</a> · <a href="#approach">Technical approach</a> · <a href="#tests">Testing</a> · <a href="#standards">Standards</a> · <a href="#success">Success criteria</a></p>
+
+<h2 id="scope">Goal &amp; scope</h2>
+<p>Let a reviewer who is reading a rendered standard, project doc or task artifact jump into VS Code's regular text editor on that <code>.md</code> file in one click, so they can make changes.</p>
+<div class="grid2">
+  <div class="card in">
+    <h3>In scope</h3>
+    <ul>
+      <li>The reader header row with the Edit button (docs and <code>.md</code> artifacts, rendered and refused)</li>
+      <li>The <code>editDoc</code> message: union member, shared validation, dispatch arm</li>
+      <li>Two strings (<code>READER.edit</code>, <code>READER.editTitle</code>) and a header-row CSS rule</li>
+      <li>Unit, DOM and integration tests</li>
+      <li>README (L12, L84-85, modes table) and a CHANGELOG <code>[Unreleased] ### Added</code> entry</li>
+    </ul>
+  </div>
+  <div class="card out">
+    <h3>Out of scope</h3>
+    <ul>
+      <li>A title-bar Edit command for doc mode, and any <code>package.json</code> or manifest-test change</li>
+      <li>Removing or merging the refused-page "Open source file" button</li>
+      <li>Codicons, icon assets, or any CSP change</li>
+      <li>Opening to the side (a split editor) or any configurable editor location</li>
+      <li>An Edit button on hosted HTML companions or task <code>dashboard.html</code></li>
+      <li>Trust gating for <code>editDoc</code></li>
+      <li>Changes to vision.md</li>
+      <li>Fixing the DOM fixture's <code>docsFolderUri</code> mismatch, and serializer restore of doc mode</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="stories">User stories</h2>
+<div class="stories">
+  <div class="card story">As a developer reviewing a standard or project doc in Maister Lens, I want an Edit button in the top-right corner so that I can fix the doc in the regular editor without finding it in Explorer.</div>
+  <div class="card story">As a developer reading a task artifact, I want the same Edit button so that correcting a spec or plan is one click away, in the same place on every markdown page.</div>
+  <div class="card story">As a keyboard or screen-reader user, I want Edit to be a named, tab-reachable button after the page navigation so that I can reach it without a pointer.</div>
+</div>
+
+<h2 id="requirements">Core requirements</h2>
+<div class="card">
+<table>
+  <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td>R1</td><td><b>Header row.</b> The reader renders a header row containing the page's existing header controls followed by an Edit button.
+      <ul>
+        <li>The row is used for <code>kind: 'doc'</code> payloads (back link + breadcrumb) and for artifact payloads (breadcrumb).</li>
+        <li>It applies to rendered and refused pages alike. On artifact pages, Edit is rendered only when <code>artifactRelPath</code> ends in <code>.md</code>.</li>
+        <li>The row is not sticky. Edit is right-aligned and wraps cleanly at narrow widths.</li>
+        <li>Hero chips, the notice banner, the summary card and <code>main#doc</code> stay below the row, unchanged.</li>
+      </ul></td><td>Must</td></tr>
+    <tr><td>R2</td><td><b>Placement constraints.</b>
+      <ul>
+        <li>Edit is not inside <code>nav.rd-crumbs</code> or any <code>nav</code>.</li>
+        <li>In DOM and tab order it comes after the back link and breadcrumb controls.</li>
+        <li>Doc-mode focusables at index 1–2 stay <code>[PROJECT.back, PROJECT.breadcrumb]</code>.</li>
+      </ul></td><td>Must</td></tr>
+    <tr><td>R3</td><td><b>Label and tooltip.</b>
+      <ul>
+        <li>The button is a <code>&lt;button type="button" class="action action-small"&gt;</code> whose visible text is <code>READER.edit</code> = "Edit".</li>
+        <li>Its <code>title</code> is <code>format(READER.editTitle, {file})</code>, with <code>READER.editTitle</code> = "Open {file} in the editor". <code>{file}</code> is the last path segment of <code>docRelPath</code> (doc) or <code>artifactRelPath</code> (artifact).</li>
+        <li>Both strings live in <code>src/strings.ts</code>.</li>
+        <li>There is no aria-label. The content is <code>"Edit "</code> followed by an sr-only <code>hidden(file)</code> span, so the accessible name is "Edit &lt;file&gt;".</li>
+      </ul></td><td>Must</td></tr>
+    <tr><td>R4</td><td><b>Doc action.</b> Clicking Edit on a doc page posts <code>{type:'editDoc', docsFolderUri: location.docsFolderUri, docRelPath: location.docRelPath}</code> and nothing else. Doc mode still never posts <code>openSource</code>, <code>openArtifact</code> or <code>openTask</code>.</td><td>Must</td></tr>
+    <tr><td>R5</td><td><b>Artifact action.</b> Clicking Edit on an artifact page posts <code>{type:'openSource', folderUri: payload.folderUri, artifactRelPath: payload.location.artifactRelPath}</code>. This is the same message the existing <code>sourceButton()</code> sends.</td><td>Must</td></tr>
+    <tr><td>R6</td><td><b><code>editDoc</code> validation.</b> <code>editDoc</code> joins the <code>Message</code> union and the A2 <code>validate</code> switch. It is accepted only when all of the following hold:
+      <ul>
+        <li><code>docsFolderUri</code> is exactly one of <code>context.workspaceFolderUris</code>;</li>
+        <li><code>docRelPath</code> is a string that resolves inside the root through <code>resolveInside</code>, and is returned normalised;</li>
+        <li>the resolved path ends in <code>.md</code> (case-insensitive).</li>
+      </ul>
+      Other fields are dropped from the accepted message. Refusal reasons name the message type (<code>editDoc …</code>).
+      <ul>
+        <li>The folder/path/<code>.md</code> checks are extracted from <code>validateDoc</code> into one shared helper that both <code>openDoc</code> and <code>editDoc</code> use.</li>
+        <li><code>openDoc</code> behaviour and refusal wording keep their current meaning, and existing <code>messages.test.ts</code> regexes (<code>/workspace folder/</code>, etc.) stay green.</li>
+        <li><code>editDoc</code> is not trust-gated, and it is not added to the Overview view's <code>OVERVIEW_TYPES</code>.</li>
+      </ul></td><td>Must</td></tr>
+    <tr><td>R7</td><td><b><code>editDoc</code> dispatch.</b> <code>TaskPanel.dispatch</code> gets an <code>editDoc</code> arm that calls <code>openInEditor(joinPath(parse(docsFolderUri), ...DOCS_ROOT, docRelPath))</code>. This is the same URI <code>buildDoc</code> renders, and it opens as a normal editor tab in the active group. Failures are logged by <code>run()</code> and never thrown.</td><td>Must</td></tr>
+    <tr><td>R8</td><td><b>Live refresh.</b> After the user saves in the editor, the viewer re-renders through the existing docs watcher (doc) or the artifact/task watcher (artifact). No new code is needed.</td><td>Must</td></tr>
+    <tr><td>R9</td><td><b>Unchanged surfaces.</b>
+      <ul>
+        <li>The in-body <code>READER.openSource</code> button on refused artifacts stays.</li>
+        <li>The title-bar <code>maister.openArtifactSource</code> stays.</li>
+        <li>Hosted HTML companions and task <code>dashboard.html</code> get no Edit button, because they don't run the reader bundle.</li>
+        <li><code>package.json</code> contributions and vision.md are unchanged.</li>
+      </ul></td><td>Must</td></tr>
+    <tr><td>R10</td><td><b>Docs.</b>
+      <ul>
+        <li>README L12: reword "read-only" to "never writes files itself; editing happens in VS Code's own editor".</li>
+        <li>README L84-85: describe the two explicit hand-offs, the in-page <b>Edit</b> on every markdown page and <b>Open Source File</b> in the title bar.</li>
+        <li>README modes table: mention Edit in the Artifact row and the Project row.</li>
+        <li>CHANGELOG <code>[Unreleased]</code>: add a <code>### Added</code> entry in the "<b>Feature</b> — sentence" style.</li>
+      </ul></td><td>Must</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="components">Reusable vs new components</h2>
+<div class="card">
+<table>
+  <thead><tr><th>Element</th><th>Location</th><th>Kind</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr><td><code>el()</code> helper + <code>post()</code></td><td><code>src/webview/components.ts</code>, <code>src/webview/reader.ts</code> L35</td><td class="reuse">reuse</td><td>Build the button and send the message</td></tr>
+    <tr><td><code>sourceButton()</code></td><td><code>src/webview/reader.ts</code> L173-183</td><td class="reuse">reuse</td><td>Template for the artifact <code>openSource</code> post (same fields)</td></tr>
+    <tr><td><code>docHeader()</code> / <code>breadcrumb()</code></td><td><code>src/webview/reader.ts</code> L58-84</td><td class="reuse">reuse</td><td>Existing header controls, wrapped in the new row unchanged</td></tr>
+    <tr><td><code>render()</code></td><td><code>src/webview/reader.ts</code> L200-251</td><td class="reuse">reuse</td><td>Single insertion point for both modes</td></tr>
+    <tr><td><code>validateDoc</code> + <code>resolveInside</code></td><td><code>src/panel/messages.ts</code> L240-257, L124-141</td><td class="reuse">reuse</td><td>Source of the shared doc-path check for <code>openDoc</code>/<code>editDoc</code></td></tr>
+    <tr><td><code>openSource</code> validation</td><td><code>src/panel/messages.ts</code> L372-391</td><td class="reuse">reuse</td><td>Artifact path; unchanged</td></tr>
+    <tr><td><code>openInEditor</code> → <code>run('vscode.open')</code></td><td><code>src/panel/panel.ts</code> L697-715</td><td class="reuse">reuse</td><td>Opens the editor, logs and never throws</td></tr>
+    <tr><td><code>DOCS_ROOT</code></td><td><code>src/panel/panel.ts</code> L91</td><td class="reuse">reuse</td><td>Same join <code>buildDoc</code> uses (L1375-1376)</td></tr>
+    <tr><td>Docs / artifact watchers</td><td><code>src/panel/panel.ts</code> L1653-1700</td><td class="reuse">reuse</td><td>Live refresh after save</td></tr>
+    <tr><td><code>READER</code>, <code>format()</code></td><td><code>src/strings.ts</code> L399-427, L502</td><td class="reuse">reuse</td><td>Home for the new label and tooltip template</td></tr>
+    <tr><td><code>.action</code>, <code>.action-small</code>, <code>margin-left:auto</code> precedent</td><td><code>media/webview.css</code> L276-305, L831, <code>.fb-head</code> L359, <code>.filter-note</code> L676</td><td class="reuse">reuse</td><td>Button look and right alignment</td></tr>
+    <tr><td>Test helpers</td><td><code>test/dom/harness.ts</code> (<code>openSurface</code>, <code>surface.posted()</code>, <code>focusables</code>, <code>readerPayload</code>, <code>readerDocPayload</code>); <code>test/helpers/tempWorkspace.ts</code> <code>spyOnCommand</code> L190; <code>test/integration/projectMode.test.ts</code> <code>projectHarness()</code>; <code>test/unit/messages.test.ts</code> <code>accepted</code>/<code>refused</code></td><td class="reuse">reuse</td><td>All new tests build on these</td></tr>
+    <tr><td><code>editButton</code> builder</td><td><code>src/webview/reader.ts</code></td><td class="new">new</td><td>Takes the file path and the message to post. <code>sourceButton()</code> has a different label and class and no tooltip, and is still needed in the refused body, so it can't be reused as-is. The shared parts are only <code>el()</code> and <code>post()</code>.</td></tr>
+    <tr><td>Header row wrapper (e.g. <code>div.rd-head</code>)</td><td><code>reader.ts</code> + <code>media/webview.css</code></td><td class="new">new</td><td>No existing reader element holds the nav and an action side by side, and the Edit button must not go inside <code>nav.rd-crumbs</code>.</td></tr>
+    <tr><td><code>editDoc</code> message</td><td><code>messages.ts</code>, <code>panel.ts</code></td><td class="new">new</td><td>One union member, one validate case (backed by the shared helper), one dispatch arm. Justified because <code>openFile</code> is looser than an allowlist and <code>openSource</code> needs an indexed task folder, which docs lack.</td></tr>
+    <tr><td><code>READER.edit</code>, <code>READER.editTitle</code></td><td><code>src/strings.ts</code></td><td class="new">new</td><td>The two strings</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="approach">Technical approach</h2>
+<div class="card">
+  <p><b>Data flow:</b> click → <code>post</code> → <code>panel.handleMessage</code> → <code>validate</code> → <code>dispatch</code> → <code>openInEditor</code> → <code>vscode.open</code>. The user saves, the watcher fires, and the reader re-renders at the same <code>locationKey</code> with scroll preserved.</p>
+  <details><summary>Webview (reader.ts)</summary>
+    <p><code>render()</code> builds one header row.</p>
+    <ul>
+      <li>For doc: <code>[...docHeader(payload), editButton(...)]</code>. For artifact: <code>[breadcrumb(payload), editButton(...)]</code>.</li>
+      <li>Hero chips and everything else are appended after the row as today.</li>
+      <li>The existing header elements keep their current vertical arrangement, grouped at the leading side. Edit is pushed to the right with <code>margin-left:auto</code> and aligned with the first header line.</li>
+      <li>The file name for the tooltip is the substring after the last <code>/</code>.</li>
+      <li><code>document_()</code> and the refused-body <code>sourceButton()</code> are unchanged.</li>
+      <li>The module docblock line "no … Source button" stays accurate, because doc mode gets Edit and never the Source button. Update the docblock only if it becomes wrong.</li>
+    </ul>
+  </details>
+  <details><summary>CSS (media/webview.css)</summary>
+    <p>In the reader section, add the header-row rule (flex, wrap, gap, baseline/start alignment) and cancel <code>.action</code>'s <code>margin-top</code> for the header button. Use VS Code theme tokens only, with no new colours.</p>
+  </details>
+  <details><summary>Protocol (messages.ts)</summary>
+    <ul>
+      <li>Add the <code>editDoc</code> union member.</li>
+      <li>Extract the folder/path/<code>.md</code> checks into a shared helper that is parameterised by message type for refusal wording.</li>
+      <li><code>validateDoc</code> keeps its anchor check and calls the helper. The new <code>case 'editDoc'</code> calls the helper and returns <code>{type:'editDoc', docsFolderUri, docRelPath}</code>.</li>
+    </ul>
+  </details>
+  <details><summary>Host (panel.ts)</summary>
+    <p>Add the <code>editDoc</code> dispatch arm (R7). <code>handleMessage</code> (L561-581) already puts <code>workspaceFolderUris</code> into the validation context, so it needs no change.</p>
+  </details>
+</div>
+
+<h2 id="tests">Testing approach</h2>
+<div class="card">
+  <p>Write 2-8 focused tests per implementation step group. Test verification runs only the new and affected tests, not the entire suite.</p>
+  <table>
+    <thead><tr><th>Layer</th><th>File</th><th>Cases</th></tr></thead>
+    <tbody>
+      <tr><td>Unit</td><td><code>test/unit/messages.test.ts</code></td><td>Add an <code>editDoc</code> case next to R9. It covers:
+        <ul>
+          <li>accepts a valid doc and returns a normalised path (for example <code>./standards/global/../frontend/css.md</code> becomes <code>standards/frontend/css.md</code>);</li>
+          <li>drops extra fields such as <code>anchor</code>;</li>
+          <li>refuses a non-workspace <code>docsFolderUri</code>, a trailing-slash folder, and missing <code>workspaceFolderUris</code>, each matching <code>/workspace folder/</code>;</li>
+          <li>refuses a non-<code>.md</code> path, <code>..</code> traversal and a non-string <code>docRelPath</code>;</li>
+          <li>is accepted in an untrusted context.</li>
+        </ul>
+        Existing <code>openDoc</code> tests must stay green.</td></tr>
+      <tr><td>DOM</td><td><code>test/dom/readerDoc.spec.ts</code></td><td>Add tests that check:
+        <ul>
+          <li>Edit (<code>getByRole('button', {name: READER.edit, exact: true})</code>) exists once, is not inside <code>nav</code>, comes after back and breadcrumb in <code>focusables</code>, and has <code>title</code> = <code>format(READER.editTitle, {file:'coding-style.md'})</code>;</li>
+          <li>clicking it posts exactly <code>{type:'editDoc', docsFolderUri: &lt;fixture location.docsFolderUri&gt;, docRelPath:'standards/global/coding-style.md'}</code>;</li>
+          <li>a refused doc still shows Edit and no Source button.</li>
+        </ul>
+        Existing tests 1-4 must pass unchanged. Test 3's click-all loop now clicks Edit too, and must still see no openSource, openArtifact or openTask.</td></tr>
+      <tr><td>DOM</td><td><code>surfaces.spec.ts</code> or a new <code>readerArtifact.spec.ts</code></td><td>Tests check:
+        <ul>
+          <li>Edit exists outside <code>nav.rd-crumbs</code>, after the breadcrumb and before the hero chips in tab order;</li>
+          <li>clicking it posts <code>{type:'openSource', folderUri, artifactRelPath:'implementation/implementation-plan.md'}</code>;</li>
+          <li>a refused artifact (<code>readerPayload({refused:true, notice:'x', bodyHtml:''})</code>) shows both Edit and <code>READER.openSource</code>.</li>
+        </ul></td></tr>
+      <tr><td>Integration</td><td><code>test/integration/projectMode.test.ts</code></td><td>Using <code>projectHarness()</code> + <code>spyOnCommand('vscode.open')</code>:
+        <ul>
+          <li><code>handleMessage({type:'editDoc', docsFolderUri: folderUriOf(workspace), docRelPath:'standards/global/coding-style.md'})</code> calls <code>vscode.open</code> once with <code>fsPath</code> = <code>&lt;workspace&gt;/.maister/docs/standards/global/coding-style.md</code>;</li>
+          <li>a refused <code>editDoc</code> (a <code>.yml</code> path, or a folder outside the workspace) calls it zero times.</li>
+        </ul></td></tr>
+      <tr><td>Regression</td><td><code>test/integration/reader.test.ts</code> L82, <code>surfaces.spec</code>/<code>themes.spec</code></td><td>The AC5 test and the a11y and tab-order loops must stay green unmodified.</td></tr>
+    </tbody>
+  </table>
+  <p class="meta">Commands: <code>npm run check</code>, <code>npm run test:dom</code>, <code>npm run test:integration</code>.</p>
+</div>
+
+<h2 id="standards">Standards compliance</h2>
+<div class="card">
+<ul>
+  <li><b>global/validation.md.</b> Webview input is validated host-side, against an allowlist (<code>.md</code> under <code>.maister/docs</code> in a workspace folder), early, with specific refusal reasons.</li>
+  <li><b>global/coding-style.md (DRY).</b> The doc-path check is shared between <code>openDoc</code> and <code>editDoc</code>, not duplicated.</li>
+  <li><b>global/minimal-implementation.md.</b> No title-bar command, icon font, trust gate, split option or fixture rewrite, and no speculative helpers.</li>
+  <li><b>global/commenting.md.</b> No change comments. Keep docblocks accurate.</li>
+  <li><b>global/conventions.md.</b> README and CHANGELOG are updated, and there are no new dependencies.</li>
+  <li><b>frontend/accessibility.md.</b>
+    <ul>
+      <li>Edit is a real <code>&lt;button&gt;</code> with a visible name, keyboard-reachable in document order after the navigation.</li>
+      <li>It has no positive tabindex.</li>
+      <li>The tooltip goes in <code>title</code>, not in a name-overriding aria-label.</li>
+    </ul></li>
+  <li><b>frontend/css.md.</b> Reuse <code>.action</code>/<code>.action-small</code> and theme tokens. The new CSS is minimal.</li>
+  <li><b>frontend/components.md.</b> A single-responsibility button builder with a minimal interface (the file path and the message).</li>
+  <li><b>frontend/responsive.md.</b> The header row wraps at narrow panel widths without horizontal scroll.</li>
+</ul>
+</div>
+
+<h2 id="success">Success criteria</h2>
+<div class="card">
+<table>
+  <thead><tr><th>AC</th><th>Criterion</th></tr></thead>
+  <tbody>
+    <tr><td>AC1</td><td>On every markdown reader page (doc, or <code>.md</code> artifact; rendered or refused), exactly one button with visible text "Edit" and accessible name "Edit &lt;file&gt;" appears at the right end of the header row. Refused <code>.html</code> artifacts show none. It is outside any <code>nav</code> and follows the back and breadcrumb controls in tab order.</td></tr>
+    <tr><td>AC2</td><td>Hovering Edit shows "Open &lt;file name&gt; in the editor" with the page's actual file name.</td></tr>
+    <tr><td>AC3</td><td>Edit on a doc page opens <code>&lt;workspace&gt;/.maister/docs/&lt;docRelPath&gt;</code> in a text editor in the same editor group, through <code>editDoc</code> and <code>vscode.open</code>.</td></tr>
+    <tr><td>AC4</td><td>Edit on an artifact page opens <code>&lt;task folder&gt;/&lt;artifactRelPath&gt;</code> through <code>openSource</code> and <code>vscode.open</code>.</td></tr>
+    <tr><td>AC5</td><td><code>editDoc</code> is refused for a non-workspace folder, for a path escaping the root, and for a non-<code>.md</code> target, and opens nothing in those cases.</td></tr>
+    <tr><td>AC6</td><td>After the user edits and saves the file, switching back to the viewer shows the updated render with no manual refresh.</td></tr>
+    <tr><td>AC7</td><td>All of the following pass unchanged: existing readerDoc.spec tests 1-4, the surfaces/themes a11y loops, messages.test <code>openDoc</code> cases and the reader.test AC5.</td></tr>
+    <tr><td>AC8</td><td>README no longer claims "the one, explicit way", and the CHANGELOG <code>[Unreleased]</code> has an <code>### Added</code> entry for the Edit button.</td></tr>
+  </tbody>
+</table>
+</div>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Plan — Edit button on Maister Lens markdown viewer pages</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.step.todo::before  { content:"☐ "; color:var(--dim); }
+.step.done::before  { content:"☑ "; color:var(--ok); }
+.step.done          { color:var(--dim); }
+.group.todo .g-badge::after { content:"pending"; }
+.group.done .g-badge::after { content:"✓ completed"; color:var(--ok); }
+/* plan-specific */
+.flow { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.wave { display:flex; flex-direction:column; gap:6px; }
+.wave .lbl { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.node { background:var(--accent-soft); color:var(--accent); border-radius:8px; padding:6px 12px; font-weight:600; font-size:13px; }
+.arrow { font-size:22px; color:var(--dim); }
+.group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin:14px 0; }
+.group.done { border-color:var(--ok); }
+.g-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.g-head h3 { margin:0; font-size:15px; }
+.g-badge { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+  padding:2px 8px; border-radius:99px; background:var(--warn-soft); color:var(--warn); }
+.group.done .g-badge { background:var(--ok-soft); }
+.meta { font-size:12.5px; color:var(--dim); margin:6px 0; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px; }
+ul.steps { list-style:none; padding-left:0; margin:8px 0; }
+ul.steps li { padding:4px 0; }
+ul.steps ul { list-style:disc; padding-left:28px; color:var(--dim); font-size:13px; margin:2px 0; }
+.ac { font-size:13px; } .ac li { margin:2px 0; }
+.tldr ul { margin:6px 0; padding-left:20px; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="spec.html">Spec</a> <span class="here">Plan</span>
+  <a href="../verification/implementation-verification.html">Verification</a>
+  <a href="implementation-plan.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Implementation Plan</span>
+  <h1>Edit button on Maister Lens markdown viewer pages</h1>
+  <div class="meta">Generated 2026-09-28 · source: <a href="implementation-plan.md" target="_blank" rel="noopener">implementation-plan.md</a></div>
+</header>
+
+<div class="tiles">
+  <div class="tile"><b>4</b><span>task groups</span></div>
+  <div class="tile"><b>22</b><span>total steps</span></div>
+  <div class="tile"><b>13-22</b><span>new tests</span></div>
+  <div class="tile"><b>2</b><span>waves</span></div>
+</div>
+
+<section class="tldr card">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <ul>
+    <li>There are 4 groups and 22 steps. Groups 1 (protocol + host), 2 (reader UI) and 3 (README/CHANGELOG) do not depend on each other and can run in parallel. Group 4 (test review + full regression) runs last.</li>
+    <li>Groups 1 and 2 are independent because <code>reader.ts</code>'s <code>post()</code> takes <code>unknown</code>. The webview does not import the <code>Message</code> union.</li>
+    <li>Expect 13-22 new tests: unit, DOM and integration.</li>
+  </ul>
+  <h2>Key Decisions</h2>
+  <ul>
+    <li><b>Protocol and host share one group.</b> The union member, validate case and dispatch arm form one contract, and the integration test covers them end to end.</li>
+    <li><b>The artifact DOM tests go in <code>test/dom/surfaces.spec.ts</code></b>, not in a new spec file. This follows minimal implementation and needs no harness changes.</li>
+    <li><b>Docs are a separate, test-free group.</b> AC8 is checked by reading them in Group 4.</li>
+    <li><b>Group 4 runs the three suites once, in full.</b> AC7 requires the existing tests to stay green without changes.</li>
+  </ul>
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li><span class="sev warning">warning</span>Doc-mode test assertions depend on the fixture. The DOM test uses the <code>readerDocPayload()</code> docs dir, and the integration test uses the real workspace folder. Do not fix the fixture.</li>
+    <li><span class="sev warning">warning</span>readerDoc.spec constraints: the strict <code>nav.rd-crumbs button</code> locator, the focusables <code>slice(1,3)</code> order, and no <code>openSource</code> in doc mode.</li>
+    <li><span class="sev info">info</span>The <code>validateDoc</code> refactor must keep the existing <code>openDoc</code> refusal regexes (<code>/workspace folder/</code>) green.</li>
+  </ul>
+</section>
+
+<h2>Execution Order</h2>
+<div class="card">
+  <div class="flow">
+    <div class="wave"><span class="lbl">Wave 1 (parallel)</span>
+      <span class="node">G1 Protocol &amp; Host</span>
+      <span class="node">G2 Reader UI</span>
+      <span class="node">G3 Documentation</span>
+    </div>
+    <span class="arrow">→</span>
+    <div class="wave"><span class="lbl">Wave 2</span>
+      <span class="node">G4 Test Review &amp; Regression</span>
+    </div>
+  </div>
+  <p class="meta">No two of Groups 1-3 declare the same file. Group 4 may append to the test files of Groups 1-2, so it runs after them.</p>
+</div>
+
+<h2>Task Groups</h2>
+
+<section data-group="1" class="group done">
+  <div class="g-head"><h3>Group 1: Protocol &amp; Host (<code>editDoc</code> message)</h3><span class="g-badge"></span></div>
+  <div class="meta">Dependencies: none · 6 steps · 6-8 tests</div>
+  <div class="chips"><code>src/panel/messages.ts</code><code>src/panel/panel.ts</code><code>test/unit/messages.test.ts</code><code>test/integration/projectMode.test.ts</code></div>
+  <ul class="steps">
+    <li data-step="1.1" class="step done">1.1 Write 4-6 unit tests for <code>editDoc</code> in messages.test.ts
+      <ul><li>Accepts a valid doc, normalises the path, drops extra fields</li><li>Refuses a non-workspace folder, a trailing slash, missing <code>workspaceFolderUris</code> (<code>/workspace folder/</code>)</li><li>Refuses non-<code>.md</code>, <code>..</code> traversal, a non-string path; accepted when untrusted</li></ul></li>
+    <li data-step="1.2" class="step done">1.2 Write 2 integration tests in projectMode.test.ts (<code>spyOnCommand('vscode.open')</code>)
+      <ul><li>A valid <code>editDoc</code> opens <code>&lt;workspace&gt;/.maister/docs/standards/global/coding-style.md</code> once</li><li>A refused <code>editDoc</code> opens nothing</li></ul></li>
+    <li data-step="1.3" class="step done">1.3 Extract the shared folder/path/<code>.md</code> helper from <code>validateDoc</code>, parameterised by message type</li>
+    <li data-step="1.4" class="step done">1.4 Add the <code>editDoc</code> union member and validate case (no trust gate, not in <code>OVERVIEW_TYPES</code>)</li>
+    <li data-step="1.5" class="step done">1.5 Add the dispatch arm: <code>openInEditor(joinPath(parse(docsFolderUri), ...DOCS_ROOT, docRelPath))</code></li>
+    <li data-step="1.6" class="step done">1.6 Run only the new and <code>openDoc</code> unit tests plus the filtered integration tests</li>
+  </ul>
+  <div class="ac"><b>Acceptance:</b> AC3, AC5; the existing <code>openDoc</code> tests stay green; the doc-path rules are implemented once.</div>
+</section>
+
+<section data-group="2" class="group done">
+  <div class="g-head"><h3>Group 2: Reader UI (header row + Edit button)</h3><span class="g-badge"></span></div>
+  <div class="meta">Dependencies: none · 7 steps · 5-7 tests</div>
+  <div class="chips"><code>src/strings.ts</code><code>src/webview/reader.ts</code><code>media/webview.css</code><code>test/dom/readerDoc.spec.ts</code><code>test/dom/surfaces.spec.ts</code></div>
+  <ul class="steps">
+    <li data-step="2.1" class="step done">2.1 Write 3-4 doc-mode DOM tests in readerDoc.spec.ts
+      <ul><li>One Edit, outside <code>nav</code>, after back + breadcrumb; the <code>title</code> names <code>coding-style.md</code></li><li>A click posts exactly <code>editDoc</code> with the fixture <code>docsFolderUri</code></li><li>A refused doc shows Edit and no Source button</li></ul></li>
+    <li data-step="2.2" class="step done">2.2 Write 2-3 artifact-mode DOM tests in surfaces.spec.ts
+      <ul><li>Edit is outside <code>nav.rd-crumbs</code>, after the breadcrumb and before the hero chips</li><li>A click posts <code>openSource</code></li><li>A refused artifact shows both Edit and <code>READER.openSource</code></li></ul></li>
+    <li data-step="2.3" class="step done">2.3 Add <code>READER.edit</code> and <code>READER.editTitle</code> to strings.ts</li>
+    <li data-step="2.4" class="step done">2.4 Add the <code>editButton(relPath, message)</code> builder (<code>.action .action-small</code>, <code>title</code>, no aria-label)</li>
+    <li data-step="2.5" class="step done">2.5 Wrap the header in <code>div.rd-head</code> in <code>render()</code> for doc and artifact, rendered and refused</li>
+    <li data-step="2.6" class="step done">2.6 Add the <code>.rd-head</code> CSS (flex, wrap, gap, Edit <code>margin-left:auto</code>, cancel <code>margin-top</code>; not sticky)</li>
+    <li data-step="2.7" class="step done">2.7 Run only readerDoc.spec + surfaces.spec; existing tests 1-4 must pass unchanged</li>
+  </ul>
+  <div class="ac"><b>Acceptance:</b> AC1, AC2, AC4; readerDoc tests 1-4 and the surfaces loops pass without modification.</div>
+</section>
+
+<section data-group="3" class="group done">
+  <div class="g-head"><h3>Group 3: Documentation (README + CHANGELOG)</h3><span class="g-badge"></span></div>
+  <div class="meta">Dependencies: none · 4 steps · no automated tests</div>
+  <div class="chips"><code>README.md</code><code>CHANGELOG.md</code></div>
+  <ul class="steps">
+    <li data-step="3.1" class="step done">3.1 Define the checks: no "one, explicit way", "read-only" reworded, <code>### Added</code> present</li>
+    <li data-step="3.2" class="step done">3.2 README: L12 rewording, the L84-85 two hand-offs, Edit in the Artifact and Project rows of the modes table</li>
+    <li data-step="3.3" class="step done">3.3 CHANGELOG <code>[Unreleased]</code> → <code>### Added</code> "<b>Edit button</b> — …"</li>
+    <li data-step="3.4" class="step done">3.4 Run the checks; <code>vision.md</code> and <code>package.json</code> are untouched</li>
+  </ul>
+  <div class="ac"><b>Acceptance:</b> AC8; R9 (vision.md and package.json unchanged).</div>
+</section>
+
+<section data-group="4" class="group done">
+  <div class="g-head"><h3>Group 4: Test Review &amp; Gap Analysis</h3><span class="g-badge"></span></div>
+  <div class="meta">Dependencies: 1, 2, 3 · 5 steps · up to 7 additional tests</div>
+  <div class="chips"><code>test/unit/messages.test.ts</code><code>test/dom/readerDoc.spec.ts</code><code>test/dom/surfaces.spec.ts</code><code>test/integration/projectMode.test.ts</code></div>
+  <ul class="steps">
+    <li data-step="4.1" class="step done">4.1 Review the Group 1-2 tests (about 11-15) against AC1-AC7</li>
+    <li data-step="4.2" class="step done">4.2 Analyse gaps: narrow-width wrap, refused-artifact tab order, <code>.MD</code> case, AC6 live refresh</li>
+    <li data-step="4.3" class="step done">4.3 Write up to 7 strategic tests for real gaps only</li>
+    <li data-step="4.4" class="step done">4.4 Run in full: <code>npm run check</code>, <code>npm run test:dom</code>, <code>npm run test:integration</code></li>
+    <li data-step="4.5" class="step done">4.5 Fix regressions within the feature's files; record the results in the work log</li>
+  </ul>
+  <div class="ac"><b>Acceptance:</b> all feature tests pass (about 13-22 new); at most 10 additional; AC7's existing list passes without modification.</div>
+</section>
+
+<h2>Standards Compliance</h2>
+<div class="card">
+  <table>
+    <tr><th>Standard</th><th>Applied as</th></tr>
+    <tr><td><code>global/validation.md</code></td><td>Host-side allowlist for <code>editDoc</code>, with specific refusal reasons</td></tr>
+    <tr><td><code>global/coding-style.md</code></td><td>Shared doc-path helper (DRY); consistent naming</td></tr>
+    <tr><td><code>global/minimal-implementation.md</code></td><td>No title-bar command, icon font, trust gate, split editor or new spec file</td></tr>
+    <tr><td><code>global/commenting.md</code></td><td>No change comments; docblocks stay accurate</td></tr>
+    <tr><td><code>global/conventions.md</code></td><td>README and CHANGELOG updated; no new dependencies</td></tr>
+    <tr><td><code>frontend/accessibility.md</code></td><td>Real <code>&lt;button&gt;</code> with the visible name "Edit", after the nav, tooltip in <code>title</code></td></tr>
+    <tr><td><code>frontend/css.md</code> · <code>components.md</code> · <code>responsive.md</code></td><td>Reuse <code>.action</code> classes and tokens; one small builder; the row wraps</td></tr>
+  </table>
+</div>
+</body>
+</html>

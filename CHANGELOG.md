@@ -6,6 +6,12 @@ All notable changes to Maister Lens are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Edit button** — every markdown page in the reader (task artifacts and `.maister/docs`
+  standards and project docs) has a top-right Edit button that opens the file in VS Code's
+  text editor.
+
 ## [0.1.1] — 2026-09-28
 
 ### Fixed

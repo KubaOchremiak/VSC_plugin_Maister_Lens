@@ -386,4 +386,52 @@ describe('messages/unit', () => {
     assert.match(refused(doc({ anchor: 'a b' })), /anchor/);
     assert.match(refused(doc({ anchor: 7 })), /anchor/);
   });
+
+  describe('editDoc', () => {
+    const edit = (patch: Record<string, unknown> = {}): Record<string, unknown> => ({
+      type: 'editDoc',
+      docsFolderUri: 'file:///w',
+      docRelPath: 'standards/global/coding-style.md',
+      ...patch
+    });
+
+    it('accepts a contained .md path, normalises it and keeps only the protocol fields', () => {
+      assert.deepEqual(
+        accepted(
+          edit({
+            docsFolderUri: 'file:///second',
+            docRelPath: './standards/global/../frontend/css.md',
+            anchor: 'design-tokens'
+          })
+        ),
+        { type: 'editDoc', docsFolderUri: 'file:///second', docRelPath: 'standards/frontend/css.md' }
+      );
+    });
+
+    it('refuses a docsFolderUri that is not exactly a workspace folder', () => {
+      for (const [patch, overrides] of [
+        [{ docsFolderUri: 'file:///elsewhere' }, {}],
+        [{ docsFolderUri: 'file:///w/' }, {}],
+        [{}, { workspaceFolderUris: undefined }]
+      ] as const) {
+        const reason = refused(edit(patch), overrides);
+        assert.match(reason, /workspace folder/);
+        assert.match(reason, /editDoc/);
+      }
+    });
+
+    it('refuses a non-markdown target, an escaping path and a non-string docRelPath', () => {
+      for (const docRelPath of ['project/tech-stack.yml', '../tasks/x/spec.md', '%2e%2e/x.md', 42]) {
+        assert.match(refused(edit({ docRelPath })), /editDoc/, String(docRelPath));
+      }
+    });
+
+    it('accepts a case-variant .MD extension', () => {
+      assert.deepEqual(accepted(edit({ docRelPath: 'INDEX.MD' })), edit({ docRelPath: 'INDEX.MD' }));
+    });
+
+    it('is accepted in an untrusted workspace', () => {
+      assert.deepEqual(accepted(edit(), { isTrusted: false }), edit());
+    });
+  });
 });

@@ -150,6 +150,10 @@ function parentDir(relPath: string): string {
   return slash === -1 ? '' : relPath.slice(0, slash);
 }
 
+function docsRootUri(docsFolderUri: string): vscode.Uri {
+  return vscode.Uri.joinPath(vscode.Uri.parse(docsFolderUri), ...DOCS_ROOT);
+}
+
 function basename(relPath: string): string {
   return relPath.slice(relPath.lastIndexOf('/') + 1);
 }
@@ -630,6 +634,10 @@ export class TaskPanel implements vscode.Disposable {
           docRelPath: message.docRelPath,
           ...(message.anchor === undefined ? {} : { anchor: message.anchor })
         });
+      case 'editDoc':
+        return this.openInEditor(
+          vscode.Uri.joinPath(docsRootUri(message.docsFolderUri), message.docRelPath)
+        );
       case 'openFollowUps':
         return this.show({
           mode: 'followUps',
@@ -1372,7 +1380,7 @@ export class TaskPanel implements vscode.Disposable {
   private async buildDoc(location: DocLocation): Promise<View> {
     const label = humanizeDocName(location.docRelPath);
     const title = format(PANEL.titleArtifact, { label });
-    const docsRoot = vscode.Uri.joinPath(vscode.Uri.parse(location.docsFolderUri), ...DOCS_ROOT);
+    const docsRoot = docsRootUri(location.docsFolderUri);
     const uri = vscode.Uri.joinPath(docsRoot, location.docRelPath);
     const webview = this.ensurePanel().webview;
     const payload = (
@@ -1557,10 +1565,7 @@ export class TaskPanel implements vscode.Disposable {
     const location = this.location;
     if (location?.mode === 'doc') {
       // R7 — only the docs root, never the whole workspace folder.
-      return [
-        ...roots.slice(0, 2),
-        vscode.Uri.joinPath(vscode.Uri.parse(location.docsFolderUri), ...DOCS_ROOT)
-      ];
+      return [...roots.slice(0, 2), docsRootUri(location.docsFolderUri)];
     }
     if (location?.mode === 'project') {
       return roots.slice(0, 2);

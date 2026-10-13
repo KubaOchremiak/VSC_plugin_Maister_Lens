@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Verification — md-viewer-edit-button</title>
+<style>
+:root {
+  --bg:#f6f7f9; --surface:#fff; --border:#e2e5ea; --text:#1a1d23; --dim:#6b7280;
+  --accent:#4f46e5; --accent-soft:#eef2ff; --ok:#16a34a; --ok-soft:#ecfdf3;
+  --warn:#d97706; --warn-soft:#fffbeb; --crit:#dc2626; --crit-soft:#fef2f2;
+  --info:#2563eb; --info-soft:#eff6ff; --radius:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111418; --surface:#1a1f26; --border:#2e3640; --text:#e6e9ee; --dim:#9aa4b2;
+    --accent:#818cf8; --accent-soft:#26294a; --ok:#4ade80; --ok-soft:#11291a;
+    --warn:#fbbf24; --warn-soft:#2e2410; --crit:#f87171; --crit-soft:#321616;
+    --info:#60a5fa; --info-soft:#15233a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:1100px; padding:24px 20px 64px; background:var(--bg);
+  color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+h1 { font-size:22px; letter-spacing:-.01em; } h2 { font-size:16px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; margin:14px 0; }
+.badge { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.04em; padding:2px 8px; border-radius:99px; background:var(--accent-soft); color:var(--accent); }
+.sev { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  padding:1.5px 7px; border-radius:99px; margin-right:6px; }
+.sev.critical { background:var(--crit-soft); color:var(--crit); }
+.sev.warning  { background:var(--warn-soft); color:var(--warn); }
+.sev.info     { background:var(--info-soft); color:var(--info); }
+.pass { color:var(--ok); font-weight:600; } .fail { color:var(--crit); font-weight:600; }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+th { font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+details > summary { cursor:pointer; font-weight:600; }
+.crumbs { display:flex; gap:14px; font-size:13px; margin-bottom:18px; flex-wrap:wrap; }
+.crumbs a.md { margin-left:auto; color:var(--dim); }
+.crumbs .here { font-weight:650; color:var(--text); }
+.tiles { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+.tile { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; text-align:center; min-width:90px; }
+.tile b { display:block; font-size:20px; letter-spacing:-.01em; }
+.tile span { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+.verdict { background:var(--ok-soft); border:1px solid var(--ok); color:var(--text); border-radius:var(--radius);
+  padding:14px 18px; font-size:15px; }
+.verdict b { color:var(--ok); }
+.warnc { color:var(--warn); font-weight:600; }
+</style>
+</head>
+<body>
+<nav class="crumbs">
+  <a href="../dashboard.html">← Dashboard</a>
+  <a href="../implementation/spec.html">Spec</a>
+  <a href="../implementation/implementation-plan.html">Plan</a>
+  <span class="here">Verification</span>
+  <a href="implementation-verification.md" target="_blank" rel="noopener" class="md">md twin ↗</a>
+</nav>
+<header>
+  <span class="badge">Implementation verification · final</span>
+  <h1>Edit button on markdown viewer pages</h1>
+</header>
+
+<div class="verdict">✅ <b>Passed</b>: 0 critical, 0 warnings, 15 info, after 2 fix iterations and 3 verification runs.</div>
+
+<div class="tiles">
+  <div class="tile"><b>236/236</b><span>tests</span></div>
+  <div class="tile"><b>100%</b><span>plan (26/26)</span></div>
+  <div class="tile"><b>0</b><span>critical</span></div>
+  <div class="tile"><b>0</b><span>warnings</span></div>
+  <div class="tile"><b>10/10</b><span>fixes resolved</span></div>
+</div>
+
+<section class="tldr card">
+  <h2 style="margin-top:0">TL;DR</h2>
+  <ul>
+    <li>Tests pass in all four commands: <code>check</code>, <code>test:dom</code>, <code>test:integration</code> and <code>test:min</code> (VS Code 1.90.0).</li>
+    <li>Reviews: code review clean, pragmatic review appropriate, production readiness GO at 97%, reality check GO.</li>
+    <li>The spec, work log, README and CHANGELOG all match the code.</li>
+  </ul>
+  <h2>Open Questions / Risks</h2>
+  <ul>
+    <li>Release steps you deferred: bump the version to 0.2.0, date the CHANGELOG entry, run <code>verify:release</code>.</li>
+    <li>vision.md, tech-stack.md and INDEX.md still say "read-only", as you decided.</li>
+    <li>Pre-existing: <code>test:min</code> runs the trust suite on 1.138.0; symlink containment is lexical; editor associations can open the preview instead.</li>
+  </ul>
+</section>
+
+<h2>Checks (final run)</h2>
+<div class="card">
+<table>
+  <tr><th>Check</th><th>Status</th><th>Critical</th><th>Warning</th><th>Info</th><th>Report</th></tr>
+  <tr><td>Test suite</td><td class="pass">✓ 236/236</td><td>0</td><td>0</td><td>1</td><td><a href="test-suite-results.md" target="_blank" rel="noopener">test-suite-results.md</a></td></tr>
+  <tr><td>Completeness</td><td class="pass">✓ Passed</td><td>0</td><td>0</td><td>3</td><td>(inline)</td></tr>
+  <tr><td>Code review</td><td class="pass">✓ Clean</td><td>0</td><td>0</td><td>3</td><td><a href="code-review-reverify.md" target="_blank" rel="noopener">code-review-reverify.md</a></td></tr>
+  <tr><td>Pragmatic review</td><td class="pass">✓ Appropriate</td><td>0</td><td>0</td><td>2</td><td><a href="pragmatic-review.md" target="_blank" rel="noopener">pragmatic-review.md</a></td></tr>
+  <tr><td>Production readiness</td><td class="pass">✓ GO (97%)</td><td>0</td><td>0</td><td>3</td><td><a href="production-readiness-report.md" target="_blank" rel="noopener">production-readiness-report.md</a></td></tr>
+  <tr><td>Reality check</td><td class="pass">✓ GO</td><td>0</td><td>0</td><td>4</td><td><a href="reality-check.md" target="_blank" rel="noopener">reality-check.md</a></td></tr>
+</table>
+</div>
+
+<h2>Remaining info items (non-blocking)</h2>
+<div class="card">
+<table>
+  <tr><th>Severity</th><th>Finding</th><th>Location</th></tr>
+  <tr><td><span class="sev info">info</span></td><td>The spec's Technical Approach doesn't mention the <code>rd-head-lead</code> wrapper; spec.html R1 is less precise than spec.md; the plan wording predates the amendments</td><td><code>implementation/spec.md:98</code>, <code>spec.html</code>, <code>implementation-plan.md</code></td></tr>
+  <tr><td><span class="sev info">info</span></td><td>Refused <code>.md</code> artifacts show both Edit and Source (your decision)</td><td><code>src/webview/reader.ts</code></td></tr>
+  <tr><td><span class="sev info">info</span></td><td>An inline <code>Uri</code> join remains in <code>projectPayload</code>; header markup differs by mode; the <code>.md</code> check exists in both bundles</td><td><code>src/panel/panel.ts:1328</code>, <code>reader.ts</code>, <code>messages.ts</code></td></tr>
+  <tr><td><span class="sev info">info</span></td><td>The artifact Edit DOM test uses <code>toContainEqual</code>; nothing tests the top-right position or the visible text; the fixture URI is the docs folder</td><td><code>test/dom/*</code></td></tr>
+  <tr><td><span class="sev info">info</span></td><td>Version bump deferred; "read-only" wording kept; trust suite not pinned to 1.90; symlinks; editor associations; no <code>.prettierrc</code></td><td>various</td></tr>
+</table>
+</div>
+
+<h2>Fix &amp; re-verification history</h2>
+<div class="card">
+<table>
+  <tr><th>Iter</th><th>Issue</th><th>Fix</th><th>Outcome</th></tr>
+  <tr><td>1</td><td><span class="sev warning">warning</span> <code>test:min</code> not run</td><td>Ran it on 1.90.0</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>1</td><td><span class="sev info">info</span> Edit shown on refused <code>.html</code> artifacts</td><td><code>MARKDOWN_FILE</code> gate plus test</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>1</td><td><span class="sev info">info</span> Accessible name had no file name</td><td>sr-only <code>hidden(file)</code></td><td class="pass">✓ resolved</td></tr>
+  <tr><td>1</td><td><span class="sev info">info</span> Docs-root join repeated 3 times</td><td><code>docsRootUri()</code></td><td class="pass">✓ resolved</td></tr>
+  <tr><td>1</td><td><span class="sev info">info</span> No round-trip test</td><td>Integration test added</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>2</td><td><span class="sev warning">warning</span> spec.md out of date on <code>.md</code> gating</td><td>Amended spec.md and spec.html</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>2</td><td><span class="sev warning">warning</span> spec.md out of date on accessible name</td><td>Amended spec.md and spec.html</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>2</td><td><span class="sev info">info</span> Work log missing Files Modified</td><td>Added</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>2</td><td><span class="sev info">info</span> Overlapping integration test</td><td>Removed the direct test</td><td class="pass">✓ resolved</td></tr>
+  <tr><td>2</td><td><span class="sev info">info</span> <code>openSource</code> literal duplicated</td><td><code>openSourceMessage()</code></td><td class="pass">✓ resolved</td></tr>
+  <tr><td>—</td><td><span class="sev warning">warning</span> Version not bumped / vision.md says "read-only"</td><td>Deferred, or kept by your decision</td><td>info</td></tr>
+</table>
+</div>
+
+<h2>Recommendations</h2>
+<ol class="card">
+  <li>At release: bump to 0.2.0, date the CHANGELOG entry, run <code>npm run verify:release</code>.</li>
+  <li>Optional: note the <code>rd-head-lead</code> wrapper in the spec's Technical Approach.</li>
+  <li>Standards candidate: add a <code>.prettierrc</code>.</li>
+  <li>Follow-up candidate: pin the <code>test:min</code> trust suite to 1.90.0.</li>
+</ol>
+</body>
+</html>

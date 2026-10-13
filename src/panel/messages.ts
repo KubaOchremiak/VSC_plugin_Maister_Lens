@@ -64,6 +64,7 @@ export type Message =
       docRelPath: string;
       anchor?: string;
     }
+  | { type: 'editDoc'; docsFolderUri: string; docRelPath: string }
   | { type: 'openFollowUps'; folderUri?: string }
   | { type: 'startWorkflow' }
   | { type: 'runNextAction'; folderUri: string };
@@ -85,7 +86,7 @@ export interface MessageContext {
    * there is no root to contain against, so `openFile` is refused.
    */
   workspaceRootUri?: string;
-  /** Every open workspace folder; an `openDoc` root must be exactly one of them. */
+  /** Every open workspace folder; an `openDoc` or `editDoc` root must be exactly one of them. */
   workspaceFolderUris?: readonly string[];
 }
 
@@ -237,23 +238,42 @@ function validateArtifact(raw: Record<string, unknown>, context: MessageContext)
   return accept(raw.anchor === undefined ? message : { ...message, anchor: raw.anchor });
 }
 
-function validateDoc(raw: Record<string, unknown>, context: MessageContext): Validation {
+type DocTarget = { docsFolderUri: string; docRelPath: string } | { reason: string };
+
+function docTarget(
+  type: 'openDoc' | 'editDoc',
+  raw: Record<string, unknown>,
+  context: MessageContext
+): DocTarget {
   const docsFolderUri = raw.docsFolderUri;
   if (typeof docsFolderUri !== 'string' || !context.workspaceFolderUris?.includes(docsFolderUri)) {
-    return refuse('openDoc carries a docsFolderUri that is not a workspace folder');
+    return { reason: `${type} carries a docsFolderUri that is not a workspace folder` };
   }
   if (typeof raw.docRelPath !== 'string') {
-    return refuse('openDoc carries no docRelPath');
+    return { reason: `${type} carries no docRelPath` };
   }
   const docRelPath = resolveInside(docsFolderUri, raw.docRelPath);
   if (docRelPath === null || !/\.md$/i.test(docRelPath)) {
-    return refuse(`openDoc path ${raw.docRelPath} is not a markdown file inside .maister/docs`);
+    return { reason: `${type} path ${raw.docRelPath} is not a markdown file inside .maister/docs` };
+  }
+  return { docsFolderUri, docRelPath };
+}
+
+function validateDoc(raw: Record<string, unknown>, context: MessageContext): Validation {
+  const target = docTarget('openDoc', raw, context);
+  if ('reason' in target) {
+    return refuse(target.reason);
   }
   if (raw.anchor !== undefined && (typeof raw.anchor !== 'string' || !ANCHOR.test(raw.anchor))) {
     return refuse('openDoc carries an anchor outside /^[-\\w.]{1,128}$/');
   }
-  const message: Message = { type: 'openDoc', docsFolderUri, docRelPath };
+  const message: Message = { type: 'openDoc', ...target };
   return accept(raw.anchor === undefined ? message : { ...message, anchor: raw.anchor });
+}
+
+function validateEditDoc(raw: Record<string, unknown>, context: MessageContext): Validation {
+  const target = docTarget('editDoc', raw, context);
+  return 'reason' in target ? refuse(target.reason) : accept({ type: 'editDoc', ...target });
 }
 
 function validateNavigate(raw: Record<string, unknown>, context: MessageContext): Validation {
@@ -341,6 +361,8 @@ export function validate(raw: unknown, context: MessageContext): Validation {
       return accept({ type: 'openProject' });
     case 'openDoc':
       return validateDoc(raw, context);
+    case 'editDoc':
+      return validateEditDoc(raw, context);
     case 'startWorkflow':
       return accept({ type: 'startWorkflow' });
     case 'navigate':

@@ -9,8 +9,8 @@ artifacts, an HTML dashboard. Maister Lens reads those folders and answers "what
 doing?" from the sidebar, opens every artifact **rendered** instead of as source, and hands the
 next `/maister:*` command to an assistant or a terminal.
 
-Maister Lens is **read-only**. It never writes a task file, never edits state, and never runs a
-workflow itself.
+Maister Lens **never writes files itself**: it never edits a task file or state and never runs a
+workflow. Editing happens in VS Code's own editor.
 
 Maister Lens is an independent extension by **Jakub Ochremiak**. It is not an official
 Maister product and does not imply affiliation with or endorsement by the Maister owners.
@@ -76,13 +76,16 @@ editor title bar.
 | Mode | What it shows |
 |---|---|
 | **Task** | Maister's own `dashboard.html` for that task, hosted verbatim in a sandboxed webview. When the file is missing or of an unrecognised vintage, a built-in fallback view renders the same facts from the state file: banner, phases, decisions, risks, artifacts and the raw state. |
-| **Artifact** | A markdown artifact rendered as a document — breadcrumb, key-artifact chips, a pinned summary card and the body. An artifact with an `.html` companion can be toggled between the two with **Toggle Styled / Markdown View**. |
+| **Artifact** | A markdown artifact rendered as a document — breadcrumb, key-artifact chips, a pinned summary card and the body, with an **Edit** button at the top right. An artifact with an `.html` companion can be toggled between the two with **Toggle Styled / Markdown View**. |
 | **Dashboard** | A cross-task dashboard: four KPI tiles, the active filter chips, four charts and a task table. It shares one filter with Tasks, so a tile pressed in the sidebar is reflected here. |
 | **Follow-ups** | What completed tasks left open, across all tasks or scoped to one, in collapsible per-task groups under a passed / passed-with-issues / failed verdict breakdown. Each row is an unfixed verification issue (with severity), an unresolved risk, a deferred follow-up decision or an E2E follow-up. Issue and E2E rows open the task dashboard; Risk and Deferred rows open the task. |
-| **Project** | Opened from the **Project** sidebar item: a TL;DR (goal from `project/vision.md`, tech stack from `INDEX.md`) and every `.maister/docs` file grouped by folder. A doc opens rendered with a **← Project** link, and the page refreshes live as the docs change. |
+| **Project** | Opened from the **Project** sidebar item: a TL;DR (goal from `project/vision.md`, tech stack from `INDEX.md`) and every `.maister/docs` file grouped by folder. A doc opens rendered with a **← Project** link and an **Edit** button, and the page refreshes live as the docs change. |
 
-Artifacts are always shown rendered through the extension's own navigation. **Open Source File**
-is the one, explicit way to reach the underlying text in a normal editor.
+Artifacts and docs are always shown rendered through the extension's own navigation. Two
+explicit hand-offs reach the underlying text in a normal editor: the **Edit** button at the top
+right of every markdown page (task artifacts and `.maister/docs` standards and project docs), and
+**Open Source File** in the editor title bar for artifacts. Both open the file in the same editor
+group, and the rendered page refreshes after you save.
 
 Task mode adds a **← Dashboard** link at the top of the view. In a hosted `dashboard.html` that
 link is injected once, when the page loads: a dashboard whose own script later replaces

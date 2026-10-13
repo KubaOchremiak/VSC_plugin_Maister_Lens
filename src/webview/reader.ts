@@ -6,14 +6,15 @@ import type {
   RenderPayload
 } from '../panel/render.ts';
 import { PROJECT, READER, format } from '../strings.ts';
-import { el } from './components.ts';
+import { el, hidden } from './components.ts';
 
 /**
  * § 6.3 — the artifact reader. `bodyHtml` arrives finished from `panel/render.ts`; this
  * bundle adds the breadcrumb, the hero chips, the pinned summary card and the one delegated
  * click handler that turns the rewritten links into A2 messages. A `kind: 'doc'` payload
  * shows a `.maister/docs` document instead: a back control to the Project page, no hero
- * chips and no Source button.
+ * chips and no Source button. Both modes end the header row with an Edit button that opens
+ * the markdown source in the editor; a refused `.html` artifact has no markdown to edit.
  */
 
 declare function acquireVsCodeApi(): {
@@ -28,6 +29,7 @@ interface ScrollState {
 }
 
 const DOC_ID = 'doc';
+const MARKDOWN_FILE = /\.md$/i;
 
 const api = acquireVsCodeApi();
 let current: ReaderLocation | DocLocation | null = null;
@@ -170,15 +172,28 @@ function summaryCard(payload: ReaderPayload): HTMLElement | null {
   return card;
 }
 
+function openSourceMessage(payload: RenderPayload): unknown {
+  return {
+    type: 'openSource',
+    folderUri: payload.folderUri,
+    artifactRelPath: payload.location.artifactRelPath
+  };
+}
+
 function sourceButton(payload: RenderPayload): HTMLButtonElement {
   const button = el('button', { class: 'action', type: 'button' }, [READER.openSource]);
-  button.addEventListener('click', () =>
-    post({
-      type: 'openSource',
-      folderUri: payload.folderUri,
-      artifactRelPath: payload.location.artifactRelPath
-    })
+  button.addEventListener('click', () => post(openSourceMessage(payload)));
+  return button;
+}
+
+function editButton(relPath: string, message: unknown): HTMLButtonElement {
+  const file = relPath.slice(relPath.lastIndexOf('/') + 1);
+  const button = el(
+    'button',
+    { class: 'action action-small', type: 'button', title: format(READER.editTitle, { file }) },
+    [`${READER.edit} `, hidden(file)]
   );
+  button.addEventListener('click', () => post(message));
   return button;
 }
 
@@ -204,9 +219,20 @@ function render(payload: ReaderPayload, root: HTMLElement): void {
   const fragment = document.createDocumentFragment();
   fragment.append(skipLink());
   if (payload.kind === 'doc') {
-    fragment.append(...docHeader(payload));
+    const { docsFolderUri, docRelPath } = payload.location;
+    fragment.append(
+      el('div', { class: 'rd-head' }, [
+        el('div', { class: 'rd-head-lead' }, docHeader(payload)),
+        editButton(docRelPath, { type: 'editDoc', docsFolderUri, docRelPath })
+      ])
+    );
   } else {
-    fragment.append(breadcrumb(payload));
+    const { artifactRelPath } = payload.location;
+    const head = el('div', { class: 'rd-head' }, [breadcrumb(payload)]);
+    if (MARKDOWN_FILE.test(artifactRelPath)) {
+      head.append(editButton(artifactRelPath, openSourceMessage(payload)));
+    }
+    fragment.append(head);
     const chips = heroChips(payload);
     if (chips !== null) {
       fragment.append(chips);

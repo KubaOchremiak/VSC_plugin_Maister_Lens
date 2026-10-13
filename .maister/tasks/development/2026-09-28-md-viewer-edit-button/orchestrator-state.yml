@@ -1,0 +1,106 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: [phase-1, phase-2, phase-5, phase-7, phase-8, phase-10, phase-11, phase-14]
+  skipped_phases: [{phase: phase-3, reason: no reproducible defect}, {phase: phase-4, reason: user skipped - single button}, {phase: phase-6, reason: user skipped audit}, {phase: phase-9, reason: phase-3 not executed}, {phase: phase-12, reason: user skipped e2e}, {phase: phase-13, reason: user skipped user docs}]
+  failed_phases: []
+  auto_fix_attempts: {}
+  options:
+    html_output: true
+    # e2e/user_docs defaults set from ui_heavy
+    mockup_format: html
+    spec_audit_enabled: false
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: 2026-09-28T21:23:46Z
+  updated: 2026-10-13T21:53:02Z
+  task_path: .maister/tasks/development/2026-09-28-md-viewer-edit-button
+  task_ids: {}
+task:
+  title: Edit button on markdown viewer pages
+  description: "On md viewer files pages add button edit on top right corner so if i review some standards or project description i can jump to regular .md editor and make changes"
+  status: completed
+  tags: [ui, webview, markdown-viewer]
+  priority: null
+task_context:
+  risk_level: low
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: "Doc pages post new editDoc (shared validateDoc helper); artifact pages reuse openSource"
+  tech_clarified: skipped-low-risk
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: false
+    ui_heavy: true
+  research_reference: {path: null, research_question: null, research_type: null, confidence_level: null}
+  design_reference: {source: null, product_design_path: null, mockup_count: 0, has_brief: false, index_path: null}
+  project_context:
+    project_doc_paths:
+      - .maister/docs/project/vision.md
+      - .maister/docs/project/tech-stack.md
+  phase_summaries:
+    codebase_analysis:
+      summary: "Single reader bundle (src/webview/reader.ts) renders both docs and artifacts; openInEditor/vscode.open path exists; openFile already works in doc mode; recommend dedicated editDoc message reusing validateDoc rules."
+      primary_language: TypeScript
+      key_files: [src/webview/reader.ts, src/strings.ts, media/webview.css, src/panel/messages.ts, src/panel/panel.ts, test/dom/readerDoc.spec.ts]
+      decisions: []
+      risks: ["README L12/L84-85 read-only wording", "readerDoc.spec.ts forbids openSource in doc mode", "DOM fixture docsFolderUri mismatch"]
+      artifacts: [{path: analysis/codebase-analysis.md, label: Codebase analysis, html: null}]
+    gap_analysis:
+      summary: "Additive, low-risk: reader header gets a right-aligned Edit button; artifact mode reuses openSource, doc mode needs a message; constrained by readerDoc.spec and AC5 tests."
+      integration_points: [src/webview/reader.ts, src/strings.ts, media/webview.css, src/panel/messages.ts, src/panel/panel.ts]
+      decisions:
+        - {decision: "Doc pages post new editDoc message", rationale: "Strict allowlist validation"}
+        - {decision: "Refused pages keep both Edit and in-body source button", rationale: "User choice"}
+        - {decision: "vision.md unchanged", rationale: "Edit is explicit hand-off"}
+        - {decision: "Text-only Edit button", rationale: "Matches existing actions; no asset/CSP work"}
+      risks: ["Refused pages would duplicate Edit + in-body source button", "vision.md criterion 2 wording", "DOM fixture docsFolderUri differs from real panel"]
+      artifacts: [{path: analysis/gap-analysis.md, label: Gap analysis, html: null}]
+    specification:
+      summary: "Header-row Edit button on docs+artifacts; editDoc message with validation helper shared with openDoc; 10 requirements, 8 ACs, 4 test groups."
+      decisions: []
+      risks: ["DOM fixture docsFolderUri differs from real panel", "Live refresh visible only after switching back to viewer tab", "README wording must be reworded"]
+      artifacts: [{path: implementation/spec.md, label: Specification, html: implementation/spec.html}, {path: analysis/requirements.md, label: Requirements, html: null}]
+    implementation_plan:
+      summary: "4 task groups, 22 steps: protocol+host (editDoc), reader UI, docs (parallel), then test review + full suites."
+      decisions: []
+      risks: ["Fixture URI mismatch", "readerDoc.spec constraints", "openDoc refusal checks must survive refactor"]
+      artifacts: [{path: implementation/implementation-plan.md, label: Implementation plan, html: implementation/implementation-plan.html}]
+    implementation:
+      summary: "All 4 groups done (22 steps). editDoc protocol+host, reader header Edit button, README/CHANGELOG. 15 new tests; check/test:dom/test:integration all green."
+      decisions: [{decision: "div.rd-head-lead wrapper in doc mode", rationale: "Keep back/breadcrumb navs stacked"}, {decision: "Shared docTarget helper for openDoc + editDoc", rationale: "DRY"}]
+      risks: ["No .prettierrc in repo; prettier --write reformats files wholesale"]
+      artifacts: [{path: implementation/work-log.md, label: Work log, html: null}]
+    clarifications:
+      - "Scope: docs + artifacts"
+      - "Open in same editor group"
+      - "Update README + CHANGELOG"
+verification_context:
+  last_status: passed
+  issues_found:
+    - {severity: warning, source: production, description: "test:min not run", fixed: true}
+    - {severity: warning, source: production, description: "Version not bumped", fixed: false}
+    - {severity: warning, source: completeness, description: "vision.md read-only wording", fixed: false}
+    - {severity: info, source: code_review, description: "Edit on refused .html artifacts", fixed: true}
+    - {severity: info, source: code_review, description: "Accessible name lacks file name", fixed: true}
+    - {severity: info, source: code_review, description: "Docs-root join repeated", fixed: true}
+    - {severity: info, source: reality, description: "No round-trip integration test", fixed: true}
+  fixes_applied:
+    - "Ran test:min (51+1 passing)"
+    - "Edit gated on .md artifacts"
+    - "sr-only file name in Edit accessible name"
+    - "docsRootUri helper"
+    - "Round-trip openDoc->editDoc integration test"
+    - "Iter 2: spec.md/spec.html amended for .md gating + accessible name"
+    - "Iter 2: work-log Files Modified line"
+    - "Iter 2: removed overlapping direct editDoc integration test"
+    - "Iter 2: openSourceMessage helper in reader.ts"
+  decisions_made:
+    - "User: leave version bump to release and vision.md unchanged"
+  reverify_count: 2

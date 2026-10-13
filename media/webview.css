@@ -436,6 +436,22 @@ body.panel {
 
 /* --- reader (§ 6.3) ------------------------------------------------------- */
 
+.rd-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: flex-start;
+}
+
+.rd-head-lead {
+  min-width: 0;
+}
+
+.rd-head .action {
+  margin-top: 0;
+  margin-left: auto;
+}
+
 .rd-crumbs {
   display: flex;
   flex-wrap: wrap;

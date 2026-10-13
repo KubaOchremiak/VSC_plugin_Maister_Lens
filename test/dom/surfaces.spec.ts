@@ -331,3 +331,99 @@ test('dom: the Follow-ups view says how many task data files could not be read',
     format(FOLLOW_UPS.unreadable, { n: 2 })
   );
 });
+
+const EDIT_PLAN = `${READER.edit} implementation-plan.md`;
+
+test('dom: the artifact reader shows Edit outside the breadcrumb, between it and the hero chips in tab order', async ({
+  page
+}) => {
+  await openSurface(page, 'reader', readerPayload());
+
+  const edit = page.getByRole('button', { name: EDIT_PLAN, exact: true });
+  await expect(edit).toHaveCount(1);
+  await expect(page.locator('nav.rd-crumbs').getByRole('button', { name: READER.edit })).toHaveCount(0);
+  await expect(edit).toHaveAttribute(
+    'title',
+    format(READER.editTitle, { file: 'implementation-plan.md' })
+  );
+
+  const names = (await focusables(page)).map((control) => control.name);
+  expect(names.slice(1, 5)).toEqual([
+    format(READER.breadcrumbTask, { title: 'Auth token rotation' }),
+    EDIT_PLAN,
+    'Specification',
+    'Implementation Plan'
+  ]);
+});
+
+test('dom: the artifact Edit button posts openSource for the shown artifact', async ({ page }) => {
+  const surface = await openSurface(page, 'reader', readerPayload());
+
+  await page.getByRole('button', { name: EDIT_PLAN, exact: true }).click();
+
+  expect(await surface.posted()).toContainEqual({
+    type: 'openSource',
+    folderUri: 'file:///tasks/.maister/tasks/development/auth-token-rotation',
+    artifactRelPath: 'implementation/implementation-plan.md'
+  });
+});
+
+test('dom: a refused artifact shows both the header Edit button and the in-body Source button', async ({
+  page
+}) => {
+  await openSurface(page, 'reader', readerPayload({ refused: true, notice: 'x', bodyHtml: '' }));
+
+  await expect(page.getByRole('button', { name: EDIT_PLAN, exact: true })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: READER.openSource })).toHaveCount(1);
+});
+
+test('dom: a refused .html artifact has no Edit button, only the in-body Source button', async ({
+  page
+}) => {
+  const html = readerPayload();
+  await openSurface(
+    page,
+    'reader',
+    readerPayload({
+      location: { ...html.location, artifactRelPath: 'verification/implementation-verification.html' },
+      refused: true,
+      notice: 'x',
+      bodyHtml: ''
+    })
+  );
+
+  await expect(page.locator('.rd-head button.action')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: READER.openSource })).toHaveCount(1);
+});
+
+test('dom: a refused artifact reaches the header Edit button before the in-body Source button', async ({
+  page
+}) => {
+  await openSurface(page, 'reader', readerPayload({ refused: true, notice: 'x', bodyHtml: '' }));
+
+  const names = (await focusables(page)).map((control) => control.name);
+  const edit = names.indexOf(EDIT_PLAN);
+  expect(edit).toBeGreaterThan(0);
+  expect(edit).toBeLessThan(names.indexOf(READER.openSource));
+});
+
+test('dom: the reader header row wraps at a narrow panel width without horizontal scroll', async ({
+  page
+}) => {
+  await page.setViewportSize({ width: 250, height: 900 });
+  for (const payload of [readerPayload(), readerDocPayload()]) {
+    await openSurface(page, 'reader', payload);
+
+    const box = await page.evaluate(() => {
+      const edit = document.querySelector('.rd-head > button.action');
+      return {
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+        editRight: edit?.getBoundingClientRect().right ?? Infinity
+      };
+    });
+    const label = payload.kind ?? 'artifact';
+    expect(box.scrollWidth, `${label} reader`).toBeLessThanOrEqual(box.clientWidth);
+    expect(box.editRight, `${label} Edit button`).toBeLessThanOrEqual(box.clientWidth);
+  }
+});

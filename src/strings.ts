@@ -417,6 +417,8 @@ export const READER = {
   opensInEditor: '(opens in editor)',
   tooLarge: 'This artifact is too large to preview ({size})',
   openSource: 'Open source file',
+  edit: 'Edit',
+  editTitle: 'Open {file} in the editor',
   unreadable: 'This artifact could not be read. Open the source file to see what is on disk.',
   companionIframe:
     'The styled companion embeds a frame that cannot be shown here, so the markdown version is shown instead.',

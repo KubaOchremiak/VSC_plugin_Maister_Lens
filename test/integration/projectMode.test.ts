@@ -1,5 +1,6 @@
 import { strict as assert } from 'node:assert';
 import * as path from 'node:path';
+import type * as vscode from 'vscode';
 import { TaskPanel } from '../../src/panel/panel.ts';
 import type { DocRenderPayload } from '../../src/panel/render.ts';
 import type { ProjectPayload } from '../../src/webview/projectMode.ts';
@@ -9,6 +10,7 @@ import {
   makeIndex,
   makeTempDir,
   removeTempDirs,
+  spyOnCommand,
   stubContext,
   waitFor,
   writeFile
@@ -131,6 +133,59 @@ describe('projectMode/integration', () => {
       assert.equal(payload?.refused, false);
       assert.match(payload?.bodyHtml ?? '', /The first line/);
     } finally {
+      harness.dispose();
+    }
+  });
+
+  it('opens the shown doc from an editDoc built from the Project page and render payloads', async () => {
+    const harness = await projectHarness('project-edit-roundtrip', true);
+    const spy = spyOnCommand('vscode.open');
+    try {
+      await harness.panel.show({ mode: 'project' });
+      const section = last<ProjectPayload>(harness.posted, 'project')?.sections[0];
+      assert.ok(section, 'no project section was posted');
+      await harness.panel.handleMessage({
+        type: 'openDoc',
+        docsFolderUri: section.docsFolderUri,
+        docRelPath: 'project/vision.md'
+      });
+      const { location } = last<DocRenderPayload>(harness.posted, 'render') ?? assert.fail('no render');
+
+      await harness.panel.handleMessage({
+        type: 'editDoc',
+        docsFolderUri: location.docsFolderUri,
+        docRelPath: location.docRelPath
+      });
+
+      assert.equal(spy.calls.length, 1);
+      assert.equal(
+        (spy.calls[0] as vscode.Uri).fsPath,
+        path.join(harness.workspace, '.maister', 'docs', 'project', 'vision.md')
+      );
+    } finally {
+      spy.dispose();
+      harness.dispose();
+    }
+  });
+
+  it('opens nothing for a refused editDoc', async () => {
+    const harness = await projectHarness('project-edit-refused', true);
+    const spy = spyOnCommand('vscode.open');
+    try {
+      await harness.panel.handleMessage({
+        type: 'editDoc',
+        docsFolderUri: folderUriOf(harness.workspace),
+        docRelPath: 'project/tech-stack.yml'
+      });
+      await harness.panel.handleMessage({
+        type: 'editDoc',
+        docsFolderUri: folderUriOf(makeTempDir('project-edit-outside')),
+        docRelPath: 'INDEX.md'
+      });
+
+      assert.equal(spy.calls.length, 0);
+    } finally {
+      spy.dispose();
       harness.dispose();
     }
   });
