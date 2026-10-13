@@ -3,6 +3,8 @@
 <img src="media/icon.png" alt="Maister Lens — AI development lifecycle through a lens" width="128" height="128">
 
 Explore Maister AI development workflows, tasks, artifacts and follow-ups inside VS Code.
+**Maister Lens works exclusively with Maister** and requires a workspace containing
+Maister-generated files.
 
 Maister writes its work into `.maister/tasks/<type>/<date>-<slug>/` — a state file, markdown
 artifacts, an HTML dashboard. Maister Lens reads those folders and answers "what is my task
@@ -14,6 +16,8 @@ workflow. Editing happens in VS Code's own editor.
 
 Maister Lens is an independent extension by **Jakub Ochremiak**. It is not an official
 Maister product and does not imply affiliation with or endorsement by the Maister owners.
+Many thanks to the creators of [Maister](https://github.com/SkillPanel/maister) for building
+the tools and workflows that this extension helps you explore.
 
 ## Getting started
 
