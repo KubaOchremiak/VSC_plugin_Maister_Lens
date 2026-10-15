@@ -19,6 +19,28 @@ Maister product and does not imply affiliation with or endorsement by the Maiste
 Many thanks to the creators of [Maister](https://github.com/SkillPanel/maister) for building
 the tools and workflows that this extension helps you explore.
 
+## Screenshots
+
+### Dark theme
+
+**Dashboard** — task counts, verification results, workflow charts and the task list in one view.
+
+![Maister Lens Dashboard with task charts and sidebar filters in the dark theme](docs/branding/dashboard-dark.png)
+
+**Project** — project goals, tech stack and grouped documentation alongside your tasks.
+
+![Maister Lens Project view with goals, tech stack and documentation in the dark theme](docs/branding/project-dark.png)
+
+### Light theme
+
+**Dashboard** — the same workspace overview in the light theme.
+
+![Maister Lens Dashboard with task charts and sidebar filters in the light theme](docs/branding/dashboard-light.png)
+
+**Project** — project documentation in the light theme.
+
+![Maister Lens Project view with goals, tech stack and documentation in the light theme](docs/branding/project-light.png)
+
 ## Getting started
 
 Requires desktop **VS Code 1.90 or newer** and a local or remote filesystem workspace.
@@ -187,7 +209,7 @@ To test a development build in VS Code:
 
 ```sh
 npm run package
-code --install-extension ./maister-lens-0.3.0.vsix
+code --install-extension ./maister-lens-0.3.1.vsix
 ```
 
 Alternatively, run **Extensions: Install from VSIX…** in VS Code and select the package.

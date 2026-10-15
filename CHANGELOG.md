@@ -12,6 +12,17 @@ All notable changes to Maister Lens are recorded here. The format follows
   standards and project docs) has a top-right Edit button that opens the file in VS Code's
   text editor.
 
+## [0.3.1] — 2026-10-15
+
+### Added
+
+- Dashboard and Project screenshots in the README and Marketplace description, with
+  dark themes first and light themes second.
+
+### Changed
+
+- Updated Marketplace icon artwork.
+
 ## [0.1.1] — 2026-09-28
 
 ### Fixed

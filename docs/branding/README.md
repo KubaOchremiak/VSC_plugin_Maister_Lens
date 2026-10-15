@@ -20,6 +20,30 @@ The Marketplace PNG does not switch with the editor theme. Its black tile is int
 white geometry remains visible on both light and dark listing surfaces. Do not use that
 PNG as the Activity Bar mask.
 
+## Extension screenshots
+
+The root [README](../../README.md#screenshots) displays the installed extension in
+this order: dark Dashboard, dark Project, light Dashboard, light Project.
+
+| Screenshot | View | Theme |
+|---|---|---|
+| [dashboard-dark.png](dashboard-dark.png) | Cross-task Dashboard | Dark |
+| [project-dark.png](project-dark.png) | Project documentation | Dark |
+| [dashboard-light.png](dashboard-light.png) | Cross-task Dashboard | Light |
+| [project-light.png](project-light.png) | Project documentation | Light |
+
+These are the original screenshots supplied on 2026-10-15, renamed without changing
+their contents. Keep these filenames stable when replacing screenshots.
+
+The Marketplace description uses the root README. During packaging, `vsce` rewrites
+its relative image paths to public GitHub URLs using `HEAD` (the default branch).
+Push the screenshots to `main` before publishing the updated extension, then check
+the listing's images.
+The GitHub repository must be public: Marketplace visitors cannot load images from
+a private repository. Verify every image URL from the packaged README without signing
+in; a successful VSIX build does not check whether those URLs are accessible.
+The screenshots stay outside the VSIX because `.vscodeignore` excludes `docs/**`.
+
 ## Provenance
 
 The PNG was created using the built-in image generation tool and selected in the design
